@@ -12,4 +12,8 @@
     <PackageReference Include="MSTest.TestFramework" Version="1.3.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Identity.WebExtensions\Microsoft.Identity.WebExtensions.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -5,15 +5,15 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF6F9ABE-66F6-42F0-BB6C-D0C8C7372150}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.Extensions", "src\Microsoft.Identity.Client.Extensions\Microsoft.Identity.Client.Extensions.csproj", "{3AEFAFAC-CF36-4FF9-9A64-0F4FCEB609BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Extensions", "src\Microsoft.Identity.Extensions\Microsoft.Identity.Extensions.csproj", "{3AEFAFAC-CF36-4FF9-9A64-0F4FCEB609BE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.Extensions.UnitTests", "tests\Microsoft.Identity.Client.Extensions.UnitTests\Microsoft.Identity.Client.Extensions.UnitTests.csproj", "{94FFF9F0-ECEC-4407-BA2C-A219FE77A5A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Extensions.UnitTests", "tests\Microsoft.Identity.Extensions.UnitTests\Microsoft.Identity.Extensions.UnitTests.csproj", "{94FFF9F0-ECEC-4407-BA2C-A219FE77A5A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.WebExtensions.UnitTests", "tests\Microsoft.Identity.Client.WebExtensions.UnitTests\Microsoft.Identity.Client.WebExtensions.UnitTests.csproj", "{89A2A5AA-7F3C-4CFC-8086-BE006541ECA9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.WebExtensions.UnitTests", "tests\Microsoft.Identity.WebExtensions.UnitTests\Microsoft.Identity.WebExtensions.UnitTests.csproj", "{89A2A5AA-7F3C-4CFC-8086-BE006541ECA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.WebExtensions", "src\Microsoft.Identity.Client.WebExtensions\Microsoft.Identity.Client.WebExtensions.csproj", "{C1FABF57-2E87-4514-BE8F-FB727B93F3B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.WebExtensions", "src\Microsoft.Identity.WebExtensions\Microsoft.Identity.WebExtensions.csproj", "{C1FABF57-2E87-4514-BE8F-FB727B93F3B5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

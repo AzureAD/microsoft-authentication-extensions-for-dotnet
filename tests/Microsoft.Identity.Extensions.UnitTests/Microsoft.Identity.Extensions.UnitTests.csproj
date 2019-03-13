@@ -15,4 +15,8 @@
     <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Identity.Extensions\Microsoft.Identity.Extensions.csproj" />
+  </ItemGroup>
+
 </Project>

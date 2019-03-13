@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Identity.Client.WebExtensions.UnitTests
+namespace Microsoft.Identity.WebExtensions.UnitTests
 {
     [TestClass]
     public class UnitTest1
