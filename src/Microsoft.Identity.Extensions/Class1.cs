@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.Identity.Client.WebExtensions
+namespace Microsoft.Identity.Extensions
 {
     public class Class1
     {

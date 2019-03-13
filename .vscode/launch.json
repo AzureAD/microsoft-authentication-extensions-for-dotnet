@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/tests/Microsoft.Identity.Client.Extensions.UnitTests/bin/Debug/netcoreapp2.1/Microsoft.Identity.Client.Extensions.UnitTests.dll",
+            "program": "${workspaceFolder}/tests/Microsoft.Identity.Extensions.UnitTests/bin/Debug/netcoreapp2.1/Microsoft.Identity.Extensions.UnitTests.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/tests/Microsoft.Identity.Client.Extensions.UnitTests",
+            "cwd": "${workspaceFolder}/tests/Microsoft.Identity.Extensions.UnitTests",
             // For more information about the 'console' field, see https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md#console-terminal-window
             "console": "internalConsole",
             "stopAtEntry": false,
