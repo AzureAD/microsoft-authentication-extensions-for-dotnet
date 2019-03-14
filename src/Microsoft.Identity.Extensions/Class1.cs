@@ -5,6 +5,9 @@ using System;
 
 namespace Microsoft.Identity.Extensions
 {
+    /// <summary>
+    ///
+    /// </summary>
     public class Class1
     {
     }
