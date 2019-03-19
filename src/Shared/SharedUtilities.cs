@@ -92,7 +92,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>A value indicating if we are running on mac or not</returns>
         public static bool IsMacPlatform()
         {
-#if NET45 || NET452
+#if NET46
             // we have to also check for PlatformID.Unix because Mono can sometimes return Unix as the platform on a Mac machine.
             // see http://www.mono-project.com/docs/faq/technical/
             return Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
@@ -107,7 +107,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>A  value indicating if we are running on linux or not</returns>
         public static bool IsLinuxPlatform()
         {
-#if NET45 || NET452
+#if NET46
             return Environment.OSVersion.Platform == PlatformID.Unix;
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
@@ -200,7 +200,7 @@ namespace Microsoft.Identity.Extensions
                 try
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
-                    fileStream = new FileStream(lockFileLocation, FileMode.OpenOrCreate, FileAccess.Read, FileShare.None);
+                    fileStream = new FileStream(lockFileLocation, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                     break;
                 }
                 catch (IOException ex)

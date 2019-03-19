@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AdditionalContextMustBeJsonRpc" xml:space="preserve">
-    <value>additionalContext must be of type JsonRpc</value>
-  </data>
-  <data name="GitHubAccountProviderName" xml:space="preserve">
-    <value>GitHub account</value>
-  </data>
-  <data name="HomeTenantInformationNotFound" xml:space="preserve">
-    <value>Could not get details about the home tenant</value>
-  </data>
   <data name="MacKeyChainDeleteFailed" xml:space="preserve">
     <value>SecKeychainItemDelete failed with error code: {0}</value>
   </data>
@@ -137,31 +128,5 @@
   </data>
   <data name="MacKeyChainUpdateFailed" xml:space="preserve">
     <value>SecKeychainItemModifyAttributesAndData failed with error code: {0}</value>
-  </data>
-  <data name="NoHomeTenantFound" xml:space="preserve">
-    <value>No home tenant could be found</value>
-  </data>
-  <data name="NoSessionTokenFound" xml:space="preserve">
-    <value>No session token entry found</value>
-  </data>
-  <data name="RetryCountExceeded" xml:space="preserve">
-    <value>Retry count exceeded</value>
-  </data>
-  <data name="TenantInformationNotFound" xml:space="preserve">
-    <value>Could not get the list of tenants</value>
-  </data>
-  <data name="VsAccountProviderName" xml:space="preserve">
-    <value>Microsoft account</value>
-    <comment>Account is the representation of the user. Like a live account on hotmail or an outlook account.</comment>
-  </data>
-  <data name="VsAccountProviderUnsupportedAccount" xml:space="preserve">
-    <value>The account provider is not supported</value>
-  </data>
-  <data name="VsAccountProviderUnsupportedConfiguration" xml:space="preserve">
-    <value>The account is not supported by this provider. The configuration does not match.</value>
-  </data>
-  <data name="VsAccountProviderWorkOrSchool" xml:space="preserve">
-    <value>Work or school account</value>
-    <comment>Account is the representation of the user. Like a live account on hotmail or an outlook account.</comment>
   </data>
 </root>

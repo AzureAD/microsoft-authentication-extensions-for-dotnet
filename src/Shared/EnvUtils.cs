@@ -27,7 +27,7 @@ namespace Microsoft.Identity.Extensions
                 }
             }
 
-            throw new NotImplementedException();
+            return new TraceSource("TemporaryTraceSource_DoNotFinishPRWithThisStillHere", level);
 
             /*
 

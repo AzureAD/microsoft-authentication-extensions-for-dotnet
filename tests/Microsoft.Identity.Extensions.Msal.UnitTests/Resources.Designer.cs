@@ -61,33 +61,6 @@ namespace Microsoft.Identity.Extensions {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to additionalContext must be of type JsonRpc.
-        /// </summary>
-        internal static string AdditionalContextMustBeJsonRpc {
-            get {
-                return ResourceManager.GetString("AdditionalContextMustBeJsonRpc", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to GitHub account.
-        /// </summary>
-        internal static string GitHubAccountProviderName {
-            get {
-                return ResourceManager.GetString("GitHubAccountProviderName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not get details about the home tenant.
-        /// </summary>
-        internal static string HomeTenantInformationNotFound {
-            get {
-                return ResourceManager.GetString("HomeTenantInformationNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to SecKeychainItemDelete failed with error code: {0}.
         /// </summary>
         internal static string MacKeyChainDeleteFailed {
@@ -120,78 +93,6 @@ namespace Microsoft.Identity.Extensions {
         internal static string MacKeyChainUpdateFailed {
             get {
                 return ResourceManager.GetString("MacKeyChainUpdateFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No home tenant could be found.
-        /// </summary>
-        internal static string NoHomeTenantFound {
-            get {
-                return ResourceManager.GetString("NoHomeTenantFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No session token entry found.
-        /// </summary>
-        internal static string NoSessionTokenFound {
-            get {
-                return ResourceManager.GetString("NoSessionTokenFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retry count exceeded.
-        /// </summary>
-        internal static string RetryCountExceeded {
-            get {
-                return ResourceManager.GetString("RetryCountExceeded", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not get the list of tenants.
-        /// </summary>
-        internal static string TenantInformationNotFound {
-            get {
-                return ResourceManager.GetString("TenantInformationNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Microsoft account.
-        /// </summary>
-        internal static string VsAccountProviderName {
-            get {
-                return ResourceManager.GetString("VsAccountProviderName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The account provider is not supported.
-        /// </summary>
-        internal static string VsAccountProviderUnsupportedAccount {
-            get {
-                return ResourceManager.GetString("VsAccountProviderUnsupportedAccount", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The account is not supported by this provider. The configuration does not match..
-        /// </summary>
-        internal static string VsAccountProviderUnsupportedConfiguration {
-            get {
-                return ResourceManager.GetString("VsAccountProviderUnsupportedConfiguration", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Work or school account.
-        /// </summary>
-        internal static string VsAccountProviderWorkOrSchool {
-            get {
-                return ResourceManager.GetString("VsAccountProviderWorkOrSchool", resourceCulture);
             }
         }
     }

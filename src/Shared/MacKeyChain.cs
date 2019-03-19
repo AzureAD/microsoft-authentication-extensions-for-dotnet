@@ -14,7 +14,7 @@ namespace Microsoft.Identity.Extensions
     /// APIs for reading, writing and deleting data from Mac KeyChain
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public static class MacKeyChain
+    internal static class MacKeyChain
     {
         /// <summary>
         /// Writes specifies vaue for given service and account names.
