@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Identity.AdalExtensions\Microsoft.Identity.AdalExtensions.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Identity.WebExtensions\Microsoft.Identity.Extensions.Web.csproj" />
   </ItemGroup>
 
 </Project>
