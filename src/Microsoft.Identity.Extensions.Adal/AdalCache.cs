@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Diagnostics;
@@ -29,22 +30,13 @@ namespace Microsoft.Identity.Extensions.Adal
         /// <param name="logger">Logger</param>
         internal AdalCache(AdalCacheStorage storage, TraceSource logger)
         {
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
-
-            if (storage == null)
-            {
-                throw new ArgumentNullException(nameof(storage));
-            }
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _store = storage ?? throw new ArgumentNullException(nameof(storage));
 
             AfterAccess = AfterAccessNotification;
             BeforeAccess = BeforeAccessNotification;
 
-            _logger = logger;
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing adal cache");
-            _store = storage;
 
             byte[] data = _store.ReadData();
 

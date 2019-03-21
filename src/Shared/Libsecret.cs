@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Runtime.InteropServices;
@@ -48,8 +49,7 @@ namespace Microsoft.Identity.Extensions
             SECRET_SCHEMA_DONT_MATCH_NAME = 1 << 1,
         }
 
-        // suppressing warning for lowercase function name
-        #pragma warning disable SA1300
+#pragma warning disable SA1300 // suppressing warning for lowercase function name
 
         /// <summary>
         /// creates a schema for saving secret
@@ -112,5 +112,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>the retrieved secret</returns>
         [DllImport("libsecret-1.so.0", CallingConvention = CallingConvention.StdCall)]
         public static extern int secret_password_clear_sync(IntPtr schema, IntPtr cancellable, out IntPtr error, string attribute1Type, string attribute1Value, string attribute2Type, string attribute2Value, IntPtr end);
+
+#pragma warning restore SA1300 // suppressing warning for lowercase function name
     }
 }

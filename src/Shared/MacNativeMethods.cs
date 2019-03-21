@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Runtime.InteropServices;
@@ -8,7 +9,7 @@ namespace Microsoft.Identity.Extensions
     /// <summary>
     /// Helper native methods for MAC keychain
     /// </summary>
-    internal static class NativeMethods
+    internal static class MacNativeMethods
     {
         /// <summary>
         /// Location of the security framework

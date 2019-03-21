@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Globalization;
@@ -16,21 +17,7 @@ namespace Microsoft.Identity.Extensions
         /// <summary>
         /// default base cache path
         /// </summary>
-        private const string DefaultBaseCachePath = @".IdentityService";
-
-        private const int ConnectRetryCount = 1;
-        private const int ConnectRetryWaitInMs = 100;
-
-        /// <summary>
-        /// Aad configuration file extension
-        /// </summary>
-        private const string ConfigFileExtension = ".Configuration.json";
-
-        /// <summary>
-        /// Provider for github accounts
-        /// </summary>
-        private const string GitHubProvider = "github.com";
-
+        private const string DefaultBaseCachePath = ".IdentityService";
         private static readonly string s_homeEnvVar = Environment.GetEnvironmentVariable("HOME");
         private static readonly string s_lognameEnvVar = Environment.GetEnvironmentVariable("LOGNAME");
         private static readonly string s_userEnvVar = Environment.GetEnvironmentVariable("USER");
@@ -42,7 +29,7 @@ namespace Microsoft.Identity.Extensions
         /// </summary>
         /// <param name="loggingAction">Logging action</param>
         /// <returns>false always in order to skip the exception filter</returns>
-        public static bool LogExceptionAndDoNotHandler(Action loggingAction)
+        public static bool LogExceptionAndDoNotHandle(Action loggingAction)
         {
             loggingAction();
             return false;
@@ -64,17 +51,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>Default artifact location</returns>
         public static string GetDefaultArtifactPath()
         {
-            return Path.Combine(SharedUtilities.GetIdentityServiceRootDirectory(), SharedUtilities.DefaultBaseCachePath);
-        }
-
-        /// <summary>
-        /// Generate the default artifact location
-        /// </summary>
-        /// <param name="windowsOS">Is the operating system windows or not</param>
-        /// <returns>Default artifact location</returns>
-        public static string GetDefaultArtifactPath(bool windowsOS)
-        {
-            return Path.Combine(SharedUtilities.GetIdentityServiceUserRootDirectory(windowsOS), SharedUtilities.DefaultBaseCachePath);
+            return Path.Combine(SharedUtilities.GetRootDirectory(), SharedUtilities.DefaultBaseCachePath);
         }
 
         /// <summary>
@@ -115,67 +92,23 @@ namespace Microsoft.Identity.Extensions
         }
 
         /// <summary>
-        /// Gets the users home directory
+        /// Gets the users root directory
         /// </summary>
-        /// <returns>Home directory</returns>
-        public static string GetIdentityServiceRootDirectory()
+        /// <returns>Root directory</returns>
+        public static string GetRootDirectory()
         {
-            bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-            return GetIdentityServiceUserRootDirectory(isWindows);
+            return GetUserRootDirectory();
         }
 
         /// <summary>
         /// Generate the default file location
         /// </summary>
-        /// <param name="windowsOS">Is the operating system windows or not</param>
-        /// <returns>Home directory</returns>
-        internal static string GetIdentityServiceUserRootDirectory(bool windowsOS)
+        /// <returns>Root directory</returns>
+        internal static string GetUserRootDirectory()
         {
-            return !windowsOS ? SharedUtilities.GetUserHomeDirOnUnix() : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        }
-
-        /// <summary>
-        /// Get the based directory for the service hub
-        /// </summary>
-        /// <returns>base directory for theservice hub</returns>
-        internal static string GetServiceHubBaseDirforUnix()
-        {
-            return Path.Combine(SharedUtilities.GetUserHomeDirOnUnix(), ".ServiceHub");
-        }
-
-        /// <summary>
-        /// Determines if the authority is an ADFS authority
-        /// </summary>
-        /// <param name="authority">Uri to check if it is ADFS or not</param>
-        /// <returns>true if the authority is an adfs authority, false otherwise</returns>
-        internal static bool IsADFSAuthority(Uri authority)
-        {
-            // Taken from ADAL src/ADAL.PCL/Authority/Authenticator.cs
-            if (authority == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                string path = authority.AbsolutePath.Substring(1);
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    return false;
-                }
-
-                if (!path.EndsWith("/", StringComparison.OrdinalIgnoreCase))
-                {
-                    path = path + "/";
-                }
-
-                string firstPath = path.Substring(0, path.IndexOf("/", StringComparison.Ordinal));
-                return string.Compare(firstPath, "adfs", StringComparison.OrdinalIgnoreCase) == 0;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            return !IsWindowsPlatform()
+                ? SharedUtilities.GetUserHomeDirOnUnix()
+                : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         }
 
         /// <summary>
@@ -187,7 +120,7 @@ namespace Microsoft.Identity.Extensions
         /// <param name="lockRetryWaitInMs">Interval to wait for before retrying to acquire the file lock</param>
         /// <param name="cancellationToken">cancellationToken</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        internal static async Task ExecuteWithinLockAsync(Func<Task> function, string lockFileLocation, int lockRetryCount, int lockRetryWaitInMs, CancellationToken cancellationToken = default(CancellationToken))
+        internal static async Task ExecuteWithinLockAsync(Func<Task> function, string lockFileLocation, int lockRetryCount, int lockRetryWaitInMs, CancellationToken cancellationToken = default)
         {
             Exception exception = null;
             FileStream fileStream = null;
@@ -222,26 +155,6 @@ namespace Microsoft.Identity.Extensions
         }
 
         /// <summary>
-        /// Remove prompt=login
-        /// </summary>
-        /// <param name="queryParameters">query parameters</param>
-        /// <returns>returns string with prompt=login removed</returns>
-        internal static string RemovePromptQueryParameter(string queryParameters)
-        {
-            if(string.IsNullOrWhiteSpace(queryParameters))
-            {
-                return queryParameters;
-            }
-
-            foreach (string stringToRemove in new string[] { "&prompt=login", "prompt=login" })
-            {
-                queryParameters = queryParameters.ToLowerInvariant().Replace(stringToRemove, string.Empty);
-            }
-
-            return queryParameters;
-        }
-
-        /// <summary>
         /// Execute a function within a file lock
         /// </summary>
         /// <param name="function">Function to execute within the filelock</param>
@@ -249,7 +162,7 @@ namespace Microsoft.Identity.Extensions
         /// <param name="lockRetryCount">Number of retry attempts for acquiring the file lock</param>
         /// <param name="lockRetryWaitInMs">Interval to wait for before retrying to acquire the file lock</param>
         /// <param name="cancellationToken">cancellationToken</param>
-        internal static void ExecuteWithinLock(Func<bool> function, string lockFileLocation, int lockRetryCount, int lockRetryWaitInMs, CancellationToken cancellationToken = default(CancellationToken))
+        internal static void ExecuteWithinLock(Func<bool> function, string lockFileLocation, int lockRetryCount, int lockRetryWaitInMs, CancellationToken cancellationToken = default)
         {
             Exception exception = null;
             FileStream fileStream = null;

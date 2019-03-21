@@ -1,25 +1,33 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.Identity.Extensions.Adal
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-#pragma warning disable IDE1006 // Naming Styles
+    /// <summary>
+    /// An immutable class containing information required to instantiate storage objects for ADAL caches in various platforms.
+    /// </summary>
     public class AdalStorageCreationProperties
     {
+        /// <summary>
+        /// This constructor is intentionally internal. To get one of these objects use <see cref="AdalStorageCreationPropertiesBuilder.Build"/>.
+        /// </summary>
         internal AdalStorageCreationProperties(
-            string adalCacheFileName,
+            string cacheFileName,
+            string cacheDirectory,
             string macKeyChainServiceName,
             string macKeyChainAccountName,
             string keyringSchemaName,
             string keyringCollection,
             string keyringSecretLabel,
-            string keyringAttribute1,
-            string keyringAttribute2
-            )
+            KeyValuePair<string, string> keyringAttribute1,
+            KeyValuePair<string, string> keyringAttribute2)
         {
-            ADALCacheFileName = adalCacheFileName;
+            CacheFileName = cacheFileName;
+            CacheDirectory = cacheDirectory;
             MacKeyChainServiceName = macKeyChainServiceName;
             MacKeyChainAccountName = macKeyChainAccountName;
             KeyringSchemaName = keyringSchemaName;
@@ -29,82 +37,49 @@ namespace Microsoft.Identity.Extensions.Adal
             KeyringAttribute2 = keyringAttribute2;
         }
 
-        public readonly string ADALCacheFileName;
+        /// <summary>
+        /// The name of the cache file.
+        /// </summary>
+        public readonly string CacheFileName;
+
+        /// <summary>
+        /// The name of the directory containing the cache file.
+        /// </summary>
+        public readonly string CacheDirectory;
+
+        /// <summary>
+        /// The mac keychain service name.
+        /// </summary>
         public readonly string MacKeyChainServiceName;
+
+        /// <summary>
+        /// The mac keychain account name.
+        /// </summary>
         public readonly string MacKeyChainAccountName;
+
+        /// <summary>
+        /// The linux keyring schema name.
+        /// </summary>
         public readonly string KeyringSchemaName;
+
+        /// <summary>
+        /// The linux keyring collection.
+        /// </summary>
         public readonly string KeyringCollection;
+
+        /// <summary>
+        /// The linux keyring secret label.
+        /// </summary>
         public readonly string KeyringSecretLabel;
-        public readonly string KeyringAttribute1;
-        public readonly string KeyringAttribute2;
-    }
 
-    public class AdalStorageCreationPropertiesBuilder
-    {
-        private readonly string _adalCacheFileName;
-        private string _macKeyChainServiceName;
-        private string _macKeyChainAccountName;
-        private string _keyringSchemaName;
-        private string _keyringCollection;
-        private string _keyringSecretLabel;
-        private string _keyringAttribute1;
-        private string _keyringAttribute2;
+        /// <summary>
+        /// Additional linux keyring attribute.
+        /// </summary>
+        public readonly KeyValuePair<string, string> KeyringAttribute1;
 
-        public AdalStorageCreationPropertiesBuilder(string cacheFileName)
-        {
-            _adalCacheFileName = cacheFileName;
-        }
-
-        public AdalStorageCreationProperties Build()
-        {
-            return new AdalStorageCreationProperties(
-                _adalCacheFileName,
-                _macKeyChainServiceName,
-                _macKeyChainAccountName,
-                _keyringSchemaName,
-                _keyringCollection,
-                _keyringSecretLabel,
-                _keyringAttribute1,
-                _keyringAttribute2);
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithMacKeyChainServiceName(string serviceName)
-        {
-            _macKeyChainServiceName = serviceName;
-            return this;
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithMacKeyChainAccountName(string accountName)
-        {
-            _macKeyChainAccountName = accountName;
-            return this;
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithKeyringSchemaName(string schemaName)
-        {
-            _keyringSchemaName = schemaName;
-            return this;
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithKeyringCollection(string keyringCollection)
-        {
-            _keyringCollection = keyringCollection;
-            return this;
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithKeyringSecretLabel(string secretLabel)
-        {
-            _keyringSecretLabel = secretLabel;
-            return this;
-        }
-
-        public AdalStorageCreationPropertiesBuilder WithKeyringAttributes(string attribute1, string attribute2)
-        {
-            _keyringAttribute1 = attribute1;
-            _keyringAttribute2 = attribute2;
-            return this;
-        }
+        /// <summary>
+        /// Additional linux keyring attribute.
+        /// </summary>
+        public readonly KeyValuePair<string, string> KeyringAttribute2;
     }
 }
-    #pragma warning restore IDE1006 // Naming Styles
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

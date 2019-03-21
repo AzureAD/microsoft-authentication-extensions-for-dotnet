@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Diagnostics;
@@ -23,7 +24,7 @@ namespace Microsoft.Identity.Extensions.Msal
 
         private static readonly Lazy<MsalCacheStorage> s_staticStore = new Lazy<MsalCacheStorage>(() =>
         {
-            return new MsalCacheStorage(s_storageCreationProperties, cacheFilePath: null, instanceName: null, logger: s_staticLogger.Value);
+            return new MsalCacheStorage(s_storageCreationProperties, logger: s_staticLogger.Value);
         });
 
         private static MsalStorageCreationProperties s_storageCreationProperties;
@@ -84,6 +85,17 @@ namespace Microsoft.Identity.Extensions.Msal
         }
 
         /// <summary>
+        /// Gets the user's root directory across platforms.
+        /// </summary>
+        public static string UserRootDirectory
+        {
+            get
+            {
+                return SharedUtilities.GetDefaultArtifactPath();
+            }
+        }
+
+        /// <summary>
         /// Gets a singleton instance of the TokenCacheHelper
         /// </summary>
         /// <param name="tokenCache">Token Cache</param>
@@ -100,7 +112,7 @@ namespace Microsoft.Identity.Extensions.Msal
                     return new MsalCacheHelper(tokenCache, s_staticStore.Value, s_staticLogger.Value);
                 }
                 catch (Exception e)
-                when (SharedUtilities.LogExceptionAndDoNotHandler(() => s_staticLogger.Value.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem creating '{nameof(RegisterCache)}' : '{e}'"))))
+                when (SharedUtilities.LogExceptionAndDoNotHandle(() => s_staticLogger.Value.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem creating '{nameof(RegisterCache)}' : '{e}'"))))
                 {
                     throw;
                 }

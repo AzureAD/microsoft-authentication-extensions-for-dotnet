@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Diagnostics;
@@ -31,15 +32,13 @@ namespace Microsoft.Identity.Extensions.Msal
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
         /// </summary>
         /// <param name="creationProperties">Properties for creating the cache storage on disk</param>
-        /// <param name="cacheFilePath">cache file path for msal cache storage</param>
-        /// <param name="instanceName">instance name for msal cache storage</param>
         /// <param name="logger">logger</param>
-        public MsalCacheStorage(MsalStorageCreationProperties creationProperties, string cacheFilePath, string instanceName, TraceSource logger)
+        public MsalCacheStorage(MsalStorageCreationProperties creationProperties, TraceSource logger)
         {
             _creationProperties = creationProperties;
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{cacheFilePath}' and instance name '{instanceName}"));
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'"));
 
             try
             {
@@ -52,28 +51,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), FormattableString.Invariant($"{Guid.NewGuid().FormatGuidAsString()}.dll")));
             }
 
-            if (string.IsNullOrWhiteSpace(cacheFilePath))
-            {
-                try
-                {
-                    string localDataPath = SharedUtilities.GetDefaultArtifactPath();
-                    logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Using the home directory '{localDataPath}'"));
-
-                    string basepath = string.IsNullOrEmpty(instanceName) ? string.Empty : instanceName;
-                    logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Using the BasePath '{basepath}'"));
-                    CacheFilePath = Path.Combine(localDataPath, basepath, _creationProperties.MSALCacheFileName);
-                    logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Generated cache file path '{CacheFilePath}'"));
-                }
-                catch (Exception e)
-                {
-                    logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"There was a problem generating the cache file path '{e}'"));
-                    throw;
-                }
-            }
-            else
-            {
-                CacheFilePath = cacheFilePath;
-            }
+            CacheFilePath = Path.Combine(creationProperties.CacheDirectory, creationProperties.CacheFileName);
 
             _lastWriteTime = _fileNotFoundOffset;
             logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Finished initializing '{nameof(MsalCacheStorage)}'"));
@@ -160,7 +138,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 ClearCore();
             }
 
-            // If the file does not exist this
+            // If the file does not exist this returns a time in the far distant past.
             _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
             return data;
         }
@@ -241,10 +219,10 @@ namespace Microsoft.Identity.Extensions.Msal
                     schema: GetLibsecretSchema(),
                     cancellable: IntPtr.Zero,
                     error: out error,
-                    attribute1Type: "string1",
-                    attribute1Value: _creationProperties.KeyringAttribute1,
-                    attribute2Type: "string2",
-                    attribute2Value: _creationProperties.KeyringAttribute2,
+                    attribute1Type: _creationProperties.KeyringAttribute1.Key,
+                    attribute1Value: _creationProperties.KeyringAttribute1.Value,
+                    attribute2Type: _creationProperties.KeyringAttribute2.Key,
+                    attribute2Value: _creationProperties.KeyringAttribute2.Value,
                     end: IntPtr.Zero);
 
                 if (error != IntPtr.Zero)
@@ -313,10 +291,10 @@ namespace Microsoft.Identity.Extensions.Msal
                         password: Convert.ToBase64String(data),
                         cancellable: IntPtr.Zero,
                         error: out error,
-                        attribute1Type: "string1",
-                        attribute1Value: _creationProperties.KeyringAttribute1,
-                        attribute2Type: "string2",
-                        attribute2Value: _creationProperties.KeyringAttribute2,
+                        attribute1Type: _creationProperties.KeyringAttribute1.Key,
+                        attribute1Value: _creationProperties.KeyringAttribute1.Value,
+                        attribute2Type: _creationProperties.KeyringAttribute2.Key,
+                        attribute2Value: _creationProperties.KeyringAttribute2.Value,
                         end: IntPtr.Zero);
 
                     if (error != IntPtr.Zero)
@@ -364,18 +342,18 @@ namespace Microsoft.Identity.Extensions.Msal
 
             TryProcessFile(() =>
             {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Before deleting the cache file");
-                    try
-                    {
-                        File.Delete(CacheFilePath);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem deleting the cache file '{e}'"));
-                    }
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Before deleting the cache file");
+                try
+                {
+                    File.Delete(CacheFilePath);
+                }
+                catch (Exception e)
+                {
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem deleting the cache file '{e}'"));
+                }
 
-                    _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"After deleting the cache file. Last write time is '{_lastWriteTime}'"));
+                _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"After deleting the cache file. Last write time is '{_lastWriteTime}'"));
             });
 
             if (SharedUtilities.IsMacPlatform())
@@ -396,10 +374,10 @@ namespace Microsoft.Identity.Extensions.Msal
                     schema: GetLibsecretSchema(),
                     cancellable: IntPtr.Zero,
                     error: out error,
-                    attribute1Type: "string1",
-                    attribute1Value: _creationProperties.KeyringAttribute1,
-                    attribute2Type: "string2",
-                    attribute2Value: _creationProperties.KeyringAttribute2,
+                    attribute1Type: _creationProperties.KeyringAttribute1.Key,
+                    attribute1Value: _creationProperties.KeyringAttribute1.Value,
+                    attribute2Type: _creationProperties.KeyringAttribute2.Key,
+                    attribute2Value: _creationProperties.KeyringAttribute2.Value,
                     end: IntPtr.Zero);
 
                 if (error != IntPtr.Zero)

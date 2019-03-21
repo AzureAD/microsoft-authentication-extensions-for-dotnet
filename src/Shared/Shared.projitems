@@ -9,6 +9,13 @@
     <Import_RootNamespace>Microsoft.Identity.Extensions</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\**\*.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EnvUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Libsecret.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LinuxNativeMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MacKeyChain.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MacNativeMethods.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SharedUtilities.cs" />
   </ItemGroup>
 </Project>

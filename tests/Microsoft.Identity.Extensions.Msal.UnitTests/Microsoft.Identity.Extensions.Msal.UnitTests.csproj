@@ -17,22 +17,6 @@
     <ProjectReference Include="..\..\src\Microsoft.Identity.Extensions.Msal\Microsoft.Identity.Extensions.Msal.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.Identity.Extensions</CustomToolNamespace>
-    </EmbeddedResource>
-  </ItemGroup>
-
   <Import Project="..\..\src\Shared\Shared.projitems" Label="Shared" />
 
 </Project>

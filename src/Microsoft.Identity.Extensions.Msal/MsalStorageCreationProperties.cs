@@ -1,25 +1,33 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.Identity.Extensions.Msal
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-#pragma warning disable IDE1006 // Naming Styles
+    /// <summary>
+    /// An immutable class containing information required to instantiate storage objects for MSAL caches in various platforms.
+    /// </summary>
     public class MsalStorageCreationProperties
     {
+        /// <summary>
+        /// This constructor is intentionally internal. To get one of these objects use <see cref="MsalStorageCreationPropertiesBuilder.Build"/>.
+        /// </summary>
         internal MsalStorageCreationProperties(
-            string msalCacheFileName,
+            string cacheFileName,
+            string cacheDirectory,
             string macKeyChainServiceName,
             string macKeyChainAccountName,
             string keyringSchemaName,
             string keyringCollection,
             string keyringSecretLabel,
-            string keyringAttribute1,
-            string keyringAttribute2
-            )
+            KeyValuePair<string, string> keyringAttribute1,
+            KeyValuePair<string, string> keyringAttribute2)
         {
-            MSALCacheFileName = msalCacheFileName;
+            CacheFileName = cacheFileName;
+            CacheDirectory = cacheDirectory;
             MacKeyChainServiceName = macKeyChainServiceName;
             MacKeyChainAccountName = macKeyChainAccountName;
             KeyringSchemaName = keyringSchemaName;
@@ -29,82 +37,49 @@ namespace Microsoft.Identity.Extensions.Msal
             KeyringAttribute2 = keyringAttribute2;
         }
 
-        public readonly string MSALCacheFileName; //= "msal.cache";
-        public readonly string MacKeyChainServiceName; //= "Microsoft.Developer.IdentityService";
-        public readonly string MacKeyChainAccountName; //= "MSALCache";
-        public readonly string KeyringSchemaName; //= "msal.cache";
-        public readonly string KeyringCollection; //= "default";
-        public readonly string KeyringSecretLabel; //= "MSALCache";
-        public readonly string KeyringAttribute1; //= "Microsoft.Developer.IdentityService";
-        public readonly string KeyringAttribute2; //= "1.0.0.0";
+        /// <summary>
+        /// The name of the cache file.
+        /// </summary>
+        public readonly string CacheFileName;
+
+        /// <summary>
+        /// The name of the directory containing the cache file.
+        /// </summary>
+        public readonly string CacheDirectory;
+
+        /// <summary>
+        /// The mac keychain service name.
+        /// </summary>
+        public readonly string MacKeyChainServiceName;
+
+        /// <summary>
+        /// The mac keychain account name.
+        /// </summary>
+        public readonly string MacKeyChainAccountName;
+
+        /// <summary>
+        /// The linux keyring schema name.
+        /// </summary>
+        public readonly string KeyringSchemaName;
+
+        /// <summary>
+        /// The linux keyring collection.
+        /// </summary>
+        public readonly string KeyringCollection;
+
+        /// <summary>
+        /// The linux keyring secret label.
+        /// </summary>
+        public readonly string KeyringSecretLabel;
+
+        /// <summary>
+        /// Additional linux keyring attribute.
+        /// </summary>
+        public readonly KeyValuePair<string, string> KeyringAttribute1;
+
+        /// <summary>
+        /// Additional linux keyring attribute.
+        /// </summary>
+        public readonly KeyValuePair<string, string> KeyringAttribute2;
     }
-
-    public class MsalStorageCreationPropertiesBuilder
-    {
-        private readonly string _msalCacheFileName;
-        private string _macKeyChainServiceName;
-        private string _macKeyChainAccountName;
-        private string _keyringSchemaName;
-        private string _keyringCollection;
-        private string _keyringSecretLabel;
-        private string _keyringAttribute1;
-        private string _keyringAttribute2;
-
-        public MsalStorageCreationPropertiesBuilder(string cacheFileName)
-        {
-            _msalCacheFileName = cacheFileName;
-        }
-
-        public MsalStorageCreationProperties Build()
-        {
-            return new MsalStorageCreationProperties(
-                _msalCacheFileName,
-                _macKeyChainServiceName,
-                _macKeyChainAccountName,
-                _keyringSchemaName,
-                _keyringCollection,
-                _keyringSecretLabel,
-                _keyringAttribute1,
-                _keyringAttribute2);
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithMacKeyChainServiceName(string serviceName)
-        {
-            _macKeyChainServiceName = serviceName;
-            return this;
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithMacKeyChainAccountName(string accountName)
-        {
-            _macKeyChainAccountName = accountName;
-            return this;
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithKeyringSchemaName(string schemaName)
-        {
-            _keyringSchemaName = schemaName;
-            return this;
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithKeyringCollection(string keyringCollection)
-        {
-            _keyringCollection = keyringCollection;
-            return this;
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithKeyringSecretLabel(string secretLabel)
-        {
-            _keyringSecretLabel = secretLabel;
-            return this;
-        }
-
-        public MsalStorageCreationPropertiesBuilder WithKeyringAttributes(string attribute1, string attribute2)
-        {
-            _keyringAttribute1 = attribute1;
-            _keyringAttribute2 = attribute2;
-            return this;
-        }
-    }
-#pragma warning restore IDE1006 // Naming Styles
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

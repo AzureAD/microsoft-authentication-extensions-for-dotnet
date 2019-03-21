@@ -1,6 +1,8 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -21,13 +23,14 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new MsalStorageCreationPropertiesBuilder("msal.cache");
-            builder = builder.WithMacKeyChainAccountName("Microsoft.Developer.IdentityService");
-            builder = builder.WithMacKeyChainServiceName("MSALCache");
-            builder = builder.WithKeyringSchemaName("msal.cache");
-            builder = builder.WithKeyringCollection("default");
-            builder = builder.WithKeyringSecretLabel("MSALCache");
-            builder = builder.WithKeyringAttributes("Microsoft.Developer.IdentityService", "1.0.0.0");
+            var builder = new MsalStorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
+            builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
+            builder = builder.WithLinuxKeyring(
+                schemaName: "msal.cache",
+                collection: "default",
+                secretLabel: "MSALCache",
+                attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
+                attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
             s_storageCreationProperties = builder.Build();
         }
 
@@ -46,7 +49,7 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalNewStoreNoFile()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
+            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
             Assert.IsFalse(store.HasChanged);
             Assert.IsFalse(store.ReadData().Any());
         }
@@ -54,7 +57,7 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalWriteEmptyData()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
+            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             store.WriteData(new byte[0]);
@@ -65,7 +68,7 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalWriteGoodData()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
+            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             byte[] data = { 2, 2, 3 };
@@ -88,8 +91,8 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalTestClear()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
-            var store2 = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
+            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store2 = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
             Assert.IsNotNull(Exception<ArgumentNullException>(() => store.WriteData(null)));
 
             byte[] data = { 2, 2, 3 };
@@ -110,35 +113,6 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
             Assert.IsFalse(store.ReadData().Any());
             Assert.IsFalse(store2.ReadData().Any());
             Assert.IsFalse(File.Exists(CacheFilePath));
-        }
-
-        [TestMethod]
-        public void MsalTestRootSuffixWithNullSuffixCacheAndRegistry()
-        {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: null, logger: _logger);
-            Assert.AreEqual(store.CacheFilePath, CacheFilePath, ignoreCase: true, culture: CultureInfo.CurrentCulture);
-            string localDataPath = SharedUtilities.GetDefaultArtifactPath();
-
-            store = new MsalCacheStorage(s_storageCreationProperties, null, instanceName: string.Empty, logger: _logger);
-
-            string cacheFilePath = Path.Combine(localDataPath, @"msal.cache");
-            Assert.AreEqual(store.CacheFilePath, cacheFilePath, ignoreCase: true, culture: CultureInfo.CurrentCulture);
-
-            store = new MsalCacheStorage(s_storageCreationProperties, null, instanceName: null, logger: _logger);
-            Assert.AreEqual(store.CacheFilePath, cacheFilePath, ignoreCase: true, culture: CultureInfo.CurrentCulture);
-        }
-
-        [TestMethod]
-        public void MsalTestRootSuffixWithGoodSuffixCacheAndRegistry()
-        {
-            var store = new MsalCacheStorage(s_storageCreationProperties, CacheFilePath, instanceName: "Exp", logger: _logger);
-            Assert.AreEqual(store.CacheFilePath, CacheFilePath, ignoreCase: true, culture: CultureInfo.CurrentCulture);
-            string localDataPath = SharedUtilities.GetDefaultArtifactPath();
-
-            store = new MsalCacheStorage(s_storageCreationProperties, null, instanceName: "Exp", logger: _logger);
-            string cacheFilePath = Path.Combine(localDataPath, "Exp", @"msal.cache");
-
-            Assert.AreEqual(cacheFilePath, store.CacheFilePath, ignoreCase: true, culture: CultureInfo.CurrentCulture);
         }
 
         /// <summary>

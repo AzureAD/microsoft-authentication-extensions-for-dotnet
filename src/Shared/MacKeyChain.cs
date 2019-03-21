@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.Diagnostics;
@@ -30,53 +31,52 @@ namespace Microsoft.Identity.Extensions
             try
             {
                 // check if the key already exists
-                uint valueLength = 0;
-                int status = NativeMethods.SecKeychainFindGenericPassword(
-                                                                          keychainOrArray: IntPtr.Zero,
-                                                                          serviceNameLength: (uint)serviceName.Length,
-                                                                          serviceName: serviceName,
-                                                                          accountNameLength: (uint)accountName.Length,
-                                                                          accountName: accountName,
-                                                                          passwordLength: out valueLength,
-                                                                          passwordData: out valuePtr,
-                                                                          itemRef: out itemRef);
+                int status = MacNativeMethods.SecKeychainFindGenericPassword(
+                    keychainOrArray: IntPtr.Zero,
+                    serviceNameLength: (uint)serviceName.Length,
+                    serviceName: serviceName,
+                    accountNameLength: (uint)accountName.Length,
+                    accountName: accountName,
+                    passwordLength: out uint valueLength,
+                    passwordData: out valuePtr,
+                    itemRef: out itemRef);
 
-                if (status != NativeMethods.errSecSuccess
-                    && status != NativeMethods.errSecItemNotFound)
+                if (status != MacNativeMethods.errSecSuccess
+                    && status != MacNativeMethods.errSecItemNotFound)
                 {
-                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainFindFailed, status));
+                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainFindFailed, status));
                 }
 
                 if (itemRef != IntPtr.Zero)
                 {
                     // key already exists so update it
-                    status = NativeMethods.SecKeychainItemModifyAttributesAndData(
-                                                                                  itemRef: itemRef,
-                                                                                  attrList: IntPtr.Zero,
-                                                                                  length: (uint)value.Length,
-                                                                                  data: value);
+                    status = MacNativeMethods.SecKeychainItemModifyAttributesAndData(
+                        itemRef: itemRef,
+                        attrList: IntPtr.Zero,
+                        length: (uint)value.Length,
+                        data: value);
 
-                    if (status != NativeMethods.errSecSuccess)
+                    if (status != MacNativeMethods.errSecSuccess)
                     {
-                        throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainUpdateFailed, status));
+                        throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainUpdateFailed, status));
                     }
                 }
                 else
                 {
                     // key doesn't exist. add key value data
-                    status = NativeMethods.SecKeychainAddGenericPassword(
-                                                                         keychain: IntPtr.Zero,
-                                                                         serviceNameLength: (uint)serviceName.Length,
-                                                                         serviceName: serviceName,
-                                                                         accountNameLength: (uint)accountName.Length,
-                                                                         accountName: accountName,
-                                                                         passwordLength: (uint)value.Length,
-                                                                         passwordData: value,
-                                                                         itemRef: out itemRef);
+                    status = MacNativeMethods.SecKeychainAddGenericPassword(
+                        keychain: IntPtr.Zero,
+                        serviceNameLength: (uint)serviceName.Length,
+                        serviceName: serviceName,
+                        accountNameLength: (uint)accountName.Length,
+                        accountName: accountName,
+                        passwordLength: (uint)value.Length,
+                        passwordData: value,
+                        itemRef: out itemRef);
 
-                    if (status != NativeMethods.errSecSuccess)
+                    if (status != MacNativeMethods.errSecSuccess)
                     {
-                        throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainInsertFailed, status));
+                        throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainInsertFailed, status));
                     }
                 }
             }
@@ -106,33 +106,31 @@ namespace Microsoft.Identity.Extensions
             try
             {
                 // get the key value
-                uint valueLength = 0;
-
                 logging.AppendLine(FormattableString.Invariant($"SecKeychainFindGenericPassword, for serviceName {serviceName} and accountName {accountName}"));
-                int status = NativeMethods.SecKeychainFindGenericPassword(
-                                                                          keychainOrArray: IntPtr.Zero,
-                                                                          serviceNameLength: (uint)serviceName.Length,
-                                                                          serviceName: serviceName,
-                                                                          accountNameLength: (uint)accountName.Length,
-                                                                          accountName: accountName,
-                                                                          passwordLength: out valueLength,
-                                                                          passwordData: out valuePtr,
-                                                                          itemRef: out itemRef);
+                int status = MacNativeMethods.SecKeychainFindGenericPassword(
+                    keychainOrArray: IntPtr.Zero,
+                    serviceNameLength: (uint)serviceName.Length,
+                    serviceName: serviceName,
+                    accountNameLength: (uint)accountName.Length,
+                    accountName: accountName,
+                    passwordLength: out uint valueLength,
+                    passwordData: out valuePtr,
+                    itemRef: out itemRef);
 
                 logging.AppendLine(FormattableString.Invariant($"Status: '{status}'"));
 
-                if (status == NativeMethods.errSecItemNotFound)
+                if (status == MacNativeMethods.errSecItemNotFound)
                 {
                     eventType = TraceEventType.Error;
                     logging.AppendLine(FormattableString.Invariant($"Failed, item not found"));
                     return null;
                 }
 
-                if (status != NativeMethods.errSecSuccess)
+                if (status != MacNativeMethods.errSecSuccess)
                 {
                     eventType = TraceEventType.Error;
                     logging.AppendLine(FormattableString.Invariant($"Failed, other error {status}"));
-                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainFindFailed, status));
+                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainFindFailed, status));
                 }
 
                 if (itemRef != IntPtr.Zero)
@@ -164,25 +162,24 @@ namespace Microsoft.Identity.Extensions
             try
             {
                 // check if the key exists
-                uint valueLength = 0;
-                int status = NativeMethods.SecKeychainFindGenericPassword(
-                                                                          keychainOrArray: IntPtr.Zero,
-                                                                          serviceNameLength: (uint)serviceName.Length,
-                                                                          serviceName: serviceName,
-                                                                          accountNameLength: (uint)accountName.Length,
-                                                                          accountName: accountName,
-                                                                          passwordLength: out valueLength,
-                                                                          passwordData: out valuePtr,
-                                                                          itemRef: out itemRef);
+                int status = MacNativeMethods.SecKeychainFindGenericPassword(
+                    keychainOrArray: IntPtr.Zero,
+                    serviceNameLength: (uint)serviceName.Length,
+                    serviceName: serviceName,
+                    accountNameLength: (uint)accountName.Length,
+                    accountName: accountName,
+                    passwordLength: out uint valueLength,
+                    passwordData: out valuePtr,
+                    itemRef: out itemRef);
 
-                if (status == NativeMethods.errSecItemNotFound)
+                if (status == MacNativeMethods.errSecItemNotFound)
                 {
                     return;
                 }
 
-                if (status != NativeMethods.errSecSuccess)
+                if (status != MacNativeMethods.errSecSuccess)
                 {
-                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainFindFailed, status));
+                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainFindFailed, status));
                 }
 
                 if (itemRef == IntPtr.Zero)
@@ -191,11 +188,11 @@ namespace Microsoft.Identity.Extensions
                 }
 
                 // key exists so delete it
-                status = NativeMethods.SecKeychainItemDelete(itemRef);
+                status = MacNativeMethods.SecKeychainItemDelete(itemRef);
 
-                if (status != NativeMethods.errSecSuccess)
+                if (status != MacNativeMethods.errSecSuccess)
                 {
-                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Resources.MacKeyChainDeleteFailed, status));
+                    throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainDeleteFailed, status));
                 }
             }
             finally
@@ -214,7 +211,7 @@ namespace Microsoft.Identity.Extensions
         {
             if (itemRef != IntPtr.Zero)
             {
-                NativeMethods.CFRelease(itemRef);
+                MacNativeMethods.CFRelease(itemRef);
                 itemRef = IntPtr.Zero;
             }
         }
@@ -223,7 +220,7 @@ namespace Microsoft.Identity.Extensions
         {
             if (valuePtr != IntPtr.Zero)
             {
-                NativeMethods.SecKeychainItemFreeContent(attrList: IntPtr.Zero, data: valuePtr);
+                MacNativeMethods.SecKeychainItemFreeContent(attrList: IntPtr.Zero, data: valuePtr);
                 valuePtr = IntPtr.Zero;
             }
         }

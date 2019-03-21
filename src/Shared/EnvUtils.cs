@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -20,8 +23,7 @@ namespace Microsoft.Identity.Extensions
             string traceSourceLevelEnvVar = Environment.GetEnvironmentVariable(EnvUtils.TraceLevelEnvVarName);
             if (!string.IsNullOrEmpty(traceSourceLevelEnvVar))
             {
-                SourceLevels result;
-                if (Enum.TryParse<SourceLevels>(traceSourceLevelEnvVar, ignoreCase: true, result: out result))
+                if (Enum.TryParse<SourceLevels>(traceSourceLevelEnvVar, ignoreCase: true, result: out SourceLevels result))
                 {
                     level = result;
                 }
