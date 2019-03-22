@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF6F9ABE-66F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensions.Web", "src\Microsoft.Identity.WebExtensions\Microsoft.Identity.Extensions.Web.csproj", "{C1FABF57-2E87-4514-BE8F-FB727B93F3B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensions.Web", "src\Microsoft.Identity.Extensions.Web\Microsoft.Identity.Extensions.Web.csproj", "{C1FABF57-2E87-4514-BE8F-FB727B93F3B5}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "src\Shared\Shared.shproj", "{F575599F-41AD-4CDD-B0AD-3B659A43EE84}"
 EndProject

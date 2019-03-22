@@ -1,4 +1,10 @@
 
+# Build Status
+
+## Release Build
+
+[![Build Status](https://identitydivision.visualstudio.com/IDDP/_apis/build/status/CI/DotNet/.NET%20MSAL%20Extensions%20Release%20Build?branchName=master)](https://identitydivision.visualstudio.com/IDDP/_build/latest?definitionId=810&branchName=master)
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
