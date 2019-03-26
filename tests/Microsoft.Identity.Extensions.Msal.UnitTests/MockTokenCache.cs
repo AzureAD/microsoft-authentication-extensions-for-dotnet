@@ -17,17 +17,17 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
             throw new NotImplementedException();
         }
 
-        public void DeserializeAdalV3(byte[] adalV3State, bool merge = false)
+        public void DeserializeAdalV3(byte[] adalV3State)
         {
             throw new NotImplementedException();
         }
 
-        public void DeserializeMsalV2(byte[] msalV2State, bool merge = false)
+        public void DeserializeMsalV2(byte[] msalV2State)
         {
             throw new NotImplementedException();
         }
 
-        public void DeserializeMsalV3(byte[] msalV3State, bool merge = false)
+        public void DeserializeMsalV3(byte[] msalV3State)
         {
             throw new NotImplementedException();
         }

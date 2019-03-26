@@ -15,7 +15,7 @@ namespace Microsoft.Identity.Extensions.Web
 {
     internal class CrossPlatLock : IDisposable
     {
-        private const bool UseMutex = false;
+        private const bool UseMutex = true;
         private const int MutexTimeout = 60000;
         private const int LockfileRetryCount = 6000;
         private const int LockfileRetryWait = 10;
