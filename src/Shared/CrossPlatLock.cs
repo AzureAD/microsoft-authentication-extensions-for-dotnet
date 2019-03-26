@@ -60,12 +60,7 @@ namespace Microsoft.Identity.Extensions.Web
                 }
             }
 
-            if (fileStream == null && exception != null)
-            {
-                throw new InvalidOperationException("Could not get access to the shared lock file.", exception);
-            }
-
-            _lockFileStream = fileStream;
+            _lockFileStream = fileStream ?? throw new InvalidOperationException("Could not get access to the shared lock file.", exception);
         }
 
         private void InitializeMutex(string simpleName)

@@ -10,7 +10,7 @@ using Microsoft.Identity.Client.Cache;
 #pragma warning disable CS0618 // Type or member is obsolete (CacheData)
 namespace Microsoft.Identity.Extensions.Msal.UnitTests
 {
-    class MockTokenCache : ITokenCache
+    internal class MockTokenCache : ITokenCache
     {
         private TokenCacheCallback _beforeAccess;
         private TokenCacheCallback _afterAccess;

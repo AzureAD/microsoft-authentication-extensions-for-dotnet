@@ -28,8 +28,12 @@ namespace Microsoft.Identity.Extensions.Msal
             return new MsalCacheStorage(s_storageCreationProperties, logger: s_staticLogger.Value);
         });
 
-        internal static MsalStorageCreationProperties s_storageCreationProperties;
-        internal CrossPlatLock _cacheLock;
+        private static MsalStorageCreationProperties s_storageCreationProperties;
+
+        /// <summary>
+        /// Holds a lock object when this helper is accessing the cache. Null otherwise.
+        /// </summary>
+        internal CrossPlatLock CacheLock { get; private set; }
 
         /// <summary>
         /// Storage that handles the storing of the adal cache file on disk.
@@ -44,7 +48,7 @@ namespace Microsoft.Identity.Extensions.Msal
         /// <summary>
         /// Gets the token cache
         /// </summary>
-        internal readonly ITokenCache _userTokenCache;
+        private readonly ITokenCache _userTokenCache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheHelper"/> class.
@@ -142,7 +146,7 @@ namespace Microsoft.Identity.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
-            _cacheLock = new CrossPlatLock(
+            CacheLock = new CrossPlatLock(
                 Path.GetFileNameWithoutExtension(s_storageCreationProperties.CacheFileName),
                 Path.Combine(s_storageCreationProperties.CacheDirectory, s_storageCreationProperties.CacheFileName) + ".lockfile");
 
@@ -215,8 +219,8 @@ namespace Microsoft.Identity.Extensions.Msal
             finally
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
-                _cacheLock?.Dispose();
-                _cacheLock = null;
+                CacheLock?.Dispose();
+                CacheLock = null;
             }
         }
     }

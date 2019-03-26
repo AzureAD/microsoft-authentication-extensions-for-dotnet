@@ -87,8 +87,8 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
             Thread.Sleep(5000);
 
             // Make sure helper1 has the lock still, and helper2 doesn't
-            Assert.IsNotNull(helper1._cacheLock);
-            Assert.IsNull(helper2._cacheLock);
+            Assert.IsNotNull(helper1.CacheLock);
+            Assert.IsNull(helper2.CacheLock);
 
             // Allow thread1 to give up the lock, and wait for helper2 to get it
             resetEvent1.Set();
@@ -96,15 +96,15 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
             resetEvent4.Reset();
 
             // Make sure helper1 gave it up properly, and helper2 now owns the lock
-            Assert.IsNull(helper1._cacheLock);
-            Assert.IsNotNull(helper2._cacheLock);
+            Assert.IsNull(helper1.CacheLock);
+            Assert.IsNotNull(helper2.CacheLock);
 
             // Allow thread2 to give up the lock, and wait for it to complete
             resetEvent2.Set();
             resetEvent4.WaitOne();
 
             // Make sure thread2 cleaned up after itself as well
-            Assert.IsNull(helper2._cacheLock);
+            Assert.IsNull(helper2.CacheLock);
         }
     }
 }
