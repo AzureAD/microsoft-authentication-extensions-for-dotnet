@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CrossPlatLock.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EnvUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GError.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Libsecret.cs" />

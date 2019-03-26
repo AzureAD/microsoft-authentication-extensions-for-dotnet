@@ -5,7 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
     internal class Constants
     {

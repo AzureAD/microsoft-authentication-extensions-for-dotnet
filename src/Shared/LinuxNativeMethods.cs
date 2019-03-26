@@ -8,9 +8,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    internal static class LinuxNativeMethods
+internal static class LinuxNativeMethods
     {
         public const int RootUserId = 0;
 

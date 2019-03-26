@@ -17,7 +17,7 @@ namespace Microsoft.Identity.Extensions.Msal
     {
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
-        private readonly MsalStorageCreationProperties _creationProperties;
+        internal readonly MsalStorageCreationProperties _creationProperties;
         private readonly TraceSource _logger;
 
         // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
@@ -38,23 +38,23 @@ namespace Microsoft.Identity.Extensions.Msal
             _creationProperties = creationProperties;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'"));
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
 
             try
             {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Getting last write file time for a missing file in localappdata"));
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), FormattableString.Invariant($"{Guid.NewGuid().FormatGuidAsString()}.dll")));
+                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Getting last write file time for a missing file in localappdata");
+                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
             catch (Exception e)
             {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}"));
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), FormattableString.Invariant($"{Guid.NewGuid().FormatGuidAsString()}.dll")));
+                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}");
+                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
 
             CacheFilePath = Path.Combine(creationProperties.CacheDirectory, creationProperties.CacheFileName);
 
             _lastWriteTime = _fileNotFoundOffset;
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Finished initializing '{nameof(MsalCacheStorage)}'"));
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Finished initializing '{nameof(MsalCacheStorage)}'");
         }
 
         /// <summary>
@@ -75,13 +75,13 @@ namespace Microsoft.Identity.Extensions.Msal
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Has the store changed");
                 bool cacheFileExists = File.Exists(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache file exists '{cacheFileExists}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file exists '{cacheFileExists}'");
 
                 DateTimeOffset currentWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
                 bool hasChanged = currentWriteTime != _lastWriteTime;
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'"));
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache has changed '{hasChanged}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'");
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache has changed '{hasChanged}'");
                 return hasChanged;
             }
         }
@@ -93,7 +93,7 @@ namespace Microsoft.Identity.Extensions.Msal
         public byte[] ReadData()
         {
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadData Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadData Cache file exists '{cacheFileExists}'");
 
             byte[] data = null;
 
@@ -103,7 +103,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
                 byte[] fileData = ReadDataCore();
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Got '{fileData?.Length}' bytes from file storage"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{fileData?.Length}' bytes from file storage");
 
                 if (fileData != null && fileData.Length > 0)
                 {
@@ -132,7 +132,7 @@ namespace Microsoft.Identity.Extensions.Msal
             {
                 if (!alreadyLoggedException)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
                 }
 
                 ClearCore();
@@ -156,7 +156,7 @@ namespace Microsoft.Identity.Extensions.Msal
 
             try
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Got '{data?.Length}' bytes to write to storage"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
 #if NET46
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
@@ -169,7 +169,7 @@ namespace Microsoft.Identity.Extensions.Msal
             }
             catch (Exception e)
             {
-                _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while writing data from the {nameof(MsalCacheStorage)} : {e}"));
+                _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while writing data from the {nameof(MsalCacheStorage)} : {e}");
             }
         }
 
@@ -189,7 +189,7 @@ namespace Microsoft.Identity.Extensions.Msal
             byte[] fileData = null;
 
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore Cache file exists '{cacheFileExists}'");
 
             if (SharedUtilities.IsWindowsPlatform())
             {
@@ -198,7 +198,7 @@ namespace Microsoft.Identity.Extensions.Msal
                     TryProcessFile(() =>
                     {
                         fileData = File.ReadAllBytes(CacheFilePath);
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData.Length}' bytes from the file"));
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData.Length}' bytes from the file");
                     });
                 }
             }
@@ -207,7 +207,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, Before reading from mac keychain");
                 fileData = MacKeyChain.RetrieveKey(_creationProperties.MacKeyChainServiceName, _creationProperties.MacKeyChainAccountName, _logger);
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
             }
             else if (SharedUtilities.IsLinuxPlatform())
             {
@@ -230,11 +230,11 @@ namespace Microsoft.Identity.Extensions.Msal
                     try
                     {
                         GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while reading secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while reading secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during reading in the {nameof(MsalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during reading in the {nameof(MsalCacheStorage)} ex:'{e}'");
                     }
                 }
                 else if (string.IsNullOrEmpty(secret))
@@ -245,7 +245,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Base64 decoding the secret string");
                     fileData = Convert.FromBase64String(secret);
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData?.Length}' bytes from the keyring"));
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData?.Length}' bytes from the keyring");
                 }
             }
             else
@@ -264,7 +264,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 throw new ArgumentNullException(nameof(data));
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Write Data core, goign to write '{data.Length}' to the storage"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Write Data core, goign to write '{data.Length}' to the storage");
 
             if (SharedUtilities.IsMacPlatform() || SharedUtilities.IsLinuxPlatform())
             {
@@ -302,11 +302,11 @@ namespace Microsoft.Identity.Extensions.Msal
                         try
                         {
                             GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while saving secret to keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while saving secret to keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                         }
                         catch (Exception e)
                         {
-                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during saving in the {nameof(MsalCacheStorage)} ex:'{e}'"));
+                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during saving in the {nameof(MsalCacheStorage)} ex:'{e}'");
                         }
                     }
 
@@ -321,11 +321,11 @@ namespace Microsoft.Identity.Extensions.Msal
             if (!Directory.Exists(directoryForCacheFile))
             {
                 string directory = Path.GetDirectoryName(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Creating directory '{directory}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Creating directory '{directory}'");
                 Directory.CreateDirectory(directory);
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file");
 
             TryProcessFile(() =>
             {
@@ -338,7 +338,7 @@ namespace Microsoft.Identity.Extensions.Msal
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Clearing cache");
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore Cache file exists '{cacheFileExists}'");
 
             TryProcessFile(() =>
             {
@@ -349,11 +349,11 @@ namespace Microsoft.Identity.Extensions.Msal
                 }
                 catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem deleting the cache file '{e}'"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Problem deleting the cache file '{e}'");
                 }
 
                 _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"After deleting the cache file. Last write time is '{_lastWriteTime}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last write time is '{_lastWriteTime}'");
             });
 
             if (SharedUtilities.IsMacPlatform())
@@ -385,11 +385,11 @@ namespace Microsoft.Identity.Extensions.Msal
                     try
                     {
                         GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while clearing secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while clearing secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(MsalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(MsalCacheStorage)} ex:'{e}'");
                     }
                 }
 
@@ -417,7 +417,7 @@ namespace Microsoft.Identity.Extensions.Msal
 
                     if (tryCount == FileLockRetryCount)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing the cache file from the {nameof(MsalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing the cache file from the {nameof(MsalCacheStorage)} ex:'{e}'");
                     }
                 }
             }
@@ -440,7 +440,7 @@ namespace Microsoft.Identity.Extensions.Msal
 
                 if (_libsecretSchema == IntPtr.Zero)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Failed to create libsecret schema from the {nameof(MsalCacheStorage)}"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Failed to create libsecret schema from the {nameof(MsalCacheStorage)}");
                 }
 
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "After creating libsecret schema");

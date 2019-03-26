@@ -1,13 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// Error returned by libsecret library if saving or retrieving fails
-    /// https://developer.gnome.org/glib/stable/glib-Error-Reporting.html
-    /// </summary>
-    internal struct GError
+/// <summary>
+/// Error returned by libsecret library if saving or retrieving fails
+/// https://developer.gnome.org/glib/stable/glib-Error-Reporting.html
+/// </summary>
+internal struct GError
     {
 #pragma warning disable IDE1006 // Naming Styles
 #pragma warning disable CS0649 // Never assigned to (is marshalled)

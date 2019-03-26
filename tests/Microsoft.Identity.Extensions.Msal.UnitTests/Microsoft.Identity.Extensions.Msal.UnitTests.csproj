@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <DefineConstants>$(DefineConstants);MSAL</DefineConstants>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -16,7 +17,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Identity.Extensions.Msal\Microsoft.Identity.Extensions.Msal.csproj" />
   </ItemGroup>
-
-  <Import Project="..\..\src\Shared\Shared.projitems" Label="Shared" />
 
 </Project>

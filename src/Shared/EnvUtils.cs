@@ -6,9 +6,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    internal static class EnvUtils
+internal static class EnvUtils
     {
         // Trace level environment variable. Must be in sync with TraceLevelEnvironmentVariable in src/Node/logger.ts
         internal const string TraceLevelEnvVarName = "SERVICEHUBTRACELEVEL";

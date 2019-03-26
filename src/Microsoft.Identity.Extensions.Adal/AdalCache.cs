@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
@@ -22,6 +23,7 @@ namespace Microsoft.Identity.Extensions.Adal
         /// Logger to log events to.
         /// </summary>
         private readonly TraceSource _logger;
+        private CrossPlatLock _cacheLock;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AdalCache"/> class.
@@ -40,7 +42,7 @@ namespace Microsoft.Identity.Extensions.Adal
 
             byte[] data = _store.ReadData();
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Read '{data?.Length}' bytes from storage"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{data?.Length}' bytes from storage");
 
             if (data != null && data.Length > 0)
             {
@@ -51,7 +53,7 @@ namespace Microsoft.Identity.Extensions.Adal
                 }
                 catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while deserializing the data during initialization of {nameof(AdalCache)} : {e}"));
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(AdalCache)} : {e}");
                     DeserializeMsalV3(null);
                     _store.Clear();
                 }
@@ -66,11 +68,16 @@ namespace Microsoft.Identity.Extensions.Adal
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
+            _cacheLock = new CrossPlatLock(
+                Path.GetFileNameWithoutExtension(_store.CreationProperties.CacheFileName),
+                Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile");
+
             if (_store.HasChanged)
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
                 byte[] fileData = _store.ReadData();
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Read '{fileData?.Length}' bytes from storage"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
 
                 if (fileData != null && fileData.Length > 0)
                 {
@@ -81,7 +88,7 @@ namespace Microsoft.Identity.Extensions.Adal
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}");
                         _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                         // Clear the memory cache
@@ -105,30 +112,39 @@ namespace Microsoft.Identity.Extensions.Adal
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
 
-            // if the access operation resulted in a cache update
-            if (HasStateChanged)
+            try
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access, cache in memory HasChanged");
-                try
+                // if the access operation resulted in a cache update
+                if (HasStateChanged)
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before Write Store");
-                    byte[] data = SerializeMsalV3();
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Serializing '{data.Length}' bytes"));
-                    _store.WriteData(data);
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access, cache in memory HasChanged");
+                    try
+                    {
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before Write Store");
+                        byte[] data = SerializeMsalV3();
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Serializing '{data.Length}' bytes");
+                        _store.WriteData(data);
 
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After write store");
-                    HasStateChanged = false;
-                }
-                catch (Exception e)
-                {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while serializing the {nameof(AdalCache)} : {e}"));
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After write store");
+                        HasStateChanged = false;
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while serializing the {nameof(AdalCache)} : {e}");
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
-                    // The cache is corrupt clear it out
-                    DeserializeMsalV3(null);
-                    _store.Clear();
-                    throw;
+                        // The cache is corrupt clear it out
+                        DeserializeMsalV3(null);
+                        _store.Clear();
+                        throw;
+                    }
                 }
+            }
+            finally
+            {
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
+                _cacheLock?.Dispose();
+                _cacheLock = null;
             }
         }
     }

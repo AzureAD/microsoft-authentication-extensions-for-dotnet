@@ -4,12 +4,18 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// Helper native methods for MAC keychain
-    /// </summary>
-    internal static class MacNativeMethods
+/// <summary>
+/// Helper native methods for MAC keychain
+/// </summary>
+internal static class MacNativeMethods
     {
         /// <summary>
         /// Location of the security framework
