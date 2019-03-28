@@ -23,7 +23,7 @@ namespace Microsoft.Identity.Extensions.Adal
         // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
         // lets make sure we get what the actual value is on the runtime we are executing under.
         private readonly DateTimeOffset _fileNotFoundOffset;
-        private readonly AdalStorageCreationProperties _creationProperties;
+        internal StorageCreationProperties CreationProperties { get; }
 
         private DateTimeOffset _lastWriteTime;
 
@@ -34,28 +34,28 @@ namespace Microsoft.Identity.Extensions.Adal
         /// </summary>
         /// <param name="creationProperties">Creation properties for storage on disk</param>
         /// <param name="logger">logger</param>
-        public AdalCacheStorage(AdalStorageCreationProperties creationProperties, TraceSource logger)
+        public AdalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger)
         {
-            _creationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
+            CreationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Initializing '{nameof(AdalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'"));
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(AdalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
 
             try
             {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Getting last write file time for a missing file in localappdata"));
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), FormattableString.Invariant($"{Guid.NewGuid().FormatGuidAsString()}.dll")));
+                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Getting last write file time for a missing file in localappdata");
+                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
             catch (Exception e)
             {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}"));
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), FormattableString.Invariant($"{Guid.NewGuid().FormatGuidAsString()}.dll")));
+                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}");
+                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
 
             CacheFilePath = Path.Combine(creationProperties.CacheDirectory, creationProperties.CacheFileName);
 
             _lastWriteTime = _fileNotFoundOffset;
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Finished initializing '{nameof(AdalCacheStorage)}'"));
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Finished initializing '{nameof(AdalCacheStorage)}'");
         }
 
         /// <summary>
@@ -87,13 +87,13 @@ namespace Microsoft.Identity.Extensions.Adal
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Has the store changed");
                 bool cacheFileExists = File.Exists(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache file exists '{cacheFileExists}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file exists '{cacheFileExists}'");
 
                 DateTimeOffset currentWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
                 bool hasChanged = currentWriteTime != _lastWriteTime;
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'"));
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache has changed '{hasChanged}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'");
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache has changed '{hasChanged}'");
                 return hasChanged;
             }
         }
@@ -105,7 +105,7 @@ namespace Microsoft.Identity.Extensions.Adal
         public byte[] ReadData()
         {
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadData Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadData Cache file exists '{cacheFileExists}'");
 
             byte[] data = null;
 
@@ -115,12 +115,12 @@ namespace Microsoft.Identity.Extensions.Adal
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
                 byte[] fileData = ReadDataCore();
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Got '{fileData?.Length}' bytes from file storage"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{fileData?.Length}' bytes from file storage");
 
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
-#if NET46
+#if NET45
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
@@ -144,7 +144,7 @@ namespace Microsoft.Identity.Extensions.Adal
             {
                 if (!alreadyLoggedException)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while reading data from the {nameof(AdalCacheStorage)} : {e}"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while reading data from the {nameof(AdalCacheStorage)} : {e}");
                 }
 
                 ClearCore();
@@ -168,8 +168,8 @@ namespace Microsoft.Identity.Extensions.Adal
 
             try
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Got '{data?.Length}' bytes to write to storage"));
-#if NET46
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
+#if NET45
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");
@@ -181,7 +181,7 @@ namespace Microsoft.Identity.Extensions.Adal
             }
             catch (Exception e)
             {
-                _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while writing data from the {nameof(AdalCacheStorage)} : {e}"));
+                _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while writing data from the {nameof(AdalCacheStorage)} : {e}");
             }
         }
 
@@ -201,7 +201,7 @@ namespace Microsoft.Identity.Extensions.Adal
             byte[] fileData = null;
 
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore Cache file exists '{cacheFileExists}'");
 
             if (SharedUtilities.IsWindowsPlatform())
             {
@@ -210,16 +210,16 @@ namespace Microsoft.Identity.Extensions.Adal
                     TryProcessFile(() =>
                     {
                         fileData = File.ReadAllBytes(CacheFilePath);
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData.Length}' bytes from the file"));
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData.Length}' bytes from the file");
                     });
                 }
             }
             else if (SharedUtilities.IsMacPlatform())
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, Before reading from mac keychain");
-                fileData = MacKeyChain.RetrieveKey(_creationProperties.MacKeyChainServiceName, _creationProperties.MacKeyChainAccountName, _logger);
+                fileData = MacKeyChain.RetrieveKey(CreationProperties.MacKeyChainServiceName, CreationProperties.MacKeyChainAccountName, _logger);
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
             }
             else if (SharedUtilities.IsLinuxPlatform())
             {
@@ -231,10 +231,10 @@ namespace Microsoft.Identity.Extensions.Adal
                     schema: GetLibsecretSchema(),
                     cancellable: IntPtr.Zero,
                     error: out error,
-                    attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                    attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                    attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                    attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                    attribute1Type: CreationProperties.KeyringAttribute1.Key,
+                    attribute1Value: CreationProperties.KeyringAttribute1.Value,
+                    attribute2Type: CreationProperties.KeyringAttribute2.Key,
+                    attribute2Value: CreationProperties.KeyringAttribute2.Value,
                     end: IntPtr.Zero);
 
                 if (error != IntPtr.Zero)
@@ -242,11 +242,11 @@ namespace Microsoft.Identity.Extensions.Adal
                     try
                     {
                         GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while reading secret from keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while reading secret from keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during reading in the {nameof(AdalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during reading in the {nameof(AdalCacheStorage)} ex:'{e}'");
                     }
                 }
                 else if (string.IsNullOrEmpty(secret))
@@ -257,7 +257,7 @@ namespace Microsoft.Identity.Extensions.Adal
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Base64 decoding the secret string");
                     fileData = Convert.FromBase64String(secret);
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore, read '{fileData?.Length}' bytes from the keyring"));
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore, read '{fileData?.Length}' bytes from the keyring");
                 }
             }
             else
@@ -276,7 +276,7 @@ namespace Microsoft.Identity.Extensions.Adal
                 throw new ArgumentNullException(nameof(data));
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Write Data core, goign to write '{data.Length}' to the storage"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Write Data core, goign to write '{data.Length}' to the storage");
 
             if (SharedUtilities.IsMacPlatform() || SharedUtilities.IsLinuxPlatform())
             {
@@ -284,8 +284,8 @@ namespace Microsoft.Identity.Extensions.Adal
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Before write to mac keychain");
                     MacKeyChain.WriteKey(
-                                         _creationProperties.MacKeyChainServiceName,
-                                         _creationProperties.MacKeyChainAccountName,
+                                         CreationProperties.MacKeyChainServiceName,
+                                         CreationProperties.MacKeyChainAccountName,
                                          data);
 
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "After write to mac keychain");
@@ -298,15 +298,15 @@ namespace Microsoft.Identity.Extensions.Adal
 
                     Libsecret.secret_password_store_sync(
                         schema: GetLibsecretSchema(),
-                        collection: _creationProperties.KeyringCollection,
-                        label: _creationProperties.KeyringSecretLabel,
+                        collection: CreationProperties.KeyringCollection,
+                        label: CreationProperties.KeyringSecretLabel,
                         password: Convert.ToBase64String(data),
                         cancellable: IntPtr.Zero,
                         error: out error,
-                        attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                        attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                        attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                        attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                        attribute1Type: CreationProperties.KeyringAttribute1.Key,
+                        attribute1Value: CreationProperties.KeyringAttribute1.Value,
+                        attribute2Type: CreationProperties.KeyringAttribute2.Key,
+                        attribute2Value: CreationProperties.KeyringAttribute2.Value,
                         end: IntPtr.Zero);
 
                     if (error != IntPtr.Zero)
@@ -314,11 +314,11 @@ namespace Microsoft.Identity.Extensions.Adal
                         try
                         {
                             GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while saving secret to keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while saving secret to keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                         }
                         catch (Exception e)
                         {
-                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during saving in the {nameof(AdalCacheStorage)} ex:'{e}'"));
+                            _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during saving in the {nameof(AdalCacheStorage)} ex:'{e}'");
                         }
                     }
 
@@ -333,11 +333,11 @@ namespace Microsoft.Identity.Extensions.Adal
             if (!Directory.Exists(directoryForCacheFile))
             {
                 string directory = Path.GetDirectoryName(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Creating directory '{directory}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Creating directory '{directory}'");
                 Directory.CreateDirectory(directory);
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file");
 
             TryProcessFile(() =>
             {
@@ -350,7 +350,7 @@ namespace Microsoft.Identity.Extensions.Adal
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Clearing adal cache");
             bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"ReadDataCore Cache file exists '{cacheFileExists}'"));
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadDataCore Cache file exists '{cacheFileExists}'");
 
             TryProcessFile(() =>
             {
@@ -361,19 +361,19 @@ namespace Microsoft.Identity.Extensions.Adal
                 }
                 catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Problem deleting the cache file '{e}'"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Problem deleting the cache file '{e}'");
                 }
 
                 _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, FormattableString.Invariant($"After deleting the cache file. Last write time is '{_lastWriteTime}'"));
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last write time is '{_lastWriteTime}'");
             });
 
             if (SharedUtilities.IsMacPlatform())
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Before delete mac keychain");
                 MacKeyChain.DeleteKey(
-                                      _creationProperties.MacKeyChainServiceName,
-                                      _creationProperties.MacKeyChainAccountName);
+                                      CreationProperties.MacKeyChainServiceName,
+                                      CreationProperties.MacKeyChainAccountName);
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "After delete mac keychain");
             }
             else if (SharedUtilities.IsLinuxPlatform())
@@ -386,10 +386,10 @@ namespace Microsoft.Identity.Extensions.Adal
                     schema: GetLibsecretSchema(),
                     cancellable: IntPtr.Zero,
                     error: out error,
-                    attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                    attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                    attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                    attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                    attribute1Type: CreationProperties.KeyringAttribute1.Key,
+                    attribute1Value: CreationProperties.KeyringAttribute1.Value,
+                    attribute2Type: CreationProperties.KeyringAttribute2.Key,
+                    attribute2Value: CreationProperties.KeyringAttribute2.Value,
                     end: IntPtr.Zero);
 
                 if (error != IntPtr.Zero)
@@ -397,11 +397,11 @@ namespace Microsoft.Identity.Extensions.Adal
                     try
                     {
                         GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An error was encountered while clearing secret from keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An error was encountered while clearing secret from keyring in the {nameof(AdalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(AdalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(AdalCacheStorage)} ex:'{e}'");
                     }
                 }
 
@@ -429,7 +429,7 @@ namespace Microsoft.Identity.Extensions.Adal
 
                     if (tryCount == FileLockRetryCount)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"An exception was encountered while processing the Adal cache file from the {nameof(AdalCacheStorage)} ex:'{e}'"));
+                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while processing the Adal cache file from the {nameof(AdalCacheStorage)} ex:'{e}'");
                     }
                 }
             }
@@ -442,17 +442,17 @@ namespace Microsoft.Identity.Extensions.Adal
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Before creating libsecret schema");
 
                 _libsecretSchema = Libsecret.secret_schema_new(
-                    name: _creationProperties.KeyringSchemaName,
+                    name: CreationProperties.KeyringSchemaName,
                     flags: (int)Libsecret.SecretSchemaFlags.SECRET_SCHEMA_DONT_MATCH_NAME,
-                    attribute1: "string1",
+                    attribute1: CreationProperties.KeyringAttribute1.Key,
                     attribute1Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
-                    attribute2: "string2",
+                    attribute2: CreationProperties.KeyringAttribute2.Key,
                     attribute2Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
                     end: IntPtr.Zero);
 
                 if (_libsecretSchema == IntPtr.Zero)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, FormattableString.Invariant($"Failed to create libsecret schema from the {nameof(AdalCacheStorage)}"));
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Failed to create libsecret schema from the {nameof(AdalCacheStorage)}");
                 }
 
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "After creating libsecret schema");

@@ -17,14 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensions.Adal.UnitTests", "tests\Microsoft.Identity.Extensions.Adal.UnitTests\Microsoft.Identity.Extensions.Adal.UnitTests.csproj", "{27BFA98C-2EAB-45C1-9E38-80C278A7E782}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensions.Msal.UnitTests", "tests\Microsoft.Identity.Extensions.Msal.UnitTests\Microsoft.Identity.Extensions.Msal.UnitTests.csproj", "{BF90B8C4-CF40-4994-A599-D6658C038819}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Extensions.Msal.UnitTests", "tests\Microsoft.Identity.Extensions.Msal.UnitTests\Microsoft.Identity.Extensions.Msal.UnitTests.csproj", "{BF90B8C4-CF40-4994-A599-D6658C038819}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Extensions.Web.UnitTests", "tests\Microsoft.Identity.Extensions.Web.UnitTests\Microsoft.Identity.Extensions.Web.UnitTests.csproj", "{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6E6DC13E-1F97-4C06-AD5A-4E98EB2186C9}"
-	ProjectSection(SolutionItems) = preProject
-		Todo.txt = Todo.txt
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManualTestApp", "tests\ManualTestApp\ManualTestApp.csproj", "{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -111,6 +108,18 @@ Global
 		{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E}.Release|x64.Build.0 = Release|Any CPU
 		{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E}.Release|x86.Build.0 = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|x64.Build.0 = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,6 +132,7 @@ Global
 		{27BFA98C-2EAB-45C1-9E38-80C278A7E782} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
 		{BF90B8C4-CF40-4994-A599-D6658C038819} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
 		{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
+		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {92BA1502-D540-4EF8-93F0-4D7EA682B10B}

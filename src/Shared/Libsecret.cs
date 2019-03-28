@@ -4,13 +4,19 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// Data structures and methods required for saving and retrieving secret using keyring in linux
-    /// https://developer.gnome.org/libsecret/0.18/
-    /// </summary>
-    internal static class Libsecret
+/// <summary>
+/// Data structures and methods required for saving and retrieving secret using keyring in linux
+/// https://developer.gnome.org/libsecret/0.18/
+/// </summary>
+internal static class Libsecret
     {
         /// <summary>
         /// type of the attribute of the schema for the secret store

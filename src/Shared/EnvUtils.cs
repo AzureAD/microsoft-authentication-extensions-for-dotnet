@@ -6,12 +6,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    internal static class EnvUtils
+internal static class EnvUtils
     {
-        // Trace level environment variable. Must be in sync with TraceLevelEnvironmentVariable in src/Node/logger.ts
-        internal const string TraceLevelEnvVarName = "SERVICEHUBTRACELEVEL";
+        internal const string TraceLevelEnvVarName = "IDENTITYEXTENSIONTRACELEVEL";
 
         internal static TraceSource GetNewTraceSource(string sourceName)
         {
@@ -29,18 +34,7 @@ namespace Microsoft.Identity.Extensions
                 }
             }
 
-            return new TraceSource("TemporaryTraceSource_DoNotFinishPRWithThisStillHere", level);
-
-            /*
-
-            var traceSource = new ServiceHubTraceSource(sourceName, level);
-            traceSource.Listeners.Remove("Default");
-            bool rollingEnabled = !(traceSource.Switch.Level == SourceLevels.Verbose || traceSource.Switch.Level == SourceLevels.All);
-            traceSource.Listeners.Add(new FileTraceListener(sourceName, rollingEnabled));
-
-            return traceSource;
-
-             */
+            return new TraceSource("Microsoft.Identity.Extensions.TraceSource", level);
         }
     }
 }

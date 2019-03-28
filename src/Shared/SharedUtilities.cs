@@ -7,12 +7,18 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// A set of utilities shared between service and client
-    /// </summary>
-    internal static class SharedUtilities
+/// <summary>
+/// A set of utilities shared between service and client
+/// </summary>
+internal static class SharedUtilities
     {
         /// <summary>
         /// default base cache path
@@ -69,7 +75,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>A value indicating if we are running on mac or not</returns>
         public static bool IsMacPlatform()
         {
-#if NET46
+#if NET45
             // we have to also check for PlatformID.Unix because Mono can sometimes return Unix as the platform on a Mac machine.
             // see http://www.mono-project.com/docs/faq/technical/
             return Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
@@ -84,7 +90,7 @@ namespace Microsoft.Identity.Extensions
         /// <returns>A  value indicating if we are running on linux or not</returns>
         public static bool IsLinuxPlatform()
         {
-#if NET46
+#if NET45
             return Environment.OSVersion.Platform == PlatformID.Unix;
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);

@@ -17,12 +17,12 @@ namespace Microsoft.Identity.Extensions.Adal.UnitTests
     {
         public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
         private readonly TraceSource _logger = new TraceSource("TestSource");
-        private static AdalStorageCreationProperties s_storageCreationProperties;
+        private static StorageCreationProperties s_storageCreationProperties;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new AdalStorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
+            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "ADALCache");
             builder = builder.WithLinuxKeyring(
                 schemaName: "IdentityServiceAdalCache.cache",

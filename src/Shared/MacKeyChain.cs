@@ -9,12 +9,18 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 #pragma warning disable CA2201 // Do not raise reserved exception types
-namespace Microsoft.Identity.Extensions
+#if ADAL
+namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// APIs for reading, writing and deleting data from Mac KeyChain
-    /// </summary>
-    [ExcludeFromCodeCoverage]
+/// <summary>
+/// APIs for reading, writing and deleting data from Mac KeyChain
+/// </summary>
+[ExcludeFromCodeCoverage]
     internal static class MacKeyChain
     {
         /// <summary>
@@ -106,7 +112,7 @@ namespace Microsoft.Identity.Extensions
             try
             {
                 // get the key value
-                logging.AppendLine(FormattableString.Invariant($"SecKeychainFindGenericPassword, for serviceName {serviceName} and accountName {accountName}"));
+                logging.AppendLine($"SecKeychainFindGenericPassword, for serviceName {serviceName} and accountName {accountName}");
                 int status = MacNativeMethods.SecKeychainFindGenericPassword(
                     keychainOrArray: IntPtr.Zero,
                     serviceNameLength: (uint)serviceName.Length,
@@ -117,25 +123,25 @@ namespace Microsoft.Identity.Extensions
                     passwordData: out valuePtr,
                     itemRef: out itemRef);
 
-                logging.AppendLine(FormattableString.Invariant($"Status: '{status}'"));
+                logging.AppendLine($"Status: '{status}'");
 
                 if (status == MacNativeMethods.errSecItemNotFound)
                 {
                     eventType = TraceEventType.Error;
-                    logging.AppendLine(FormattableString.Invariant($"Failed, item not found"));
+                    logging.AppendLine($"Failed, item not found");
                     return null;
                 }
 
                 if (status != MacNativeMethods.errSecSuccess)
                 {
                     eventType = TraceEventType.Error;
-                    logging.AppendLine(FormattableString.Invariant($"Failed, other error {status}"));
+                    logging.AppendLine($"Failed, other error {status}");
                     throw new Exception(string.Format(CultureInfo.CurrentCulture, Constants.MacKeyChainFindFailed, status));
                 }
 
                 if (itemRef != IntPtr.Zero)
                 {
-                    logging.AppendLine(FormattableString.Invariant($"SecKeychainFindGenericPassword succeeded"));
+                    logging.AppendLine($"SecKeychainFindGenericPassword succeeded");
                     valueBuffer = new byte[valueLength];
                     Marshal.Copy(source: valuePtr, destination: valueBuffer, startIndex: 0, length: valueBuffer.Length);
                 }
