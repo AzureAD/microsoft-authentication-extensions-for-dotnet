@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace Microsoft.Identity.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal
 {
     /// <summary>
     /// Persist cache to file

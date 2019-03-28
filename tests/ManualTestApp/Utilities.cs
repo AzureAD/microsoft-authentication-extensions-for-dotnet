@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.AppConfig;
-using Microsoft.Identity.Extensions.Msal;
+using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
 {

@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Identity.WebExtensions\Microsoft.Identity.Extensions.Web.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Web\Microsoft.Identity.Client.Extensions.Web.csproj" />
   </ItemGroup>
 
 </Project>

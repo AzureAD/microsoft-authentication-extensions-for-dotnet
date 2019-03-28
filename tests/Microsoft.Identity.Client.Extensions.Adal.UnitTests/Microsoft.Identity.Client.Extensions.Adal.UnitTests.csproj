@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Identity.Extensions.Adal\Microsoft.Identity.Extensions.Adal.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Adal\Microsoft.Identity.Client.Extensions.Adal.csproj" />
   </ItemGroup>
 
 </Project>

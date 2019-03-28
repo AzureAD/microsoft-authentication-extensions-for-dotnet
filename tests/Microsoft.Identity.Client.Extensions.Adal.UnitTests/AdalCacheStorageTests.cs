@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Identity.Extensions.Adal.UnitTests
+namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
 {
     [TestClass]
     public class AdalCacheStorageTests
