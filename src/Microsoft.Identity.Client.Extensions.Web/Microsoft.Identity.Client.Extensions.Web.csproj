@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+
+    <!--This should be passed from the VSTS build-->
+    <ClientSemVer Condition="'$(ClientSemVer)' == ''">1.0.0-localbuild</ClientSemVer>
+    <!--This will generate AssemblyVersion, AssemblyFileVersion and AssemblyInformationVersion-->
+    <Version>$(ClientSemVer)</Version>
+
     <TargetFramework>netstandard2.0</TargetFramework>
     <DefineConstants>$(DefineConstants);WEB</DefineConstants>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -14,6 +20,14 @@
     <PackageTags>Microsoft Authentication Library MSAL Azure Active Directory AAD Identity .NET ASP.NET Core</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup Label="Source Link">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Build symbol package (.snupkg) to distribute the PDB containing Source Link -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
@@ -21,4 +35,7 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Label="Build Tools" Condition="$([MSBuild]::IsOsPlatform('Windows'))">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
+  </ItemGroup>
 </Project>

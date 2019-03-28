@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+
+    <!--This should be passed from the VSTS build-->
+    <ClientSemVer Condition="'$(ClientSemVer)' == ''">1.0.0-localbuild</ClientSemVer>
+    <!--This will generate AssemblyVersion, AssemblyFileVersion and AssemblyInformationVersion-->
+    <Version>$(ClientSemVer)</Version>
+
     <TargetFrameworks>netcoreapp2.1;net45</TargetFrameworks>
     <DefineConstants>$(DefineConstants);MSAL</DefineConstants>
     <Authors>Microsoft</Authors>
@@ -14,6 +20,14 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
+  <PropertyGroup Label="Source Link">
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Build symbol package (.snupkg) to distribute the PDB containing Source Link -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
@@ -28,4 +42,7 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup Label="Build Tools" Condition="$([MSBuild]::IsOsPlatform('Windows'))">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
+  </ItemGroup>
 </Project>
