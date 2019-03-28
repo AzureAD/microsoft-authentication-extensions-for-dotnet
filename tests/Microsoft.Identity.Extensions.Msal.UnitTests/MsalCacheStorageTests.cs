@@ -18,12 +18,12 @@ namespace Microsoft.Identity.Extensions.Msal.UnitTests
     {
         public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
         private readonly TraceSource _logger = new TraceSource("TestSource");
-        private static MsalStorageCreationProperties s_storageCreationProperties;
+        private static StorageCreationProperties s_storageCreationProperties;
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new MsalStorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
+            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
             builder = builder.WithLinuxKeyring(
                 schemaName: "msal.cache",

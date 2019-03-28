@@ -28,7 +28,7 @@ namespace Microsoft.Identity.Extensions.Msal
             return new MsalCacheStorage(s_storageCreationProperties, logger: s_staticLogger.Value);
         });
 
-        private static MsalStorageCreationProperties s_storageCreationProperties;
+        private static StorageCreationProperties s_storageCreationProperties;
 
         /// <summary>
         /// Holds a lock object when this helper is accessing the cache. Null otherwise.
@@ -111,7 +111,7 @@ namespace Microsoft.Identity.Extensions.Msal
         /// <param name="tokenCache">Token Cache</param>
         /// <param name="storageProperties">Properties to use when creating the storage on disk</param>
         /// <returns>token cache helper</returns>
-        public static MsalCacheHelper RegisterCache(ITokenCache tokenCache, MsalStorageCreationProperties storageProperties)
+        public static MsalCacheHelper RegisterCache(ITokenCache tokenCache, StorageCreationProperties storageProperties)
         {
             lock (s_lockObject)
             {

@@ -3,12 +3,18 @@
 
 using System.Collections.Generic;
 
+#if ADAL
 namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// An incremental builder for <see cref="AdalStorageCreationProperties"/> objects.
-    /// </summary>
-    public class AdalStorageCreationPropertiesBuilder
+/// <summary>
+/// An incremental builder for <see cref="StorageCreationProperties"/> objects.
+/// </summary>
+public class StorageCreationPropertiesBuilder
     {
         private readonly string _cacheFileName;
         private readonly string _cacheDirectory;
@@ -25,19 +31,19 @@ namespace Microsoft.Identity.Extensions.Adal
         /// </summary>
         /// <param name="cacheFileName">The name of the cache file to use when creating or opening storage.</param>
         /// <param name="cacheDirectory">The name of the directory containing the cache file.</param>
-        public AdalStorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory)
+        public StorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory)
         {
             _cacheFileName = cacheFileName;
             _cacheDirectory = cacheDirectory;
         }
 
         /// <summary>
-        /// Returns an immutable instance of <see cref="AdalStorageCreationProperties"/> matching the configuration of this builder.
+        /// Returns an immutable instance of <see cref="StorageCreationProperties"/> matching the configuration of this builder.
         /// </summary>
-        /// <returns>An immutable instance of <see cref="AdalStorageCreationProperties"/> matching the configuration of this builder.</returns>
-        public AdalStorageCreationProperties Build()
+        /// <returns>An immutable instance of <see cref="StorageCreationProperties"/> matching the configuration of this builder.</returns>
+        public StorageCreationProperties Build()
         {
-            return new AdalStorageCreationProperties(
+            return new StorageCreationProperties(
                 _cacheFileName,
                 _cacheDirectory,
                 _macKeyChainServiceName,
@@ -55,7 +61,7 @@ namespace Microsoft.Identity.Extensions.Adal
         /// <param name="serviceName">The mac keychain service name</param>
         /// <param name="accountName">The mac keychain account name</param>
         /// <returns>The augmented builder</returns>
-        public AdalStorageCreationPropertiesBuilder WithMacKeyChain(string serviceName, string accountName)
+        public StorageCreationPropertiesBuilder WithMacKeyChain(string serviceName, string accountName)
         {
             _macKeyChainServiceName = serviceName;
             _macKeyChainAccountName = accountName;
@@ -71,7 +77,7 @@ namespace Microsoft.Identity.Extensions.Adal
         /// <param name="attribute1">Additional attribute</param>
         /// <param name="attribute2">Additional attribute</param>
         /// <returns>The augmented builder</returns>
-        public AdalStorageCreationPropertiesBuilder WithLinuxKeyring(
+        public StorageCreationPropertiesBuilder WithLinuxKeyring(
             string schemaName,
             string collection,
             string secretLabel,

@@ -23,7 +23,7 @@ namespace Microsoft.Identity.Extensions.Adal
         // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
         // lets make sure we get what the actual value is on the runtime we are executing under.
         private readonly DateTimeOffset _fileNotFoundOffset;
-        internal AdalStorageCreationProperties CreationProperties { get; }
+        internal StorageCreationProperties CreationProperties { get; }
 
         private DateTimeOffset _lastWriteTime;
 
@@ -34,7 +34,7 @@ namespace Microsoft.Identity.Extensions.Adal
         /// </summary>
         /// <param name="creationProperties">Creation properties for storage on disk</param>
         /// <param name="logger">logger</param>
-        public AdalCacheStorage(AdalStorageCreationProperties creationProperties, TraceSource logger)
+        public AdalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger)
         {
             CreationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -120,7 +120,7 @@ namespace Microsoft.Identity.Extensions.Adal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
-#if NET46
+#if NET45
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
@@ -169,7 +169,7 @@ namespace Microsoft.Identity.Extensions.Adal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
-#if NET46
+#if NET45
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");
@@ -444,9 +444,9 @@ namespace Microsoft.Identity.Extensions.Adal
                 _libsecretSchema = Libsecret.secret_schema_new(
                     name: CreationProperties.KeyringSchemaName,
                     flags: (int)Libsecret.SecretSchemaFlags.SECRET_SCHEMA_DONT_MATCH_NAME,
-                    attribute1: "string1",
+                    attribute1: CreationProperties.KeyringAttribute1.Key,
                     attribute1Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
-                    attribute2: "string2",
+                    attribute2: CreationProperties.KeyringAttribute2.Key,
                     attribute2Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
                     end: IntPtr.Zero);
 

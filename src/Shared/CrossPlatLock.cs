@@ -91,6 +91,9 @@ namespace Microsoft.Identity.Extensions.Web
         {
             _mutex?.ReleaseMutex();
             _mutex = null;
+
+            _lockFileStream?.Dispose();
+            _lockFileStream = null;
         }
     }
 }

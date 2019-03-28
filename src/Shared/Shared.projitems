@@ -18,5 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)MacKeyChain.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MacNativeMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SharedUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StorageCreationProperties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StorageCreationPropertiesBuilder.cs" />
   </ItemGroup>
 </Project>

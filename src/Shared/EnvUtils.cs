@@ -16,8 +16,7 @@ namespace Microsoft.Identity.Extensions.Web
 {
 internal static class EnvUtils
     {
-        // Trace level environment variable. Must be in sync with TraceLevelEnvironmentVariable in src/Node/logger.ts
-        internal const string TraceLevelEnvVarName = "SERVICEHUBTRACELEVEL";
+        internal const string TraceLevelEnvVarName = "IDENTITYEXTENSIONTRACELEVEL";
 
         internal static TraceSource GetNewTraceSource(string sourceName)
         {
@@ -35,18 +34,7 @@ internal static class EnvUtils
                 }
             }
 
-            return new TraceSource("TemporaryTraceSource_DoNotFinishPRWithThisStillHere", level);
-
-            /*
-
-            var traceSource = new ServiceHubTraceSource(sourceName, level);
-            traceSource.Listeners.Remove("Default");
-            bool rollingEnabled = !(traceSource.Switch.Level == SourceLevels.Verbose || traceSource.Switch.Level == SourceLevels.All);
-            traceSource.Listeners.Add(new FileTraceListener(sourceName, rollingEnabled));
-
-            return traceSource;
-
-             */
+            return new TraceSource("Microsoft.Identity.Extensions.TraceSource", level);
         }
     }
 }

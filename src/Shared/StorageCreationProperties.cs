@@ -5,17 +5,23 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#if ADAL
 namespace Microsoft.Identity.Extensions.Adal
+#elif MSAL
+namespace Microsoft.Identity.Extensions.Msal
+#else // WEB
+namespace Microsoft.Identity.Extensions.Web
+#endif
 {
-    /// <summary>
-    /// An immutable class containing information required to instantiate storage objects for ADAL caches in various platforms.
-    /// </summary>
-    public class AdalStorageCreationProperties
+/// <summary>
+/// An immutable class containing information required to instantiate storage objects for MSAL caches in various platforms.
+/// </summary>
+public class StorageCreationProperties
     {
         /// <summary>
-        /// This constructor is intentionally internal. To get one of these objects use <see cref="AdalStorageCreationPropertiesBuilder.Build"/>.
+        /// This constructor is intentionally internal. To get one of these objects use <see cref="StorageCreationPropertiesBuilder.Build"/>.
         /// </summary>
-        internal AdalStorageCreationProperties(
+        internal StorageCreationProperties(
             string cacheFileName,
             string cacheDirectory,
             string macKeyChainServiceName,

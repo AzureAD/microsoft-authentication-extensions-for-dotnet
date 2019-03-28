@@ -17,7 +17,7 @@ namespace Microsoft.Identity.Extensions.Msal
     {
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
-        internal readonly MsalStorageCreationProperties _creationProperties;
+        internal readonly StorageCreationProperties _creationProperties;
         private readonly TraceSource _logger;
 
         // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
@@ -33,7 +33,7 @@ namespace Microsoft.Identity.Extensions.Msal
         /// </summary>
         /// <param name="creationProperties">Properties for creating the cache storage on disk</param>
         /// <param name="logger">logger</param>
-        public MsalCacheStorage(MsalStorageCreationProperties creationProperties, TraceSource logger)
+        public MsalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger)
         {
             _creationProperties = creationProperties;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -108,7 +108,7 @@ namespace Microsoft.Identity.Extensions.Msal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
-#if NET46
+#if NET45
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
@@ -157,7 +157,7 @@ namespace Microsoft.Identity.Extensions.Msal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
-#if NET46
+#if NET45
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");
@@ -432,9 +432,9 @@ namespace Microsoft.Identity.Extensions.Msal
                 _libsecretSchema = Libsecret.secret_schema_new(
                     name: _creationProperties.KeyringSchemaName,
                     flags: (int)Libsecret.SecretSchemaFlags.SECRET_SCHEMA_DONT_MATCH_NAME,
-                    attribute1: "string1",
+                    attribute1: _creationProperties.KeyringAttribute1.Key,
                     attribute1Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
-                    attribute2: "string2",
+                    attribute2: _creationProperties.KeyringAttribute2.Key,
                     attribute2Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
                     end: IntPtr.Zero);
 
