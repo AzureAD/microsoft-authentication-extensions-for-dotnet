@@ -49,12 +49,12 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                 try
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing data into memory");
-                    DeserializeMsalV3(data);
+                    DeserializeAdalV3(data);
                 }
                 catch (Exception e)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(AdalCache)} : {e}");
-                    DeserializeMsalV3(null);
+                    DeserializeAdalV3(null);
                     _store.Clear();
                 }
             }
@@ -84,7 +84,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
-                        DeserializeMsalV3(fileData);
+                        DeserializeAdalV3(fileData);
                     }
                     catch (Exception e)
                     {
@@ -92,7 +92,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                         _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                         // Clear the memory cache
-                        DeserializeMsalV3(null);
+                        DeserializeAdalV3(null);
                         _store.Clear();
                         throw;
                     }
@@ -102,7 +102,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                     // Clear the memory cache
-                    DeserializeMsalV3(null);
+                    DeserializeAdalV3(null);
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before Write Store");
-                        byte[] data = SerializeMsalV3();
+                        byte[] data = SerializeAdalV3();
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Serializing '{data.Length}' bytes");
                         _store.WriteData(data);
 
@@ -134,7 +134,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                         _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
-                        DeserializeMsalV3(null);
+                        DeserializeAdalV3(null);
                         _store.Clear();
                         throw;
                     }
