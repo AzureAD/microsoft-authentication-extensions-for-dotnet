@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.Identity.Client;
 
-namespace Microsoft.Identity.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal
 {
     /// <summary>
     /// Helper to create the token cache

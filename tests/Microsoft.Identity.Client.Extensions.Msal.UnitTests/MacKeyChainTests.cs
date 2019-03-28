@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Identity.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal
 {
     [TestClass]
     [Ignore("Unable to run these tests on Windows, ignoring for now")]

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace Microsoft.Identity.Extensions.Adal
+namespace Microsoft.Identity.Client.Extensions.Adal
 {
     /// <summary>
     /// Persist adal cache to file

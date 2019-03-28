@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Identity.Extensions.Msal.UnitTests
+namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
     [TestClass]
     public class MsalCacheStorageTests

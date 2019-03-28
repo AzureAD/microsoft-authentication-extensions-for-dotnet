@@ -9,11 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 #if ADAL
-namespace Microsoft.Identity.Extensions.Adal
+namespace Microsoft.Identity.Client.Extensions.Adal
 #elif MSAL
-namespace Microsoft.Identity.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal
 #else // WEB
-namespace Microsoft.Identity.Extensions.Web
+namespace Microsoft.Identity.Client.Extensions.Web
 #endif
 {
     internal class CrossPlatLock : IDisposable

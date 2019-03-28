@@ -7,7 +7,7 @@ using System.IO;
 using Microsoft;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
-namespace Microsoft.Identity.Extensions.Adal
+namespace Microsoft.Identity.Client.Extensions.Adal
 {
     /// <summary>
     /// Override Adal token cache

@@ -11,6 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Microsoft.Identity.Extensions.Msal\Microsoft.Identity.Extensions.Msal.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj" />
   </ItemGroup>
 </Project>
