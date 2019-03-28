@@ -3,6 +3,15 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net45</TargetFrameworks>
     <DefineConstants>$(DefineConstants);MSAL</DefineConstants>
+    <Authors>Microsoft</Authors>
+    <Company>Microsoft</Company>
+    <Description>This package contains extensions to Microsoft Authentication Library for .NET (MSAL.NET)</Description>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</RepositoryUrl>
+    <PackageTags>Microsoft Authentication Library MSAL Azure Active Directory AAD Identity .NET</PackageTags>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
@@ -10,6 +19,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.2-preview" />
     <Reference Include="System.Security" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
