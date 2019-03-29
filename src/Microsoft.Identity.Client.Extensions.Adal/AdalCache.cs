@@ -30,7 +30,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// </summary>
         /// <param name="storage">Adal cache storage</param>
         /// <param name="logger">Logger</param>
-        internal AdalCache(AdalCacheStorage storage, TraceSource logger)
+        public AdalCache(AdalCacheStorage storage, TraceSource logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _store = storage ?? throw new ArgumentNullException(nameof(storage));
