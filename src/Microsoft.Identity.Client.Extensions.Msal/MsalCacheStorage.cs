@@ -62,8 +62,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"ReadData Cache file exists '{cacheFileExists}'");
 
             byte[] data = null;
-
-            bool alreadyLoggedException = false;
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
@@ -74,15 +72,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
-
-                    if (SharedUtilities.IsWindowsPlatform())
-                    {
-                        data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
-                    }
-                    else
-                    {
-                        data = fileData;
-                    }
+                    data = SharedUtilities.IsWindowsPlatform() ?
+                        ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser) :
+                        fileData;
                 }
                 else if (fileData == null || fileData.Length == 0)
                 {
@@ -97,11 +89,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             catch (Exception e)
             {
-                if (!alreadyLoggedException)
-                {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
-                }
-
+                _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
                 ClearCore();
             }
 

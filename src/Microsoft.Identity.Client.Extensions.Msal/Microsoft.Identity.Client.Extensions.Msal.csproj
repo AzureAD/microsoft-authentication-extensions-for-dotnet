@@ -27,7 +27,6 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
