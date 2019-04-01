@@ -46,7 +46,9 @@ namespace ManualTestApp
             var storageCreationProps = storageCreationPropsBuilder.Build();
 
             // This hooks up our custom cache onto the one used by MSAL
-            var cacheHelper = MsalCacheHelper.RegisterCache(app.UserTokenCache, storageCreationProps);
+            var cacheHelper = new MsalCacheHelper(storageCreationProps);
+            cacheHelper.RegisterCache(app.UserTokenCache);
+
             Console.WriteLine($"Cache registered");
 
             return (scopes, app, cacheHelper);
