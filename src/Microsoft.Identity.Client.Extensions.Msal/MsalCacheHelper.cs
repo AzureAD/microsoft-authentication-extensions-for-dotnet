@@ -91,11 +91,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
-        /// Gets whether this instance has had <see cref="RegisterCache(ITokenCache)" /> called.
-        /// </summary>
-        public bool Registerred { get; private set; }
-
-        /// <summary>
         /// Gets a singleton instance of the TokenCacheHelper
         /// </summary>
         /// <param name="tokenCache">Token Cache</param>
@@ -129,7 +124,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     }
                 }
 
-                Registerred = true;
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
             }
         }
