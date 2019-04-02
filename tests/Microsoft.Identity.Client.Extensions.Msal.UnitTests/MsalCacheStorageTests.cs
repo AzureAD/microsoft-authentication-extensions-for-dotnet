@@ -47,6 +47,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
+        public void MsalTestUserDirectory()
+        {
+            Assert.AreEqual(MsalCacheHelper.UserRootDirectory, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+        }
+
+        [TestMethod]
         public void MsalNewStoreNoFile()
         {
             var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
