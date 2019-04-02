@@ -23,7 +23,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <summary>
         /// default base cache path
         /// </summary>
-        private const string DefaultBaseCachePath = ".IdentityService";
         private static readonly string s_homeEnvVar = Environment.GetEnvironmentVariable("HOME");
         private static readonly string s_lognameEnvVar = Environment.GetEnvironmentVariable("LOGNAME");
         private static readonly string s_userEnvVar = Environment.GetEnvironmentVariable("USER");
