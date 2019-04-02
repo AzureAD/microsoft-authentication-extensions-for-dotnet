@@ -15,6 +15,14 @@ namespace Microsoft.Identity.Client.Extensions.Adal
     /// </summary>
     public sealed class AdalCacheStorage
     {
+        /// <summary>
+        /// A default logger for use if the user doesn't want to provide their own.
+        /// </summary>
+        private static readonly Lazy<TraceSource> s_staticLogger = new Lazy<TraceSource>(() =>
+        {
+            return (TraceSource)EnvUtils.GetNewTraceSource(nameof(AdalCacheStorage) + "Singleton");
+        });
+
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
 
@@ -36,8 +44,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <param name="logger">logger</param>
         public AdalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger)
         {
+            _logger = logger ?? s_staticLogger.Value;
             CreationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(AdalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
 
@@ -65,7 +73,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         {
             get
             {
-                return SharedUtilities.GetDefaultArtifactPath();
+                return SharedUtilities.GetUserRootDirectory();
             }
         }
 

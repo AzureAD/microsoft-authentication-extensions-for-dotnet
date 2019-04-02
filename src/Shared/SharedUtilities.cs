@@ -52,15 +52,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
         }
 
         /// <summary>
-        /// Generate the default artifact location
-        /// </summary>
-        /// <returns>Default artifact location</returns>
-        public static string GetDefaultArtifactPath()
-        {
-            return Path.Combine(SharedUtilities.GetRootDirectory(), SharedUtilities.DefaultBaseCachePath);
-        }
-
-        /// <summary>
         ///  Is this a windows platform
         /// </summary>
         /// <returns>A  value indicating if we are running on windows or not</returns>
@@ -95,15 +86,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
 #endif
-        }
-
-        /// <summary>
-        /// Gets the users root directory
-        /// </summary>
-        /// <returns>Root directory</returns>
-        public static string GetRootDirectory()
-        {
-            return GetUserRootDirectory();
         }
 
         /// <summary>

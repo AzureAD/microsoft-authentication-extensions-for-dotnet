@@ -86,7 +86,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             get
             {
-                return SharedUtilities.GetDefaultArtifactPath();
+                return SharedUtilities.GetUserRootDirectory();
             }
         }
 
