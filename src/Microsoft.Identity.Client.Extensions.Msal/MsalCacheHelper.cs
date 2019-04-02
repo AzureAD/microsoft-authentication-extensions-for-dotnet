@@ -14,17 +14,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     public class MsalCacheHelper
     {
         /// <summary>
-        /// A lock object for serialization
-        /// </summary>
-        private static readonly object s_lockObject = new object();
-
-        /// <summary>
         /// A default logger for use if the user doesn't want to provide their own.
         /// </summary>
         private static readonly Lazy<TraceSource> s_staticLogger = new Lazy<TraceSource>(() =>
         {
             return (TraceSource)EnvUtils.GetNewTraceSource(nameof(MsalCacheHelper) + "Singleton");
         });
+
+        /// <summary>
+        /// A lock object for serialization
+        /// </summary>
+        private readonly object _lockObject = new object();
 
         /// <summary>
         /// Properties used to create storage on disk.
@@ -97,7 +97,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <returns>token cache helper</returns>
         public void RegisterCache(ITokenCache tokenCache)
         {
-            lock (s_lockObject)
+            lock (_lockObject)
             {
                 _userTokenCache = tokenCache ?? throw new ArgumentNullException(nameof(tokenCache));
 
@@ -119,8 +119,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(MsalCacheHelper)} : {e}");
-                        _store.Clear();
+                        _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(MsalCacheHelper)} : {e}");
+
+                        Clear();
                     }
                 }
 
@@ -168,7 +169,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                         // Clear the memory cache
-                        _store.Clear();
+                        Clear();
                         throw;
                     }
                 }
@@ -210,7 +211,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
-                        _store.Clear();
+                        Clear();
                         throw;
                     }
                 }
