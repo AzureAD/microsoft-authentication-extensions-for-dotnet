@@ -69,9 +69,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
-            _cacheLock = new CrossPlatLock(
-                Path.GetFileNameWithoutExtension(_store.CreationProperties.CacheFileName),
-                Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile");
+            _cacheLock = new CrossPlatLock(Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile");
 
             if (_store.HasChanged)
             {

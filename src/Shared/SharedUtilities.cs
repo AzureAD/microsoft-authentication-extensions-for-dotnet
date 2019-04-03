@@ -23,7 +23,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <summary>
         /// default base cache path
         /// </summary>
-        private const string DefaultBaseCachePath = ".IdentityService";
         private static readonly string s_homeEnvVar = Environment.GetEnvironmentVariable("HOME");
         private static readonly string s_lognameEnvVar = Environment.GetEnvironmentVariable("LOGNAME");
         private static readonly string s_userEnvVar = Environment.GetEnvironmentVariable("USER");
@@ -49,15 +48,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
         public static string FormatGuidAsString(this Guid guid)
         {
             return guid.ToString("D", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Generate the default artifact location
-        /// </summary>
-        /// <returns>Default artifact location</returns>
-        public static string GetDefaultArtifactPath()
-        {
-            return Path.Combine(SharedUtilities.GetRootDirectory(), SharedUtilities.DefaultBaseCachePath);
         }
 
         /// <summary>
@@ -95,15 +85,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
 #endif
-        }
-
-        /// <summary>
-        /// Gets the users root directory
-        /// </summary>
-        /// <returns>Root directory</returns>
-        public static string GetRootDirectory()
-        {
-            return GetUserRootDirectory();
         }
 
         /// <summary>

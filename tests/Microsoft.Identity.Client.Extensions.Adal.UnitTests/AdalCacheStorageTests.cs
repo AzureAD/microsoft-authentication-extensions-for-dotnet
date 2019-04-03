@@ -46,6 +46,12 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         }
 
         [TestMethod]
+        public void AdalTestUserDirectory()
+        {
+            Assert.AreEqual(AdalCacheStorage.UserRootDirectory, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+        }
+
+        [TestMethod]
         public void AdalNewStoreNoFile()
         {
             var store = new AdalCacheStorage(s_storageCreationProperties, logger: _logger);
