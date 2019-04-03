@@ -18,12 +18,13 @@ namespace Microsoft.Identity.Client.Extensions.Web
 {
     internal class CrossPlatLock : IDisposable
     {
-        private const bool UseMutex = true;
+        private const bool UseMutex = false;
         private const int MutexTimeout = 60000;
         private const int LockfileRetryCount = 6000;
         private const int LockfileRetryWait = 10;
         private Mutex _mutex;
         private FileStream _lockFileStream;
+        private string _lockFilePath;
 
         public CrossPlatLock(string simpleName, string lockfilePath)
         {
@@ -41,6 +42,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
         private void InitializeLockfileAsync(string lockfilePath)
         {
+            _lockFilePath = lockfilePath;
             Exception exception = null;
             FileStream fileStream = null;
             for (int tryCount = 0; tryCount < LockfileRetryCount; tryCount++)
@@ -50,7 +52,8 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 try
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
-                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                    const int defaultBufferSize = 4096;
+                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, defaultBufferSize, FileOptions.DeleteOnClose);
                     break;
                 }
                 catch (IOException ex)
@@ -90,6 +93,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         public void Dispose()
         {
             _mutex?.ReleaseMutex();
+            _mutex?.Dispose();
             _mutex = null;
 
             _lockFileStream?.Dispose();
