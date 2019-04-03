@@ -12,7 +12,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
     {
         /// <summary>
         /// Instantiate a ClaimsPrincipal from an account objectId and tenantId. This can
-        /// we useful when the Web app subscribes to another service on behalf of the user
+        /// be useful when the Web app subscribes to another service on behalf of the user
         /// and then is called back by a notification where the user is identified by his tenant
         /// id and object id (like in Microsoft Graph Web Hooks)
         /// </summary>
