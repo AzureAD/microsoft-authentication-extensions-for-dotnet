@@ -15,6 +15,14 @@ namespace Microsoft.Identity.Client.Extensions.Adal
     public sealed class AdalCache : TokenCache
     {
         /// <summary>
+        /// A default logger for use if the user doesn't want to provide their own.
+        /// </summary>
+        private static readonly Lazy<TraceSource> s_staticLogger = new Lazy<TraceSource>(() =>
+        {
+            return (TraceSource)EnvUtils.GetNewTraceSource(nameof(AdalCache) + "Singleton");
+        });
+
+        /// <summary>
         /// Storage that handles the storing of the adal cache file on disk.
         /// </summary>
         private readonly AdalCacheStorage _store;
@@ -32,7 +40,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <param name="logger">Logger</param>
         public AdalCache(AdalCacheStorage storage, TraceSource logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? s_staticLogger.Value;
             _store = storage ?? throw new ArgumentNullException(nameof(storage));
 
             AfterAccess = AfterAccessNotification;

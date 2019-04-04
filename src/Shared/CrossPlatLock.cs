@@ -27,10 +27,13 @@ namespace Microsoft.Identity.Client.Extensions.Web
         {
             Exception exception = null;
             FileStream fileStream = null;
+
+            // Create lock file dir if it doesn't already exist
+            Directory.CreateDirectory(Path.GetDirectoryName(lockfilePath));
+
             for (int tryCount = 0; tryCount < LockfileRetryCount; tryCount++)
             {
-                // Create lock file dir if it doesn't already exist
-                Directory.CreateDirectory(Path.GetDirectoryName(lockfilePath));
+                
                 try
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
@@ -46,6 +49,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 {
                     exception = ex;
                     Thread.Sleep(LockfileRetryWait);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    exception = ex;
+                    Thread.Sleep(LockfileRetryCount);
                 }
             }
 
