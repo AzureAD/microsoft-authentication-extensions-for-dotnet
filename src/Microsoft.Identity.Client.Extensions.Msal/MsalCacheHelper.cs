@@ -60,8 +60,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             _logger = logger ?? s_staticLogger.Value;
             _storageCreationProperties = storageCreationProperties;
-            _store = new MsalCacheStorage(_storageCreationProperties, logger);
-
+            _store = new MsalCacheStorage(_storageCreationProperties, _logger);
         }
 
         /// <summary>
