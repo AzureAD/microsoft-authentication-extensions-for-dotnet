@@ -10,10 +10,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
-using Microsoft.Identity.Client;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client.AppConfig;
-using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -27,14 +25,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             Path.Combine(SharedUtilities.GetUserRootDirectory(), "msal.cache");
         private readonly IPublicClientApplication _app;
         private readonly MsalCacheHelper _cacheHelper;
-        private readonly IConfigurationProvider _config;
-        private readonly TraceSource _logger;
+        private readonly IConfiguration _config;
+        private readonly ILogger _logger;
 
         /// <inheritdoc />
-        public SharedTokenCacheProvider(IConfigurationProvider config = null, TraceSource logger = null)
+        public SharedTokenCacheProvider(IConfiguration config = null, ILogger logger = null)
         {
             _logger = logger;
-            _config = config ?? new EnvironmentVariablesConfigurationProvider();
+            _config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
             var authority = string.Format(CultureInfo.InvariantCulture,
                 AadAuthority.AadCanonicalAuthorityTemplate,
                 AadAuthority.DefaultTrustedHost,
@@ -58,15 +56,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public async Task<bool> AvailableAsync()
         {
-            TraceEvent(TraceEventType.Information, "checking for accounts in shared developer tool cache");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
             var accounts = await GetAccountsAsync().ConfigureAwait(false);
-            return accounts.Any();
+            var available = accounts.Any();
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {available}");
+            return available;
         }
 
         /// <inheritdoc />
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
         {
-            TraceEvent(TraceEventType.Information, "checking for accounts in shared developer tool cache");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
             var accounts = (await GetAccountsAsync().ConfigureAwait(false)).ToList();
             if(!accounts.Any())
             {
@@ -81,26 +81,26 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var accounts = (await _app.GetAccountsAsync().ConfigureAwait(false)).ToList();
             if (accounts.Any())
             {
-                TraceEvent(TraceEventType.Information, $"found the following account usernames: {string.Join(", ", accounts.Select(i => i.Username))}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"found the following account usernames: {string.Join(", ", accounts.Select(i => i.Username))}");
             }
             else
             {
                 const string msg = "no accounts found in the shared cache -- perhaps, log into Visual Studio, Azure CLI, Azure PowerShell, etc";
-                TraceEvent(TraceEventType.Information, msg);
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, msg);
             }
-            var username = _config.Get(Constants.AzurePreferredAccountUsernameEnvName);
+            var username = _config.GetValue<string>(Constants.AzurePreferredAccountUsernameEnvName);
             if (!string.IsNullOrWhiteSpace(username))
             {
-                TraceEvent(TraceEventType.Information, $"since {Constants.AzurePreferredAccountUsernameEnvName} is set accounts will be filtered by username: {username}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"since {Constants.AzurePreferredAccountUsernameEnvName} is set accounts will be filtered by username: {username}");
                 return accounts.Where(i => i.Username == username);
             }
 
             return accounts;
         }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            _logger?.TraceEvent(type, 0, $"{nameof(SharedTokenCacheProvider)}.{memberName} :: {message}");
+            _logger?.Log(level, $"{nameof(SharedTokenCacheProvider)}.{memberName} :: {message}");
         }
     }
 }

@@ -5,46 +5,35 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client.Extensions.Msal.Providers;
 
 namespace ConsoleTestForTokenProviderChains
 {
     class Program
     {
-        private static readonly TraceSource s_TraceSource = new TraceSource("ConsoleTestForTokenProviderChains")
-        {
-            Switch =
-            {
-                Level = SourceLevels.All
-            }
-        };
-
         static void Main(string[] args)
         {
-            var consoleTracer = new TextWriterTraceListener(Console.Out)
-            {
-                Filter = new EventTypeFilter(SourceLevels.All)
-            };
-            Trace.Listeners.Clear();
-            Trace.Listeners.Add(consoleTracer);
-            s_TraceSource.Listeners.Add(consoleTracer);
+            var lf = new LoggerFactory();
+            lf.AddProvider(new ConsoleLoggerProvider(
+                new OptionsMonitor<ConsoleLoggerOptions>(
+                    new OptionsFactory<ConsoleLoggerOptions>(new List<IConfigureOptions<ConsoleLoggerOptions>>(), new List<IPostConfigureOptions<ConsoleLoggerOptions>>()),
+                    new List<IOptionsChangeTokenSource<ConsoleLoggerOptions>>(),
+                    new OptionsCache<ConsoleLoggerOptions>())));
 
-            var chain = new DefaultTokenProviderChain(logger: s_TraceSource);
+            var logger = lf.CreateLogger<DefaultTokenProviderChain>();
+            var chain = new DefaultTokenProviderChain(logger: logger);
             var available = chain.AvailableAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            TraceEvent(TraceEventType.Information, available ? "Available" : "Not Available");
+            logger.Log(LogLevel.Information, available ? "Available" : "Not Available");
 
             if (available)
             {
                 var scopes = new List<string>{Constants.AzureResourceManagerDefaultScope};
                 var token = chain.GetTokenAsync(scopes).ConfigureAwait(false).GetAwaiter().GetResult();
-                Console.Out.WriteLine(token.AccessToken);
+                logger.Log(LogLevel.Information, token.AccessToken);
             }
-            Trace.Flush();
-        }
-
-        private static void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
-        {
-            s_TraceSource.TraceEvent(type, 0, $"ConsoleTestForTokenProviderChains:{memberName} :: {message}");
         }
     }
 }

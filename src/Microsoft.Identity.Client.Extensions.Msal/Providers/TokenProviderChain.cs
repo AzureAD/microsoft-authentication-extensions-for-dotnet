@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -81,7 +80,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         private const string Code = "no_probes_are_available";
 
         private const string ErrorMessage =
-            "All of the IProbes provided were unable to find the variables needed to successfully create a credential provider.";
+            "All of the ITokenProviders were unable to find the variables needed to successfully create a credential provider.";
 
         /// <inheritdoc />
         /// <summary>

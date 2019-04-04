@@ -5,19 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
 using System.Threading.Tasks;
-using System.Runtime.Serialization;
-using Microsoft.Identity.Client.Utils;
-using System.Text;
-using Microsoft.Identity.Client;
-using System.Runtime.Serialization.Json;
-using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -31,17 +23,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         private readonly HttpClient _httpClient;
         private readonly IManagedIdentityConfiguration _config;
         private readonly string _overrideClientId;
-        private readonly bool _checkVmListening;
-        private readonly TraceSource _logger;
+        private readonly ILogger _logger;
 
-        internal ManagedIdentityTokenProvider(HttpClient httpClient, IConfigurationProvider config = null,
-            string overrideClientId = null, bool checkVmListening = true, TraceSource logger = null)
+        internal ManagedIdentityTokenProvider(HttpClient httpClient, IConfiguration config = null,
+            string overrideClientId = null, ILogger logger = null)
         {
             _httpClient = httpClient;
-            config = config ?? new EnvironmentVariablesConfigurationProvider();
+            config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
             _config = new DefaultManagedIdentityConfiguration(config);
             _overrideClientId = overrideClientId;
-            _checkVmListening = checkVmListening;
             _logger = logger;
         }
 
@@ -51,7 +41,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <param name="config">option configuration structure -- if not supplied, a default environmental configuration is used.</param>
         /// <param name="overrideClientId">override the client identity found in the config for use when querying the Azure IMDS endpoint</param>
         /// <param name="logger">TraceSource logger</param>
-        public ManagedIdentityTokenProvider(IConfigurationProvider config = null, string overrideClientId = null, TraceSource logger = null)
+        public ManagedIdentityTokenProvider(IConfiguration config = null, string overrideClientId = null, ILogger logger = null)
             : this(null, config, overrideClientId, logger: logger) { }
 
         /// <inheritdoc />
@@ -64,32 +54,23 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             // check App Service MSI
             if (IsAppService())
             {
-                TraceEvent(TraceEventType.Information, "AppService Managed Identity is available");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "AppService Managed Identity is available");
                 return true;
             }
-            TraceEvent(TraceEventType.Information, "AppService Managed Identity is not available");
-
-            // Check if there is no service listening on VM IP
-            //
-            // This is a performance optimization to avoid retrying requests to the Managed Identity service
-//            if(_checkVmListening && !IsVmManagedIdentityListening())
-//            {
-//                TraceEvent(TraceEventType.Information, "Virtual Machine Managed Identity is not available");
-//                return false;
-//            }
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "AppService Managed Identity is not available");
 
             try
             {
-                TraceEvent(TraceEventType.Information, "Attempting to fetch test token with Virtual Machine Managed Identity");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "Attempting to fetch test token with Virtual Machine Managed Identity");
                 // if service is listening on VM IP check if a token can be acquired
                 var provider = BuildInternalProvider(maxRetries: 2, httpClient: _httpClient);
                 var token = await provider.GetTokenAsync(new List<string> { Constants.AzureResourceManagerDefaultScope }).ConfigureAwait(false);
-                TraceEvent(TraceEventType.Information, "Token fetch was " + (token != null ? "not " : "") + "successful");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {token != null}");
                 return token != null;
             }
             catch (TooManyRetryAttemptsException)
             {
-                TraceEvent(TraceEventType.Information, "Exceeded retry limit for Virtual Machine Managed Identity request");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "Exceeded retry limit for Virtual Machine Managed Identity request");
                 return false;
             }
         }
@@ -103,7 +84,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
         {
             var internalProvider = BuildInternalProvider(httpClient: _httpClient);
-            TraceEvent(TraceEventType.Information, $"Attempting to fetch token with scopes {string.Join(", ", scopes)}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"Attempting to fetch token with scopes {string.Join(", ", scopes)}");
             return await internalProvider.GetTokenAsync(scopes).ConfigureAwait(false);
         }
 
@@ -118,25 +99,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return vars.All(item => !string.IsNullOrWhiteSpace(item));
         }
 
-        private bool IsVmManagedIdentityListening()
-        {
-            var loopback = IPAddress.Parse(Constants.ManagedIdentityLoopbackAddress);
-            foreach (var activeIp in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners())
-            {
-                TraceEvent(TraceEventType.Information, $"{activeIp.Address}:{activeIp.Port} is actively listening");
-                if (activeIp.Address.Equals(loopback) && activeIp.Port == 80)
-                {
-                    return true;
-                }
-            }
-            TraceEvent(TraceEventType.Information, $"did not find an matching active listener on {loopback}");
-            return false;
-        }
-
         private InternalManagedIdentityCredentialProvider BuildInternalProvider(int maxRetries = 5, HttpClient httpClient = null)
         {
             var endpoint = IsAppService() ? _config.ManagedIdentityEndpoint : Constants.ManagedIdentityTokenEndpoint;
-            TraceEvent(TraceEventType.Information, "building " + (IsAppService() ? "an AppService " : "a VM") + " Managed Identity provider");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "building " + (IsAppService() ? "an AppService " : "a VM") + " Managed Identity provider");
             return new InternalManagedIdentityCredentialProvider(endpoint,
                 httpClient: httpClient,
                 secret: _config.ManagedIdentitySecret,
@@ -147,9 +113,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         private string ClientId => string.IsNullOrWhiteSpace(_overrideClientId) ? _config.ClientId : _overrideClientId;
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            _logger?.TraceEvent(type, 0, $"{nameof(ManagedIdentityTokenProvider)}.{memberName} :: {message}");
+            _logger?.Log(level, $"{nameof(ManagedIdentityTokenProvider)}.{memberName} :: {message}");
         }
     }
 
@@ -165,13 +131,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         };
 
         private readonly ManagedIdentityClient _client;
-        private readonly TraceSource _logger;
+        private readonly ILogger _logger;
 
         internal InternalManagedIdentityCredentialProvider(string endpoint, HttpClient httpClient = null,
-            string secret = null, string clientId = null, int maxRetries = 5, TraceSource logger = null)
+            string secret = null, string clientId = null, int maxRetries = 5, ILogger logger = null)
         {
             _logger = logger;
-            TraceEvent(TraceEventType.Information, $"built with clientId: {clientId}, maxRetries: {maxRetries}, secret was present {!string.IsNullOrWhiteSpace(secret)}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"built with clientId: {clientId}, maxRetries: {maxRetries}, secret was present {!string.IsNullOrWhiteSpace(secret)}");
             if (string.IsNullOrWhiteSpace(secret))
             {
                 _client = new ManagedIdentityVmClient(endpoint, httpClient ?? DefaultClient, clientId: clientId, maxRetries: maxRetries, logger: _logger);
@@ -181,17 +147,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 _client = new ManagedIdentityAppServiceClient(endpoint, secret, httpClient ?? DefaultClient, maxRetries: maxRetries, logger: _logger);
             }
         }
-
-        /// <summary>
-        /// Create an instance of a ManagedIdentityCredentialProvider which will talk to either AppService or VM managed identity token endpoint
-        /// </summary>
-        /// <param name="endpoint">token endpoint</param>
-        /// <param name="secret">secret for fetching a token from the endpoint (only used with AppService)</param>
-        /// <param name="clientId">clientId for a user assigned identity</param>
-        /// <param name="maxRetries">maximum number of retries for token requests</param>
-        /// <param name="logger">TraceSource logger</param>
-        public InternalManagedIdentityCredentialProvider(string endpoint, string secret = null, string clientId = null, int maxRetries = 5, TraceSource logger = null)
-            : this(endpoint, httpClient: DefaultClient, secret: secret, clientId: clientId, maxRetries: maxRetries, logger: logger) { }
 
         /// <summary>
         ///     GetTokenAsync returns a token for a given set of scopes
@@ -206,49 +161,24 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 throw new NoResourceUriInScopesException();
             }
 
-            TraceEvent(TraceEventType.Information, $"fetching token with retry and scopes {string.Join(", ", scopes)}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"fetching token with retry and scopes {string.Join(", ", scopes)}");
             var resourceUri = resourceUriInScopes.Substring(0, resourceUriInScopes.Length - 8);
             return await _client.FetchTokenWithRetryAsync(resourceUri).ConfigureAwait(false);
         }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            _logger?.TraceEvent(type, 0, $"{nameof(InternalManagedIdentityCredentialProvider)}.{memberName} :: {message}");
+            _logger?.Log(level, $"{nameof(InternalManagedIdentityCredentialProvider)}.{memberName} :: {message}");
         }
-    }
-
-
-    /// <inheritdoc />
-    /// <summary>
-    /// NoResourceUriInScopesException is thrown when the managed identity token provider does not find a .default
-    /// scope for a resource in the enumeration of scopes.
-    /// </summary>
-    public class NoResourceUriInScopesException : MsalClientException
-    {
-        private const string Code = "no_resource_uri_with_slash_.default_in_scopes";
-        private const string ErrorMessage = "The scopes provided is either empty or none that end in `/.default`.";
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Create a TooManyRetryAttemptsException
-        /// </summary>
-        public NoResourceUriInScopesException() : base(Code, ErrorMessage) { }
-
-        /// <summary>
-        /// Create a TooManyRetryAttemptsException with an error message
-        /// </summary>
-        public NoResourceUriInScopesException(string errorMessage) : base(Code, errorMessage) { }
     }
 
     internal abstract class ManagedIdentityClient
     {
-        private const string FailedParseOfManagedIdentityExpiration = "failed_parse_of_managed_identity_token_expiry";
-
         private readonly int _maxRetries;
         private readonly HttpClient _client;
-        protected readonly TraceSource Logger;
+        protected readonly ILogger Logger;
 
-        internal ManagedIdentityClient(string endpoint, HttpClient client, int maxRetries = 5, TraceSource logger = null)
+        internal ManagedIdentityClient(string endpoint, HttpClient client, int maxRetries = 5, ILogger logger = null)
         {
             Endpoint = endpoint;
             _client = client;
@@ -264,12 +194,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             HttpResponseMessage res = null;
             await strategy.RunAsync(async () =>
             {
-                TraceEvent(TraceEventType.Information, $"fetching resource uri {resourceUri}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"fetching resource uri {resourceUri}");
                 var req = BuildTokenRequest(resourceUri);
                 res = await _client.SendAsync(req).ConfigureAwait(false);
 
                 var intCode = (int)res.StatusCode;
-                TraceEvent(TraceEventType.Information, $"received status code {intCode}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"received status code {intCode}");
                 switch (intCode) {
                     case 404:
                     case 429:
@@ -283,7 +213,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
             if(string.IsNullOrEmpty(json))
             {
-                TraceEvent(TraceEventType.Information, $"received empty body");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "received empty body");
                 return null;
             }
 
@@ -291,16 +221,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var startOfUnixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             if (!double.TryParse(tokenRes.ExpiresOn, out var seconds))
             {
-                throw new MsalException(FailedParseOfManagedIdentityExpiration, $"unable to parse the expires on token into an int: {tokenRes.ExpiresOn}");
+                throw new FailedParseOfManagedIdentityExpirationException();
             }
             return new AccessTokenWithExpiration { ExpiresOn = startOfUnixTime.AddSeconds(seconds), AccessToken = tokenRes.AccessToken };
         }
 
         protected string Endpoint { get; }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            Logger?.TraceEvent(type, 0, $"{nameof(ManagedIdentityClient)}.{memberName} :: {message}");
+            Logger?.Log(level, $"{nameof(ManagedIdentityClient)}.{memberName} :: {message}");
         }
     }
 
@@ -308,7 +238,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     {
         private readonly string _clientId;
 
-        public ManagedIdentityVmClient(string endpoint, HttpClient client, string clientId = null, int maxRetries = 10, TraceSource logger = null)
+        public ManagedIdentityVmClient(string endpoint, HttpClient client, string clientId = null, int maxRetries = 10, ILogger logger = null)
             : base(endpoint, client, maxRetries, logger)
         {
             _clientId = clientId;
@@ -323,13 +253,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var requestUri = $"{Endpoint}?resource={resourceUri}{clientIdParameter}&api-version={Constants.ManagedIdentityVMApiVersion}";
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             request.Headers.Add("Metadata", "true");
-            TraceEvent(TraceEventType.Information, $"sending token request: {requestUri}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"sending token request: {requestUri}");
             return request;
         }
 
-        private void TraceEvent(TraceEventType type, string message, string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            Logger?.TraceEvent(type, 0, $"{nameof(ManagedIdentityVmClient)}.{memberName} :: {message}");
+            Logger?.Log(level, $"{nameof(ManagedIdentityVmClient)}.{memberName} :: {message}");
         }
     }
 
@@ -337,7 +267,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     {
         private readonly string _secret;
 
-        public ManagedIdentityAppServiceClient(string endpoint, string secret, HttpClient client, int maxRetries = 10, TraceSource logger = null) : base(endpoint, client, maxRetries, logger)
+        public ManagedIdentityAppServiceClient(string endpoint, string secret, HttpClient client, int maxRetries = 10, ILogger logger = null) : base(endpoint, client, maxRetries, logger)
         {
             _secret = secret;
         }
@@ -347,13 +277,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var requestUri = $"{Endpoint}?resource={resourceUri}&api-version={Constants.ManagedIdentityAppServiceApiVersion}";
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             request.Headers.Add("Secret", _secret);
-            TraceEvent(TraceEventType.Information, $"sending token request: {requestUri}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"sending token request: {requestUri}");
             return request;
         }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            Logger?.TraceEvent(type, 0, $"{nameof(ManagedIdentityAppServiceClient)}.{memberName} :: {message}");
+            Logger?.Log(level, $"{nameof(ManagedIdentityAppServiceClient)}.{memberName} :: {message}");
         }
     }
 
@@ -380,17 +310,61 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
     internal class DefaultManagedIdentityConfiguration : IManagedIdentityConfiguration
     {
-        private readonly IConfigurationProvider _config;
+        private readonly IConfiguration _config;
 
-        public DefaultManagedIdentityConfiguration(IConfigurationProvider config)
+        public DefaultManagedIdentityConfiguration(IConfiguration config)
         {
             _config = config;
         }
 
-        public string ManagedIdentitySecret => _config.Get(Constants.ManagedIdentitySecretEnvName);
+        public string ManagedIdentitySecret => _config.GetValue<string>(Constants.ManagedIdentitySecretEnvName);
 
-        public string ManagedIdentityEndpoint => _config.Get(Constants.ManagedIdentityEndpointEnvName);
+        public string ManagedIdentityEndpoint => _config.GetValue<string>(Constants.ManagedIdentityEndpointEnvName);
 
-        public string ClientId => _config.Get(Constants.AzureClientIdEnvName);
+        public string ClientId => _config.GetValue<string>(Constants.AzureClientIdEnvName);
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// NoResourceUriInScopesException is thrown when the managed identity token provider does not find a .default
+    /// scope for a resource in the enumeration of scopes.
+    /// </summary>
+    public class NoResourceUriInScopesException : MsalClientException
+    {
+        private const string Code = "no_resource_uri_with_slash_.default_in_scopes";
+        private const string ErrorMessage = "The scopes provided is either empty or none that end in `/.default`.";
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Create a NoResourceUriInScopesException
+        /// </summary>
+        public NoResourceUriInScopesException() : base(Code, ErrorMessage) { }
+
+        /// <summary>
+        /// Create a NoResourceUriInScopesException with an error message
+        /// </summary>
+        public NoResourceUriInScopesException(string errorMessage) : base(Code, errorMessage) { }
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// FailedParseOfManagedIdentityExpirationException is thrown when the managed identity service returns a token
+    /// with an expiration we are unable to parse.
+    /// </summary>
+    public class FailedParseOfManagedIdentityExpirationException : MsalClientException
+    {
+        private const string Code = "failed_parse_of_managed_identity_token_expiry";
+        private const string ErrorMessage = "managed identity service returned a response with an expiration we are unable to parse.";
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Create a FailedParseOfManagedIdentityExpirationException
+        /// </summary>
+        public FailedParseOfManagedIdentityExpirationException() : base(Code, ErrorMessage) { }
+
+        /// <summary>
+        /// Create a FailedParseOfManagedIdentityExpirationException with an error message
+        /// </summary>
+        public FailedParseOfManagedIdentityExpirationException(string errorMessage) : base(Code, errorMessage) { }
     }
 }

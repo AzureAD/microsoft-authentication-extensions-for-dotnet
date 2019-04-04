@@ -142,10 +142,6 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
-<<<<<<< HEAD
-
-=======
->>>>>>> 32f40f7... add token provider chains with IConfigurationProviders
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");

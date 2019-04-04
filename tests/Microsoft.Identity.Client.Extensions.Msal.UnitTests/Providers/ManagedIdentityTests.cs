@@ -39,14 +39,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
         }
 
-        private IConfigurationProvider FakeConfiguration(IEnumerable<KeyValuePair<string,string>> initialData = null)
+        private IConfiguration FakeConfiguration(IEnumerable<KeyValuePair<string,string>> initialData = null)
         {
             initialData = initialData ?? new List<KeyValuePair<string, string>>();
-            var source = new MemoryConfigurationSource
-            {
-                InitialData = initialData
-            };
-            return new MemoryConfigurationProvider(source);
+            return new ConfigurationBuilder().AddInMemoryCollection(initialData).Build();
         }
 
         [TestMethod]
@@ -103,7 +99,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.ManagedIdentitySecretEnvName, "secret")
 
             });
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config, checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config);
             var token = await provider.GetTokenAsync(new List<string> { "https://management.azure.com/.default" }).ConfigureAwait(false);
             Assert.IsNotNull(token);
             var seconds = double.Parse(ExpiresOn, CultureInfo.InvariantCulture);
@@ -140,7 +136,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.AzureClientIdEnvName, "foo"),
 
             });
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config, checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config);
             var token = await provider.GetTokenAsync(new List<string> { "https://management.azure.com/.default" }).ConfigureAwait(false);
             Assert.IsNotNull(token);
             var seconds = double.Parse(ExpiresOn, CultureInfo.InvariantCulture);
@@ -172,7 +168,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 }
             });
             var client = new HttpClient(handler);
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration(), checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
             Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
         }
 
@@ -192,7 +188,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 MockResponse = (req, state) => new HttpResponseMessage(HttpStatusCode.BadRequest)
             });
             var client = new HttpClient(handler);
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration(), checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
             await Assert.ThrowsExceptionAsync<BadRequestManagedIdentityException>(async () => await provider.AvailableAsync()
                 .ConfigureAwait(false)).ConfigureAwait(false);
         }
@@ -226,7 +222,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 }
             });
             var client = new HttpClient(handler);
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration(), checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
             Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
         }
 
@@ -261,7 +257,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 }
             });
             var client = new HttpClient(handler);
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration(), checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
             Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
         }
 
@@ -301,7 +297,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 }
             });
             var client = new HttpClient(handler);
-            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration(), checkVmListening: false);
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
             Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
         }
     }

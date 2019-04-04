@@ -111,14 +111,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             }
         };
 
-        private IConfigurationProvider FakeConfiguration(IEnumerable<KeyValuePair<string,string>> initialData = null)
+        private IConfiguration FakeConfiguration(IEnumerable<KeyValuePair<string,string>> initialData = null)
         {
             initialData = initialData ?? new List<KeyValuePair<string, string>>();
-            var source = new MemoryConfigurationSource
-            {
-                InitialData = initialData
-            };
-            return new MemoryConfigurationProvider(source);
+            return new ConfigurationBuilder().AddInMemoryCollection(initialData).Build();
         }
 
         [TestInitialize]

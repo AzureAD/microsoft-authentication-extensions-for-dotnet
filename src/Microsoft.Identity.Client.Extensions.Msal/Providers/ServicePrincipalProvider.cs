@@ -1,18 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.AppConfig;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -23,17 +21,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     public class ServicePrincipalTokenProvider : ITokenProvider
     {
         private readonly IServicePrincipalConfiguration _config;
-        private readonly TraceSource _logger;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Create a new instance of a ServicePrincipalProbe
         /// </summary>
         /// <param name="config">optional configuration; if not specified the default configuration will use environment variables</param>
         /// <param name="logger">optional TraceSource for detailed logging information</param>
-        public ServicePrincipalTokenProvider(IConfigurationProvider config = null, TraceSource logger = null)
+        public ServicePrincipalTokenProvider(IConfiguration config = null, ILogger logger = null)
         {
-            _logger = logger ?? new TraceSource(nameof(ServicePrincipalTokenProvider));
-            config = config ?? new EnvironmentVariablesConfigurationProvider();
+            _logger = logger;
+            config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
             _config = new DefaultServicePrincipalConfiguration(config);
         }
 
@@ -41,9 +39,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public Task<bool> AvailableAsync()
         {
-            TraceEvent(TraceEventType.Information,  "checking if provider is available");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "checking if provider is available");
             var available = IsClientSecret() || IsClientCertificate();
-            TraceEvent(TraceEventType.Information,  $"provider available: {available}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"provider available: {available}");
             return Task.FromResult(available);
         }
 
@@ -52,7 +50,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
         {
             var provider = await ProviderAsync().ConfigureAwait(false);
-            TraceEvent(TraceEventType.Information,  $"fetching token");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"fetching token");
             return await provider.GetTokenAsync(scopes).ConfigureAwait(false);
         }
 
@@ -61,7 +59,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var available = await AvailableAsync().ConfigureAwait(false);
             if (!available)
             {
-                TraceEvent(TraceEventType.Information,  "provider is not available");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is not available");
                 throw new InvalidOperationException("The required environment variables are not available.");
             }
 
@@ -69,34 +67,34 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
             if (!IsClientCertificate())
             {
-                TraceEvent(TraceEventType.Information,  "provider is configured to use client certificates");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is configured to use client certificates");
                 return new InternalServicePrincipalTokenProvider(authorityWithTenant, _config.TenantId, _config.ClientId, _config.ClientSecret);
             }
 
             X509Certificate2 cert;
             if (!string.IsNullOrWhiteSpace(_config.CertificateBase64))
             {
-                TraceEvent(TraceEventType.Information,  $"decoding certificate from base64 directly from environment variable {Constants.AzureCertificateEnvName}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"decoding certificate from base64 directly from environment variable {Constants.AzureCertificateEnvName}");
                 // If the certificate is provided as base64 encoded string in env, decode and hydrate a x509 cert
                 var decoded = Convert.FromBase64String(_config.CertificateBase64);
                 cert = new X509Certificate2(decoded);
             }
             else
             {
-                TraceEvent(TraceEventType.Information,  $"using certificate store with name {StoreNameWithDefault} and location {StoreLocationFromEnv}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"using certificate store with name {StoreNameWithDefault} and location {StoreLocationFromEnv}");
                 // Try to use the certificate store
                 var store = new X509Store(StoreNameWithDefault, StoreLocationFromEnv);
                 store.Open(OpenFlags.ReadOnly);
                 X509Certificate2Collection certs;
                 if (!string.IsNullOrEmpty(_config.CertificateSubjectDistinguishedName))
                 {
-                    TraceEvent(TraceEventType.Information,  $"finding certificates in store by distinguished name {_config.CertificateSubjectDistinguishedName}");
+                    Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"finding certificates in store by distinguished name {_config.CertificateSubjectDistinguishedName}");
                     certs = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName,
                         _config.CertificateSubjectDistinguishedName, true);
                 }
                 else
                 {
-                    TraceEvent(TraceEventType.Information,  $"finding certificates in store by thumbprint {_config.CertificateThumbprint}");
+                    Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"finding certificates in store by thumbprint {_config.CertificateThumbprint}");
                     certs = store.Certificates.Find(X509FindType.FindByThumbprint, _config.CertificateThumbprint, true);
                 }
 
@@ -140,16 +138,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         internal bool IsClientSecret()
         {
-            TraceEvent(TraceEventType.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and {Constants.AzureClientSecretEnvName} are set");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and {Constants.AzureClientSecretEnvName} are set");
             var vars = new List<string> { _config.TenantId, _config.ClientId, _config.ClientSecret };
             var isClientSecret = vars.All(item => !string.IsNullOrWhiteSpace(item));
-            TraceEvent(TraceEventType.Information, $"set: {isClientSecret}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"set: {isClientSecret}");
             return isClientSecret;
         }
 
         internal bool IsClientCertificate()
         {
-            TraceEvent(TraceEventType.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and ({Constants.AzureCertificateEnvName} or {Constants.AzureCertificateThumbprintEnvName} or {Constants.AzureCertificateSubjectDistinguishedNameEnvName}) are set");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and ({Constants.AzureCertificateEnvName} or {Constants.AzureCertificateThumbprintEnvName} or {Constants.AzureCertificateSubjectDistinguishedNameEnvName}) are set");
             var tenantAndClient = new List<string> { _config.TenantId, _config.ClientId };
             if (tenantAndClient.All(item => !string.IsNullOrWhiteSpace(item)))
             {
@@ -162,9 +160,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return false;
         }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            _logger?.TraceEvent(type, 0, $"{nameof(ServicePrincipalTokenProvider)}.{memberName} :: {message}");
+            _logger?.Log(level, $"{nameof(ServicePrincipalTokenProvider)}.{memberName} :: {message}");
         }
     }
 
@@ -221,30 +219,33 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
     internal class DefaultServicePrincipalConfiguration : IServicePrincipalConfiguration
     {
-        private readonly IConfigurationProvider _config;
+        private readonly IConfiguration _config;
 
-        public DefaultServicePrincipalConfiguration(IConfigurationProvider config)
+        public DefaultServicePrincipalConfiguration(IConfiguration config)
         {
             _config = config;
         }
 
-        public string ClientId => _config.Get(Constants.AzureClientIdEnvName);
+        public string ClientId => _config.GetValue<string>(Constants.AzureClientIdEnvName);
 
-        public string CertificateBase64 => _config.Get(Constants.AzureCertificateEnvName);
+        public string CertificateBase64 => _config.GetValue<string>(Constants.AzureCertificateEnvName);
 
-        public string CertificateThumbprint => _config.Get(Constants.AzureCertificateThumbprintEnvName);
+        public string CertificateThumbprint => _config.GetValue<string>(Constants.AzureCertificateThumbprintEnvName);
 
-        public string CertificateStoreName => _config.Get(Constants.AzureCertificateStoreEnvName);
+        public string CertificateStoreName => _config.GetValue<string>(Constants.AzureCertificateStoreEnvName);
 
-        public string TenantId => _config.Get(Constants.AzureTenantIdEnvName);
+        public string TenantId => _config.GetValue<string>(Constants.AzureTenantIdEnvName);
 
-        public string ClientSecret => _config.Get(Constants.AzureClientSecretEnvName);
+        public string ClientSecret => _config.GetValue<string>(Constants.AzureClientSecretEnvName);
 
-        public string CertificateStoreLocation => _config.Get(Constants.AzureCertificateStoreLocationEnvName);
+        public string CertificateStoreLocation => _config.GetValue<string>(Constants.AzureCertificateStoreLocationEnvName);
 
-        public string CertificateSubjectDistinguishedName => _config.Get(Constants.AzureCertificateSubjectDistinguishedNameEnvName);
+        public string CertificateSubjectDistinguishedName => _config.GetValue<string>(Constants.AzureCertificateSubjectDistinguishedNameEnvName);
 
-        public string Authority => string.IsNullOrWhiteSpace(_config.Get(Constants.AadAuthorityEnvName)) ? AadAuthority.DefaultTrustedHost : _config.Get(Constants.AadAuthorityEnvName);
+        public string Authority => string.IsNullOrWhiteSpace(
+            _config.GetValue<string>(Constants.AadAuthorityEnvName)) ?
+                AadAuthority.DefaultTrustedHost :
+                _config.GetValue<string>(Constants.AadAuthorityEnvName);
     }
 
     /// <summary>

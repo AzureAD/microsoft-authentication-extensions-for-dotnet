@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -19,14 +19,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     public class DefaultTokenProviderChain : ITokenProvider
     {
         private readonly ITokenProvider _chain;
-        private readonly TraceSource _logger;
+        private readonly ILogger _logger;
 
         /// <inheritdoc />
-        public DefaultTokenProviderChain(IConfigurationProvider config = null, TraceSource logger = null)
+        public DefaultTokenProviderChain(IConfiguration config = null, ILogger logger = null)
         {
-            _logger = logger ?? new TraceSource(nameof(DefaultTokenProviderChain));
-            config = config ?? new EnvironmentVariablesConfigurationProvider();
-            config.Load();
+            _logger = logger;
+            config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
             var providers = new List<ITokenProvider>
             {
                 new ServicePrincipalTokenProvider(config: config, logger: logger),
@@ -40,26 +39,26 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public async Task<bool> AvailableAsync()
         {
-            TraceEvent(TraceEventType.Information, "checking if any provider is available");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking if any provider is available");
             var available = await _chain.AvailableAsync().ConfigureAwait(false);
-            TraceEvent(TraceEventType.Information, $"provider available: {available}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {available}");
             return available;
         }
 
         /// <inheritdoc />
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
         {
-            TraceEvent(TraceEventType.Information, "getting token");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "getting token");
             var token = await _chain.GetTokenAsync(scopes).ConfigureAwait(false);
-            TraceEvent(TraceEventType.Information, token != null ?
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, token != null ?
                 $"token was returned and will expire on {token.ExpiresOn}" :
                 "no token was returned");
             return token;
         }
 
-        private void TraceEvent(TraceEventType type, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
-            _logger?.TraceEvent(type, 0, $"{nameof(DefaultTokenProviderChain)}.{memberName} :: {message}");
+            _logger?.Log(level, $"{nameof(DefaultTokenProviderChain)}.{memberName} :: {message}");
         }
     }
 }
