@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace Microsoft.Identity.Client.Extensions.Web
 {
     /// <summary>
-    /// 
+    /// Extensions around ClaimsPrincipal.
     /// </summary>
     public static class ClaimsPrincipalExtensions
     {
@@ -15,7 +15,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// Get the Account identifier for an MSAL.NET account from a ClaimsPrincipal
         /// </summary>
         /// <param name="claimsPrincipal">Claims principal</param>
-        /// <returns>A string corresponding to an account identifier as defined in <see cref="Microsoft.Identity.Client.AccountId.Identifier"/></returns>
+        /// <returns>A string corresponding to an account identifier as defined in <see cref="AccountId.Identifier"/></returns>
         public static string GetMsalAccountId(this ClaimsPrincipal claimsPrincipal)
         {
             string userObjectId = claimsPrincipal.GetObjectId();

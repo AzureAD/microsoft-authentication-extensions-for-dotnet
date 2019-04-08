@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace Microsoft.Identity.Client.Extensions.Web
 {
     /// <summary>
-    /// 
+    /// Extension methods dealing with IAccount instances.
     /// </summary>
     public static class AccountExtensions
     {

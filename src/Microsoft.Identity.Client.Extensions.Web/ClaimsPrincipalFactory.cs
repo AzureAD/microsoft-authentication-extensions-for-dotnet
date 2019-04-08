@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace Microsoft.Identity.Client.Extensions.Web
 {
     /// <summary>
-    /// 
+    /// Factory class to create ClaimsPrincipal objects.
     /// </summary>
     public static class ClaimsPrincipalFactory
     {
