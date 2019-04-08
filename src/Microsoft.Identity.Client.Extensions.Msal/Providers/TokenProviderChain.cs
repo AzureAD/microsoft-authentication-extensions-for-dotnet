@@ -77,7 +77,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     /// </summary>
     public class NoProvidersAvailableException : MsalClientException
     {
-        private const string Code = "no_probes_are_available";
+        private const string Code = "no_providers_are_available";
 
         private const string ErrorMessage =
             "All of the ITokenProviders were unable to find the variables needed to successfully create a credential provider.";
