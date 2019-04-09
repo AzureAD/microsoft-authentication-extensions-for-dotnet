@@ -59,7 +59,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
             // InMemoryCache, the cache could be empty if the server was restarted. This is why
             // the null_user exception is thrown.
 
-            return ex.ErrorCode == MsalUiRequiredException.UserNullError;
+            return ex.ErrorCode == MsalError.UserNullError;
         }
 
         /// <summary>
