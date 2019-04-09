@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Rest;
 using WebAppTestWithAzureSDK.AzureClients;
 using WebAppTestWithAzureSDK.Credentials;
@@ -23,7 +25,11 @@ namespace WebAppTestWithAzureSDK
                 {
                     config.SetBasePath(Directory.GetCurrentDirectory());
                     config.AddEnvironmentVariables();
-                    config.AddJsonFile("azure.json", optional: true, reloadOnChange: false);
+                    var env = hostingContext.HostingEnvironment;
+                    config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json",
+                            optional: true, reloadOnChange: true)
+                        .AddJsonFile("azure.json", optional: true, reloadOnChange: true);
                     config.AddCommandLine(args);
                 })
                 .ConfigureServices(services =>

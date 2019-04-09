@@ -188,6 +188,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         protected abstract HttpRequestMessage BuildTokenRequest(string resourceUri);
 
+        protected abstract DateTimeOffset ParseExpiresOn(TokenResponse tokenResponse);
+
+
         public async Task<IToken> FetchTokenWithRetryAsync(string resourceUri)
         {
             var strategy = new RetryWithExponentialBackoff(_maxRetries, 50, 60000);
@@ -218,12 +221,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             }
 
             var tokenRes = TokenResponse.Parse(json);
-            var startOfUnixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            if (!double.TryParse(tokenRes.ExpiresOn, out var seconds))
-            {
-                throw new FailedParseOfManagedIdentityExpirationException();
-            }
-            return new AccessTokenWithExpiration { ExpiresOn = startOfUnixTime.AddSeconds(seconds), AccessToken = tokenRes.AccessToken };
+            return new AccessTokenWithExpiration { ExpiresOn = ParseExpiresOn(tokenRes), AccessToken = tokenRes.AccessToken };
         }
 
         protected string Endpoint { get; }
@@ -257,6 +255,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return request;
         }
 
+        protected override DateTimeOffset ParseExpiresOn(TokenResponse tokenResponse)
+        {
+            var startOfUnixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+            if (double.TryParse(tokenResponse.ExpiresOn, out var seconds))
+            {
+                return startOfUnixTime.AddSeconds(seconds);
+            }
+
+            Log(Microsoft.Extensions.Logging.LogLevel.Error, $"failed to parse: {tokenResponse.ExpiresOn}");
+            throw new FailedParseOfManagedIdentityExpirationException();
+        }
+
         private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
         {
             Logger?.Log(level, $"{nameof(ManagedIdentityVmClient)}.{memberName} :: {message}");
@@ -279,6 +290,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             request.Headers.Add("Secret", _secret);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"sending token request: {requestUri}");
             return request;
+        }
+
+        protected override DateTimeOffset ParseExpiresOn(TokenResponse tokenResponse)
+        {
+            if (DateTimeOffset.TryParse(tokenResponse.ExpiresOn, out var dateTimeOffset))
+            {
+                return dateTimeOffset;
+            }
+
+            Log(Microsoft.Extensions.Logging.LogLevel.Error, $"failed to parse: {tokenResponse.ExpiresOn}");
+            throw new FailedParseOfManagedIdentityExpirationException();
         }
 
         private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")

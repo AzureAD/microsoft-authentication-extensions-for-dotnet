@@ -49,10 +49,20 @@ resource "azurerm_app_service" "test" {
     resource_group_name = "${azurerm_resource_group.test.name}"
     app_service_plan_id = "${azurerm_app_service_plan.test.id}"
 
+    identity {
+        type = "SystemAssigned"
+    }
+
     site_config {
         dotnet_framework_version = "v4.0"
         scm_type                 = "LocalGit"
     }
+}
+
+resource "azurerm_role_assignment" "test_appsvc" {
+    scope              = "subscriptions/${data.azurerm_client_config.current.subscription_id}"
+    role_definition_id = "subscriptions/${data.azurerm_client_config.current.subscription_id}${data.azurerm_builtin_role_definition.contributor.id}"
+    principal_id       = "${azurerm_app_service.test.identity.0.principal_id}"
 }
 
 resource "azurerm_virtual_network" "test" {

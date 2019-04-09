@@ -66,7 +66,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <summary>
         /// API Version used for the Managed Identity metadata endpoint on AppService
         /// </summary>
-        public static readonly string ManagedIdentityAppServiceApiVersion = "2017-08-01";
+        public static readonly string ManagedIdentityAppServiceApiVersion = "2017-09-01";
 
         /// <summary>
         /// API Version used for the Managed Identity metadata endpoint on Virtual Machines

@@ -24,12 +24,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         private const string AccessToken = "abcdefg";
         private const string RefreshToken = "hijklmn";
         private const string ExpiresOn = "1506484173";
-        private const string AzureManagementManagedIdentityJson = @"{
+        private const string AzureManagementVMManagedIdentityJson = @"{
           ""access_token"": """ + AccessToken + @""",
           ""refresh_token"": """ + RefreshToken + @""",
           ""expires_in"": ""3599"",
           ""expires_on"": """ + ExpiresOn + @""",
           ""not_before"": ""1506480273"",
+          ""resource"": ""https://management.azure.com/"",
+          ""token_type"": ""Bearer""
+        }";
+
+        private const string AzureAppServiceManagedIdentityJson = @"{
+          ""access_token"": """ + AccessToken + @""",
+          ""expires_on"": ""4/10/2019 6:27:14 AM +00:00"",
           ""resource"": ""https://management.azure.com/"",
           ""token_type"": ""Bearer""
         }";
@@ -87,7 +94,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 {
                     var resp = new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                        Content = new MockJsonContent(AzureAppServiceManagedIdentityJson)
                     };
                     return resp;
                 }
@@ -102,9 +109,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config);
             var token = await provider.GetTokenAsync(new List<string> { "https://management.azure.com/.default" }).ConfigureAwait(false);
             Assert.IsNotNull(token);
-            var seconds = double.Parse(ExpiresOn, CultureInfo.InvariantCulture);
-            var startOfUnixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            Assert.AreEqual(token.ExpiresOn, startOfUnixTime.AddSeconds(seconds));
+            Assert.AreEqual(DateTimeOffset.Parse("4/10/19 6:27:14 AM +00:00", CultureInfo.InvariantCulture), token.ExpiresOn);
             Assert.AreEqual(AccessToken, token.AccessToken);
         }
 
@@ -125,7 +130,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 {
                     var resp = new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                        Content = new MockJsonContent(AzureManagementVMManagedIdentityJson)
                     };
                     return resp;
                 }
@@ -162,7 +167,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 {
                     var resp = new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                        Content = new MockJsonContent(AzureManagementVMManagedIdentityJson)
                     };
                     return resp;
                 }
@@ -212,7 +217,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                     {
                         var resp = new HttpResponseMessage(HttpStatusCode.OK)
                         {
-                            Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                            Content = new MockJsonContent(AzureManagementVMManagedIdentityJson)
                         };
                         return resp;
                     }
@@ -245,7 +250,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                     {
                         var resp = new HttpResponseMessage(HttpStatusCode.OK)
                         {
-                            Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                            Content = new MockJsonContent(AzureManagementVMManagedIdentityJson)
                         };
                         return resp;
                     }
@@ -280,7 +285,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                     {
                         var resp = new HttpResponseMessage(HttpStatusCode.OK)
                         {
-                            Content = new MockJsonContent(AzureManagementManagedIdentityJson)
+                            Content = new MockJsonContent(AzureManagementVMManagedIdentityJson)
                         };
                         return resp;
                     }
