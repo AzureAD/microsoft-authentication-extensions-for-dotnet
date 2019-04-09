@@ -33,24 +33,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
             _logger = logger;
             _config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
+
             var authority = string.Format(CultureInfo.InvariantCulture,
                 AadAuthority.AadCanonicalAuthorityTemplate,
                 AadAuthority.DefaultTrustedHost,
                 "common");
-            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
-            builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
-            builder = builder.WithLinuxKeyring(
-                schemaName: "msal.cache",
-                collection: "default",
-                secretLabel: "MSALCache",
-                attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
-                attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
-            var storageCreationProperties = builder.Build();
+
+            const string serviceName = "Microsoft.Developer.IdentityService";
+            var storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
+                Path.GetFileName(CacheFilePath),
+                Path.GetDirectoryName(CacheFilePath))
+                .WithMacKeyChain(serviceName: serviceName, accountName: "MSALCache")
+                .WithLinuxKeyring(
+                    schemaName: "msal.cache",
+                    collection: "default",
+                    secretLabel: "MSALCache",
+                    attribute1: new KeyValuePair<string, string>("MsalClientID", serviceName),
+                    attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+
             _app = PublicClientApplicationBuilder
                 .Create("04b07795-8ddb-461a-bbee-02f9e1bf7b46")
                 .WithAuthority(new Uri(authority))
                 .Build();
-            _cacheHelper = MsalCacheHelper.RegisterCache(_app.UserTokenCache, storageCreationProperties);
+
+            _cacheHelper = MsalCacheHelper.RegisterCache(_app.UserTokenCache, storageCreationPropertiesBuilder.Build());
         }
 
         /// <inheritdoc />
