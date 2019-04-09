@@ -7,7 +7,7 @@
     <!--This will generate AssemblyVersion, AssemblyFileVersion and AssemblyInformationVersion-->
     <Version>$(ClientSemVer)</Version>
 
-    <TargetFrameworks>netcoreapp2.1;net45</TargetFrameworks>
+    <TargetFrameworks>$(DesktopTargetFrameworks)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);MSAL</DefineConstants>
     <Authors>Microsoft</Authors>
     <Company>Microsoft</Company>
@@ -27,11 +27,18 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  
+
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Windows'))">
+    <Reference Include="System.Security" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('OSX'))">
     <Reference Include="System.Security" />
   </ItemGroup>
 

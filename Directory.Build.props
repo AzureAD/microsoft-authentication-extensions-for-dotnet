@@ -8,6 +8,17 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/build/SolutionWideAnalyzerConfig.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+
+    <TargetFrameworkNetDesktop>net45</TargetFrameworkNetDesktop>
+    <TargetFrameworkNetStandard>netstandard2.0</TargetFrameworkNetStandard>
+    <TargetFrameworkNetCore>netcoreapp2.1</TargetFrameworkNetCore>
+
+    <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(TargetFrameworkNetDesktop);$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
+    <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
+    <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Linux'))">$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
+
+    <WebTargetFramework>netcoreapp2.2</WebTargetFramework>
+
   </PropertyGroup>
   <ItemGroup>
     <!-- PrivateAssets="All" is on these packages to ensure they're development dependencies

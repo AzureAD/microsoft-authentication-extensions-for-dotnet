@@ -7,7 +7,7 @@
     <!--This will generate AssemblyVersion, AssemblyFileVersion and AssemblyInformationVersion-->
     <Version>$(ClientSemVer)</Version>
 
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>$(WebTargetFramework)</TargetFramework>
     <DefineConstants>$(DefineConstants);WEB</DefineConstants>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Authors>Microsoft</Authors>
@@ -27,7 +27,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
@@ -40,9 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.2.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
   </ItemGroup>
 </Project>
