@@ -14,14 +14,16 @@ namespace ManualTestApp
     {
         private static MsalCacheHelper s_helper;
 
-        static void Main(string[] args)
+#pragma warning disable UseAsyncSuffix // Use Async suffix
+        static async Task Main(string[] args)
+#pragma warning restore UseAsyncSuffix // Use Async suffix
         {
             string input;
             do
             {
                 Console.Write("> ");
                 input = Console.ReadLine();
-            } while (RunCommandAsync(input).Result);
+            } while (await RunCommandAsync(input).ConfigureAwait(true));
         }
 
         /// <summary>
