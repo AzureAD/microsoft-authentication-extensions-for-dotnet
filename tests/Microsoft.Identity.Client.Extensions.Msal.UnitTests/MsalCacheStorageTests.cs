@@ -49,7 +49,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalTestUserDirectory()
         {
-            Assert.AreEqual(MsalCacheHelper.UserRootDirectory, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+            Assert.AreEqual(MsalCacheHelper.UserRootDirectory,
+                Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+                    : Environment.GetEnvironmentVariable("HOME"));
         }
 
         [TestMethod]

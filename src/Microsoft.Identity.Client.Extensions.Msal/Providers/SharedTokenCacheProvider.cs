@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,7 +10,6 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client.AppConfig;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -56,7 +54,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 .WithAuthority(new Uri(authority))
                 .Build();
 
-            _cacheHelper = MsalCacheHelper.RegisterCache(_app.UserTokenCache, storageCreationPropertiesBuilder.Build());
+            _cacheHelper = new MsalCacheHelper(storageCreationPropertiesBuilder.Build());
+            _cacheHelper.RegisterCache(_app.UserTokenCache);
         }
 
         /// <inheritdoc />
@@ -78,7 +77,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             {
                 throw new InvalidOperationException("there are no accounts available to acquire a token");
             }
-            var res = await _app.AcquireTokenSilentAsync(scopes, accounts.First()).ConfigureAwait(false);
+            var res = await _app.AcquireTokenSilent(scopes, accounts.First()).ExecuteAsync().ConfigureAwait(false);
             return new AccessTokenWithExpiration { ExpiresOn = res.ExpiresOn, AccessToken = res.AccessToken };
         }
 

@@ -33,12 +33,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
             for (int tryCount = 0; tryCount < LockfileRetryCount; tryCount++)
             {
-                
+
                 try
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
                     const int defaultBufferSize = 4096;
-
                     var fileShare = FileShare.None;
                     if (SharedUtilities.IsWindowsPlatform())
                     {

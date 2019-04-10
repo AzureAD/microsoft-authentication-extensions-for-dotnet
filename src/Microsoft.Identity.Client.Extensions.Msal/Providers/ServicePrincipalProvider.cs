@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Microsoft.Identity.Client.AppConfig;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -306,7 +305,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <returns>A token with expiration</returns>
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
         {
-            var res = await _client.AcquireTokenForClientAsync(scopes).ConfigureAwait(false);
+            var res = await _client.AcquireTokenForClient(scopes).ExecuteAsync().ConfigureAwait(false);
             return new AccessTokenWithExpiration { ExpiresOn = res.ExpiresOn, AccessToken = res.AccessToken };
         }
     }

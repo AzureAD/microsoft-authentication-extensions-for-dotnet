@@ -8,8 +8,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
-using Microsoft.Identity.Client.AppConfig;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
