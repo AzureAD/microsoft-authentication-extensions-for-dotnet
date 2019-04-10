@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 #if ADAL
@@ -30,7 +31,8 @@ public class StorageCreationProperties
             string keyringCollection,
             string keyringSecretLabel,
             KeyValuePair<string, string> keyringAttribute1,
-            KeyValuePair<string, string> keyringAttribute2)
+            KeyValuePair<string, string> keyringAttribute2,
+            string clientId)
         {
             CacheFileName = cacheFileName;
             CacheDirectory = cacheDirectory;
@@ -41,7 +43,13 @@ public class StorageCreationProperties
             KeyringSecretLabel = keyringSecretLabel;
             KeyringAttribute1 = keyringAttribute1;
             KeyringAttribute2 = keyringAttribute2;
+            ClientId = clientId;
         }
+
+        /// <summary>
+        /// Gets the full path to the cache file, combining the directory and filename.
+        /// </summary>
+        public string CacheFilePath => Path.Combine(CacheDirectory, CacheFileName);
 
         /// <summary>
         /// The name of the cache file.
@@ -87,5 +95,10 @@ public class StorageCreationProperties
         /// Additional linux keyring attribute.
         /// </summary>
         public readonly KeyValuePair<string, string> KeyringAttribute2;
+
+        /// <summary>
+        /// The client id
+        /// </summary>
+        public string ClientId { get; }
     }
 }

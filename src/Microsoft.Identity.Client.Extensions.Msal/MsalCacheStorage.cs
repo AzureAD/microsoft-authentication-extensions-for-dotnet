@@ -20,10 +20,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         internal readonly StorageCreationProperties _creationProperties;
         private readonly TraceSource _logger;
 
-        // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
-        // lets make sure we get what the actual value is on the runtime we are executing under.
-        private readonly DateTimeOffset _fileNotFoundOffset;
-
         private DateTimeOffset _lastWriteTime;
 
         private IntPtr _libsecretSchema = IntPtr.Zero;
@@ -40,31 +36,29 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
 
+            // When calling get last writetimeUtc and the file is not found, the time returned is not the minimum date time or datetime offset.
+            // Get a baseline value by trying to get the last write time of a file we know doesn't exist. Then HasChanged will return false
+            // if the cache file actually doesn't exist.
+            DateTimeOffset fileNotFoundOffset;
             try
             {
                 logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Getting last write file time for a missing file in localappdata");
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
+                fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
             catch (Exception e)
             {
                 logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}");
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
+                fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
             }
 
-            CacheFilePath = Path.Combine(creationProperties.CacheDirectory, creationProperties.CacheFileName);
-
-            _lastWriteTime = _fileNotFoundOffset;
+            _lastWriteTime = fileNotFoundOffset;
             logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Finished initializing '{nameof(MsalCacheStorage)}'");
         }
 
         /// <summary>
         /// Gets cache file path
         /// </summary>
-        public string CacheFilePath
-        {
-            get;
-            private set;
-        }
+        public string CacheFilePath => _creationProperties.CacheFilePath;
 
         /// <summary>
         /// Gets a value indicating whether the persist file has changed before load it to cache
@@ -108,14 +102,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
-#if NET45
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
                     }
-#else
-                    data = fileData;
-#endif
+                    else
+                    {
+                        data = fileData;
+                    }
                 }
                 else if (fileData == null || fileData.Length == 0)
                 {
@@ -157,13 +151,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
-#if NET45
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");
                     data = ProtectedData.Protect(data, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
                 }
-#endif
 
                 WriteDataCore(data);
             }
