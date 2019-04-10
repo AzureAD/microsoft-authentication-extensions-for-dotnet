@@ -38,6 +38,14 @@
     <Reference Include="System.Security" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetCore)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
