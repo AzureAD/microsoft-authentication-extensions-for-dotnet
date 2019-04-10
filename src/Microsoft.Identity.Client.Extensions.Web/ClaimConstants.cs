@@ -5,14 +5,8 @@ namespace Microsoft.Identity.Client.Extensions.Web
 {
     internal static class ClaimConstants
     {
-        /// <summary>
-        /// 
-        /// </summary>
         public const string ObjectId = "http://schemas.microsoft.com/identity/claims/objectidentifier";
-
-        /// <summary>
-        /// 
-        /// </summary>
         public const string TenantId = "http://schemas.microsoft.com/identity/claims/tenantid";
+        public const string TidKey = "tid";
     }
 }
