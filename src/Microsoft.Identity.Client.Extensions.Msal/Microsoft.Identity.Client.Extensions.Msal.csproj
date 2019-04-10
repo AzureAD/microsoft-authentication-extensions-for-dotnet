@@ -31,7 +31,7 @@
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Identity.Client" Version="3.0.2-preview" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
     <Reference Include="System.Security" />
   </ItemGroup>
 
