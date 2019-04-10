@@ -7,8 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.AppConfig;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
