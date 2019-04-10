@@ -30,13 +30,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.0.2-preview" />
-   </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Windows'))">
-    <Reference Include="System.Security" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('OSX'))">
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
     <Reference Include="System.Security" />
   </ItemGroup>
 

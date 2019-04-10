@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.0.2-preview" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

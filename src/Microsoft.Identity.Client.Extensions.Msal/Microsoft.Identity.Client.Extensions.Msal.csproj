@@ -34,11 +34,7 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
   </ItemGroup>
 
-  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('Windows'))">
-    <Reference Include="System.Security" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOsPlatform('OSX'))">
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
     <Reference Include="System.Security" />
   </ItemGroup>
 
