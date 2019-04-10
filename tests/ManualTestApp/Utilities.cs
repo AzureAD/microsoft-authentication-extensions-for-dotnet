@@ -11,7 +11,7 @@ namespace ManualTestApp
 {
     internal static class Utilities
     {
-        internal static (string[], IPublicClientApplication, MsalCacheHelper) GetPublicClient(
+        internal static async Task<(string[], IPublicClientApplication, MsalCacheHelper)> GetPublicClientAsync(
             string resource,
             string tenant,
             Uri baseAuthority,
@@ -39,12 +39,12 @@ namespace ManualTestApp
             var app = appBuilder.Build();
             Console.WriteLine($"Built public client");
 
-            var storageCreationPropsBuilder = new StorageCreationPropertiesBuilder(cacheFilename, cacheDirectory);
+            var storageCreationPropsBuilder = new StorageCreationPropertiesBuilder(cacheFilename, cacheDirectory, clientId);
             storageCreationPropsBuilder = storageCreationPropsBuilder.WithMacKeyChain(serviceName, accountName);
             var storageCreationProps = storageCreationPropsBuilder.Build();
 
             // This hooks up our custom cache onto the one used by MSAL
-            var cacheHelper = new MsalCacheHelper(storageCreationProps);
+            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProps).ConfigureAwait(false);
             cacheHelper.RegisterCache(app.UserTokenCache);
 
             Console.WriteLine($"Cache registered");

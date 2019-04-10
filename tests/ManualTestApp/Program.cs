@@ -2,22 +2,28 @@
 // Licensed under the MIT License.
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
 {
     class Program
     {
-        static void Main(string[] args)
+        private static MsalCacheHelper s_helper;
+
+#pragma warning disable UseAsyncSuffix // Use Async suffix
+        static async Task Main(string[] args)
+#pragma warning restore UseAsyncSuffix // Use Async suffix
         {
             string input;
             do
             {
                 Console.Write("> ");
                 input = Console.ReadLine();
-            } while (RunCommand(input));
+            } while (await RunCommandAsync(input).ConfigureAwait(true));
         }
 
         /// <summary>
@@ -25,11 +31,11 @@ namespace ManualTestApp
         /// </summary>
         /// <param name="splitInput">The command</param>
         /// <returns>True if execution should continue, false if we should terminate.</returns>
-        private static bool RunCommand(string input)
+        private static async Task<bool> RunCommandAsync(string input)
         {
 
-            var splitInput = input.ToLowerInvariant().Split(' ');
-            var command = splitInput[0];
+            var splitInput = input.Split(' ');
+            var command = splitInput[0].ToLowerInvariant();
             var args = splitInput.Skip(1).ToArray();
 
             switch (command)
@@ -50,7 +56,7 @@ namespace ManualTestApp
                 }
                 else
                 {
-                    LoginWithMsal(args);
+                    await LoginWithMsalAsync(args).ConfigureAwait(false);
                 }
                 return true;
 
@@ -61,7 +67,7 @@ namespace ManualTestApp
             }
         }
 
-        private static void LoginWithMsal(string[] args)
+        private static async Task LoginWithMsalAsync(string[] args)
         {
             try
             {
@@ -73,7 +79,7 @@ namespace ManualTestApp
 #pragma warning restore CA1305 // Specify IFormatProvider
                 string clientId = args[4];
                 string cacheFileName = args[5];
-                string cacheDirectory = args[6];
+                string cacheDirectory = Path.Combine(MsalCacheHelper.UserRootDirectory, args[6]);
 
                 string serviceName = null;
                 string accountName = null;
@@ -84,7 +90,7 @@ namespace ManualTestApp
                     accountName = args[8];
                 }
 
-                (var scopes, var app, var helper) = Utilities.GetPublicClient(
+                (var scopes, var app, var helper) = await Utilities.GetPublicClientAsync(
                     resource,
                     tenant,
                     baseAuthority,
@@ -94,9 +100,19 @@ namespace ManualTestApp
                     cacheDirectory,
                     serviceName,
                     accountName
-                    );
+                    ).ConfigureAwait(false);
+
+                if (s_helper == null)
+                {
+                    s_helper = helper;
+                    s_helper.CacheChanged += (s, e) =>
+                    {
+                        Console.WriteLine($"Cache Changed, Added: {e.AccountsAdded.Count()} Removed: {e.AccountsRemoved.Count()}");
+                    };
+                }
+
                 var builder = app.AcquireTokenWithDeviceCode(scopes, Utilities.DeviceCodeCallbackAsync);
-                var authResult = builder.ExecuteAsync().Result;
+                var authResult = await builder.ExecuteAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
