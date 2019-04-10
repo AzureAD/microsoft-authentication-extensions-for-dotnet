@@ -18,6 +18,7 @@ public class StorageCreationPropertiesBuilder
     {
         private readonly string _cacheFileName;
         private readonly string _cacheDirectory;
+        private readonly string _clientId;
         private string _macKeyChainServiceName;
         private string _macKeyChainAccountName;
         private string _keyringSchemaName;
@@ -31,10 +32,12 @@ public class StorageCreationPropertiesBuilder
         /// </summary>
         /// <param name="cacheFileName">The name of the cache file to use when creating or opening storage.</param>
         /// <param name="cacheDirectory">The name of the directory containing the cache file.</param>
-        public StorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory)
+        /// <param name="clientId">The client id for the calling application</param>
+        public StorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory, string clientId)
         {
             _cacheFileName = cacheFileName;
             _cacheDirectory = cacheDirectory;
+            _clientId = clientId;
         }
 
         /// <summary>
@@ -52,7 +55,8 @@ public class StorageCreationPropertiesBuilder
                 _keyringCollection,
                 _keyringSecretLabel,
                 _keyringAttribute1,
-                _keyringAttribute2);
+                _keyringAttribute2,
+                _clientId);
         }
 
         /// <summary>

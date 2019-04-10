@@ -2,9 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.AppConfig;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -52,15 +56,110 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private ITokenCache _userTokenCache;
 
         /// <summary>
+        /// Contains a list of accounts that we know about. This is used as a 'before' list when the cache is changed on disk,
+        /// so that we know which accounts were added and removed. Used when sending the <see cref="CacheChanged"/> event.
+        /// </summary>
+        private HashSet<string> _knownAccountIds;
+
+        /// <summary>
+        /// Watches a filesystem location in order to fire events when the cache on disk is changed.
+        /// </summary>
+        private readonly FileSystemWatcher _cacheWatcher;
+
+        /// <summary>
+        /// Allows clients to listen for cache updates originating from disk.
+        /// </summary>
+        public event EventHandler<CacheChangedEventArgs> CacheChanged;
+
+        /// <summary>
+        /// Creates a new instance of <see cref="MsalCacheHelper"/>.
+        /// </summary>
+        /// <param name="storageCreationProperties">Properties to use when creating storage on disk.</param>
+        /// <param name="logger">Passing null uses a default logger</param>
+        /// <returns>A new instance of <see cref="MsalCacheHelper"/>.</returns>
+        public static async Task<MsalCacheHelper> CreateAsync(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
+        {
+            // We want CrossPlatLock around this operation so that we don't have a race against first read of the file and creating the watcher
+            using (CreateCrossPlatLock(storageCreationProperties))
+            {
+                // Cache the list of accounts
+                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties).ConfigureAwait(false);
+
+                var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
+                var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
+                cacheWatcher.EnableRaisingEvents = true;
+
+                return helper;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current set of accounts in the cache by creating a new public client, and
+        /// deserializing the cache into a temporary object.
+        /// </summary>
+        private static async Task<HashSet<string>> GetAccountIdentifiersAsync(StorageCreationProperties storageCreationProperties)
+        {
+            var accountIdentifiers = new HashSet<string>();
+            if (File.Exists(storageCreationProperties.CacheFilePath))
+            {
+                var pca = PublicClientApplicationBuilder.Create(storageCreationProperties.ClientId).Build();
+                var tempCache = new MsalCacheStorage(storageCreationProperties, s_staticLogger.Value);
+
+                // We're using ReadData here so that decryption is gets handled within the store.
+                pca.UserTokenCache.DeserializeMsalV3(tempCache.ReadData());
+
+                var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
+
+                foreach (var account in accounts)
+                {
+                    accountIdentifiers.Add(account.HomeAccountId.Identifier);
+                }
+            }
+
+            return accountIdentifiers;
+        }
+
+        /// <summary>
         /// Creates a new instance of this class.
         /// </summary>
         /// <param name="storageCreationProperties">Properties to use when creating storage on disk.</param>
-        /// <param name="logger">Passing null uses the default logger</param>
-        public MsalCacheHelper(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
+        /// <param name="logger">Passing null uses a default logger</param>
+        /// <param name="knownAccountIds">The set of known accounts</param>
+        /// <param name="cacheWatcher">Watcher for the cache file, to enable sending updated events</param>
+        private MsalCacheHelper(StorageCreationProperties storageCreationProperties, TraceSource logger, HashSet<string> knownAccountIds, FileSystemWatcher cacheWatcher)
         {
             _logger = logger ?? s_staticLogger.Value;
             _storageCreationProperties = storageCreationProperties;
             _store = new MsalCacheStorage(_storageCreationProperties, _logger);
+            _knownAccountIds = knownAccountIds;
+
+            _cacheWatcher = cacheWatcher;
+            _cacheWatcher.Changed += OnCacheFileChangedAsync;
+            _cacheWatcher.Deleted += OnCacheFileChangedAsync;
+        }
+
+        private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
+        {
+            try
+            {
+                var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
+
+                var intersect = currentAccountIds.Intersect(_knownAccountIds);
+                var removed = _knownAccountIds.Except(intersect);
+                var added = currentAccountIds.Except(intersect);
+
+                _knownAccountIds = currentAccountIds;
+
+                if (added.Any() || removed.Any())
+                {
+                    CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                }
+            }
+            catch (Exception e)
+            {
+                // Never let this throw, just log errors
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Exception within File Watcher : {e}");
+            }
         }
 
         /// <summary>
@@ -90,10 +189,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
-        /// Gets a singleton instance of the TokenCacheHelper
+        /// Registers this object to receive events when the provided token cache changes, in order
+        /// to serialize to disk.
         /// </summary>
         /// <param name="tokenCache">Token Cache</param>
-        /// <returns>token cache helper</returns>
         public void RegisterCache(ITokenCache tokenCache)
         {
             lock (_lockObject)
@@ -137,6 +236,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
+        /// Gets a new instance of a lock for synchronizing against a cache made with the same creation properties.
+        /// </summary>
+        private static CrossPlatLock CreateCrossPlatLock(StorageCreationProperties storageCreationProperties)
+        {
+            return new CrossPlatLock(storageCreationProperties.CacheFilePath + ".lockfile");
+        }
+
+        /// <summary>
         /// Before cache access
         /// </summary>
         /// <param name="args">Callback parameters from MSAL</param>
@@ -145,7 +252,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
-            CacheLock = new CrossPlatLock(Path.Combine(_storageCreationProperties.CacheDirectory, _storageCreationProperties.CacheFileName) + ".lockfile");
+            CacheLock = CreateCrossPlatLock(_storageCreationProperties);
 
             if (_store.HasChanged)
             {

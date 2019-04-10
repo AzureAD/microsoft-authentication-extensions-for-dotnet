@@ -23,7 +23,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
+            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere");
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
             builder = builder.WithLinuxKeyring(
                 schemaName: "msal.cache",
