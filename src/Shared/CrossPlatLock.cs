@@ -38,7 +38,20 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
                     const int defaultBufferSize = 4096;
-                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read, defaultBufferSize, FileOptions.DeleteOnClose);
+
+                    var fileShare = FileShare.None;
+                    if (SharedUtilities.IsWindowsPlatform())
+                    {
+                        // This is so that Windows can offer read due to the granularity of the locking. Unix will not
+                        // lock with FileShare.Read. Read access on Windows is only for debugging purposes and will not
+                        // affect the functionality.
+                        //
+                        // See: https://github.com/dotnet/coreclr/blob/98472784f82cee7326a58e0c4acf77714cdafe03/src/System.Private.CoreLib/shared/System/IO/FileStream.Unix.cs#L74-L89
+                        fileShare = FileShare.Read;
+                    }
+
+                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, fileShare, defaultBufferSize, FileOptions.DeleteOnClose);
+                    
                     using (var writer = new StreamWriter(fileStream, Encoding.UTF8, defaultBufferSize, leaveOpen: true))
                     {
                         writer.WriteLine($"{Process.GetCurrentProcess().Id} {Process.GetCurrentProcess().ProcessName}");
