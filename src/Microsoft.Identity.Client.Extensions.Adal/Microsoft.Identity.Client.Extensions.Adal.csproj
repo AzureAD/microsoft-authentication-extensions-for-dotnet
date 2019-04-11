@@ -7,7 +7,7 @@
     <!--This will generate AssemblyVersion, AssemblyFileVersion and AssemblyInformationVersion-->
     <Version>$(ClientSemVer)</Version>
 
-    <TargetFrameworks>netcoreapp2.1;net45</TargetFrameworks>
+    <TargetFrameworks>$(DesktopTargetFrameworks)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);ADAL</DefineConstants>
     <Authors>Microsoft</Authors>
     <Company>Microsoft</Company>
@@ -27,16 +27,21 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.0.2-preview" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
     <Reference Include="System.Security" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <PackageReference Include="System.Security.Cryptography.ProtectedData">
-      <Version>4.5.0</Version>
-    </PackageReference>
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetCore)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
   </ItemGroup>
 
   <ItemGroup>
