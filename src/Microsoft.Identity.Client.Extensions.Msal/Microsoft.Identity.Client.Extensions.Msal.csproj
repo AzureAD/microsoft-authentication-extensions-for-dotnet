@@ -13,7 +13,7 @@
     <Company>Microsoft</Company>
     <Description>This package contains extensions to Microsoft Authentication Library for .NET (MSAL.NET)</Description>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageLicenseUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</RepositoryUrl>
     <PackageTags>Microsoft Authentication Library MSAL Azure Active Directory AAD Identity .NET</PackageTags>

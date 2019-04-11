@@ -12,7 +12,7 @@
     <Authors>Microsoft</Authors>
     <Company>Microsoft</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageLicenseUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</RepositoryUrl>
     <PackageTags>Microsoft Authentication Library ADAL Azure Active Directory AAD Identity .NET</PackageTags>
     <Description>This package contains extensions to Azure Active Directory Library for .NET (ADAL.NET)</Description>

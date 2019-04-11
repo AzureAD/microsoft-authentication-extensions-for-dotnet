@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
 
     <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp2.1;net472</TargetFrameworks>
     <TargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp2.1</TargetFrameworks>
