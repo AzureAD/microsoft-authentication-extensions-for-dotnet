@@ -23,11 +23,20 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
         /// <summary>
+        /// A default logger for use if the user doesn't want to provide their own.
+        /// </summary>
+        private static readonly Lazy<TraceSource> s_staticLogger = new Lazy<TraceSource>(() =>
+        {
+            return (TraceSource)EnvUtils.GetNewTraceSource(nameof(MsalCacheHelper) + "Singleton");
+        });
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
         /// </summary>
         /// <param name="creationProperties">Properties for creating the cache storage on disk</param>
         /// <param name="logger">logger</param>
-        public MsalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger)
+        public MsalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger = null)
         {
             _creationProperties = creationProperties;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));

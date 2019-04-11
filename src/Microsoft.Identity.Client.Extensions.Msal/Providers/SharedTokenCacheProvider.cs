@@ -32,15 +32,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             _logger = logger;
             _config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
-            var authority = string.Format(CultureInfo.InvariantCulture,
-                AadAuthority.AadCanonicalAuthorityTemplate,
-                AadAuthority.DefaultTrustedHost,
-                "common");
-
             const string serviceName = "Microsoft.Developer.IdentityService";
+            const string clientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
             var storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
                 Path.GetFileName(CacheFilePath),
-                Path.GetDirectoryName(CacheFilePath))
+                Path.GetDirectoryName(CacheFilePath),
+                clientId)
                 .WithMacKeyChain(serviceName: serviceName, accountName: "MSALCache")
                 .WithLinuxKeyring(
                     schemaName: "msal.cache",
@@ -49,12 +46,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                     attribute1: new KeyValuePair<string, string>("MsalClientID", serviceName),
                     attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
 
+            var authority = string.Format(CultureInfo.InvariantCulture,
+                AadAuthority.AadCanonicalAuthorityTemplate,
+                AadAuthority.DefaultTrustedHost,
+                "common");
             _app = PublicClientApplicationBuilder
-                .Create("04b07795-8ddb-461a-bbee-02f9e1bf7b46")
+                .Create(clientId)
                 .WithAuthority(new Uri(authority))
                 .Build();
 
-            _cacheHelper = new MsalCacheHelper(storageCreationPropertiesBuilder.Build());
+            var cacheStore = new MsalCacheStorage(storageCreationPropertiesBuilder.Build());
+            _cacheHelper = new MsalCacheHelper(_app.UserTokenCache, cacheStore);
             _cacheHelper.RegisterCache(_app.UserTokenCache);
         }
 
