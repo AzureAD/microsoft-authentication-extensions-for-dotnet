@@ -31,7 +31,7 @@
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Identity.Client" Version="3.0.3-preview" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="3.0.5-preview" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
@@ -39,11 +39,11 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetCore)'">
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
