@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,7 +119,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var helper = await MsalCacheHelper.CreateAsync(s_storageCreationProperties).ConfigureAwait(true);
             helper._cacheWatcher.EnableRaisingEvents = false;
 
-            await File.WriteAllTextAsync(s_storageCreationProperties.CacheFilePath, "Something to start with").ConfigureAwait(true);
+            // Intentionally write the file after creating the MsalCacheHelper to avoid the initial inner PCA being created only to read garbage
+            string startString = "Something to start with";
+            var startBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(startString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
+            await File.WriteAllBytesAsync(s_storageCreationProperties.CacheFilePath, startBytes).ConfigureAwait(true);
 
             var cache1 = new MockTokenCache();
             var cache2 = new MockTokenCache();
@@ -129,6 +133,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // One call from register
             Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(startString, cache1.LastDeserializedString);
+            Assert.AreEqual(startString, cache2.LastDeserializedString);
 
             var args1 = new TokenCacheNotificationArgs
             {
@@ -140,7 +146,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 TokenCache = cache2
             };
 
-            await File.WriteAllTextAsync(s_storageCreationProperties.CacheFilePath, "Hey look, the file changed").ConfigureAwait(true);
+            File.Delete(s_storageCreationProperties.CacheFilePath);
+            var changedString = "Hey look, the file changed";
+            var changedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(changedString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
+            await File.WriteAllBytesAsync(s_storageCreationProperties.CacheFilePath, changedBytes).ConfigureAwait(true);
 
             helper.BeforeAccessNotification(args1);
             helper.AfterAccessNotification(args1);
@@ -155,6 +164,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // One call from BeforeAccess
             Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_ClearCache);
+
+            Assert.AreEqual(changedString, cache1.LastDeserializedString);
+            Assert.AreEqual(changedString, cache2.LastDeserializedString);
+
+            File.Delete(s_storageCreationProperties.CacheFilePath);
         }
     }
 }

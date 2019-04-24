@@ -18,6 +18,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         internal int DeserializeMsalV3_ClearCache { get; set; }
         internal int DeserializeMsalV3_MergeCache { get; set; }
 
+        internal string LastDeserializedString { get; set; }
+
         public void Deserialize(byte[] msalV2State)
         {
             throw new NotImplementedException();
@@ -35,6 +37,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public void DeserializeMsalV3(byte[] msalV3State, bool shouldClearExistingCache = false)
         {
+            LastDeserializedString = Encoding.UTF8.GetString(msalV3State);
+
             if (shouldClearExistingCache)
             {
                 DeserializeMsalV3_ClearCache++;
