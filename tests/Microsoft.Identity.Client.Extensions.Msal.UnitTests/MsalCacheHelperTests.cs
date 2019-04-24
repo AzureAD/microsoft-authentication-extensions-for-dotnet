@@ -38,13 +38,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MultiAccessSerializationAsync()
         {
+            var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
-                new MockTokenCache(),
+                cache1,
                 new MsalCacheStorage(s_storageCreationProperties, _logger),
                 _logger);
 
+            var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
-                new MockTokenCache(),
+                cache2,
                 new MsalCacheStorage(s_storageCreationProperties, _logger),
                 _logger);
 
@@ -62,7 +64,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread1 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs();
+                var args = new TokenCacheNotificationArgs
+                {
+                    TokenCache = cache1
+                };
+
                 helper1.BeforeAccessNotification(args);
                 resetEvent3.Set();
                 resetEvent1.WaitOne();
@@ -71,7 +77,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread2 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs();
+                var args = new TokenCacheNotificationArgs
+                {
+                    TokenCache = cache2
+                };
+
                 helper2.BeforeAccessNotification(args);
                 resetEvent4.Set();
                 resetEvent2.WaitOne();

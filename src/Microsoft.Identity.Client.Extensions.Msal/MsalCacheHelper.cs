@@ -60,6 +60,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private HashSet<string> _knownAccountIds;
 
         /// <summary>
+        /// Contains the last-read bytes from _store, so multiple callers don't necessarily result in multiple reads from the file.
+        /// </summary>
+        private byte[] _cachedStoreData = new byte[0];
+
+        /// <summary>
         /// Watches a filesystem location in order to fire events when the cache on disk is changed. Internal for testing.
         /// </summary>
         internal readonly FileSystemWatcher _cacheWatcher;
@@ -68,6 +73,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Allows clients to listen for cache updates originating from disk.
         /// </summary>
         public event EventHandler<CacheChangedEventArgs> CacheChanged;
+
+        /// <summary>
+        /// Contains a reference to all caches currently registerred to synchronize with this MsalCacheHelper, along with
+        /// timestamp of the cache file the last time they deserialized.
+        /// </summary>
+        private readonly Dictionary<ITokenCache, DateTimeOffset> _registerredCaches = new Dictionary<ITokenCache, DateTimeOffset>();
 
         /// <summary>
         /// Creates a new instance of <see cref="MsalCacheHelper"/>.
@@ -187,31 +198,47 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
-        /// Registers this object to receive events when the provided token cache changes, in order
-        /// to serialize to disk.
+        /// Registers a token cache to synchronize with on disk storage.
         /// </summary>
         /// <param name="tokenCache">Token Cache</param>
         public void RegisterCache(ITokenCache tokenCache)
         {
-            lock (_lockObject)
+            // OK, we have two nested locks here. We need to maintain a clear ordering to avoid deadlocks.
+            // 1. Use the CrossPlatLock which is respected by all processes and is used around all cache accesses.
+            // 2. Use _lockObject which is used in UnregisterCache, and is needed for all accesses of _registerredCaches.
+            //
+            // Here specifically, we don't want to set this.CacheLock because we're done with the lock by the end of the method.
+            using (var crossPlatLock =  CreateCrossPlatLock(_storageCreationProperties))
             {
-                _userTokenCache = tokenCache ?? throw new ArgumentNullException(nameof(tokenCache));
-
-                _userTokenCache.SetBeforeAccess(BeforeAccessNotification);
-                _userTokenCache.SetAfterAccess(AfterAccessNotification);
-
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing msal cache");
-
-                byte[] data = _store.ReadData();
-
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{data?.Length}' bytes from storage");
-
-                if (data != null && data.Length > 0)
+                lock (_lockObject)
                 {
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Registerring token cache with on disk storage");
+                    if (_registerredCaches.ContainsKey(tokenCache))
+                    {
+                        _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Redundant registration of {nameof(tokenCache)} in {nameof(MsalCacheHelper)}, skipping further registration.");
+                        return;
+                    }
+
+                    _userTokenCache = tokenCache ?? throw new ArgumentNullException(nameof(tokenCache));
+
+                    _userTokenCache.SetBeforeAccess(BeforeAccessNotification);
+                    _userTokenCache.SetAfterAccess(AfterAccessNotification);
+
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing msal cache");
+
+                    if (_store.HasChanged)
+                    {
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
+                        byte[] fileData = _store.ReadData();
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
+                        _cachedStoreData = _store.ReadData();
+                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{_cachedStoreData?.Length}' bytes from storage");
+                    }
+
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing data into memory");
-                        _userTokenCache.DeserializeMsalV3(data);
+                        _userTokenCache.DeserializeMsalV3(_cachedStoreData);
                     }
                     catch (Exception e)
                     {
@@ -221,7 +248,33 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     }
                 }
 
+                _registerredCaches[tokenCache] = _store.LastWriteTime;
+
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
+            }
+        }
+
+
+        /// <summary>
+        /// Unregisters a token cache so it no longer synchronizes with on disk storage.
+        /// </summary>
+        /// <param name="tokenCache"></param>
+        public void UnregisterCache(ITokenCache tokenCache)
+        {
+            lock (_lockObject)
+            {
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unregisterring token cache from on disk storage");
+
+                if (_registerredCaches.ContainsKey(tokenCache))
+                {
+                    _registerredCaches.Remove(tokenCache);
+                    tokenCache.SetBeforeAccess(args => { });
+                    tokenCache.SetAfterAccess(args => { });
+                }
+                else
+                {
+                    _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Attempting to unregister an already unregisterred {nameof(tokenCache)} in {nameof(MsalCacheHelper)}");
+                }
             }
         }
 
@@ -250,20 +303,29 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
+
+            // OK, we have two nested locks here. We need to maintain a clear ordering to avoid deadlocks.
+            // 1. Use the CrossPlatLock which is respected by all processes and is used around all cache accesses.
+            // 2. Use _lockObject which is used in UnregisterCache, and is needed for all accesses of _registerredCaches.
             CacheLock = CreateCrossPlatLock(_storageCreationProperties);
 
             if (_store.HasChanged)
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
-                byte[] fileData = _store.ReadData();
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
+                _cachedStoreData = _store.ReadData();
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{_cachedStoreData?.Length}' bytes from storage");
+            }
 
-                if (fileData != null && fileData.Length > 0)
+            lock (_lockObject)
+            {
+                if ((!_registerredCaches.ContainsKey(args.TokenCache)) || _registerredCaches[args.TokenCache] < _store.LastWriteTime)
                 {
+
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
-                        args.TokenCache.DeserializeMsalV3(fileData, shouldClearExistingCache: true);
+                        args.TokenCache.DeserializeMsalV3(_cachedStoreData, shouldClearExistingCache: true);
+                        _registerredCaches[args.TokenCache] = _store.LastWriteTime;
                     }
                     catch (Exception e)
                     {
@@ -274,12 +336,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         Clear();
                         throw;
                     }
-                }
-                else
-                {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
-
-                    // Clear the memory cache
                 }
             }
         }
