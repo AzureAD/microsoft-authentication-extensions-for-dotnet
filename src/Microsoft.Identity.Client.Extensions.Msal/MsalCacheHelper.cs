@@ -60,9 +60,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private HashSet<string> _knownAccountIds;
 
         /// <summary>
-        /// Watches a filesystem location in order to fire events when the cache on disk is changed.
+        /// Watches a filesystem location in order to fire events when the cache on disk is changed. Internal for testing.
         /// </summary>
-        private readonly FileSystemWatcher _cacheWatcher;
+        internal readonly FileSystemWatcher _cacheWatcher;
 
         /// <summary>
         /// Allows clients to listen for cache updates originating from disk.
@@ -263,7 +263,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
-                        args.TokenCache.DeserializeMsalV3(fileData);
+                        args.TokenCache.DeserializeMsalV3(fileData, shouldClearExistingCache: true);
                     }
                     catch (Exception e)
                     {

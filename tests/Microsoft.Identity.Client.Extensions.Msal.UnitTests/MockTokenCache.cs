@@ -15,6 +15,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         private TokenCacheCallback _beforeAccess;
         private TokenCacheCallback _afterAccess;
 
+        internal int DeserializeMsalV3_ClearCache { get; set; }
+        internal int DeserializeMsalV3_MergeCache { get; set; }
+
         public void Deserialize(byte[] msalV2State)
         {
             throw new NotImplementedException();
@@ -30,9 +33,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             throw new NotImplementedException();
         }
 
-        public void DeserializeMsalV3(byte[] msalV3State)
+        public void DeserializeMsalV3(byte[] msalV3State, bool shouldClearExistingCache = false)
         {
-            throw new NotImplementedException();
+            if (shouldClearExistingCache)
+            {
+                DeserializeMsalV3_ClearCache++;
+            }
+            else
+            {
+                DeserializeMsalV3_MergeCache++;
+            }
         }
 
         public void DeserializeUnifiedAndAdalCache(CacheData cacheData)

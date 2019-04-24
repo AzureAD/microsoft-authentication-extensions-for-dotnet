@@ -102,6 +102,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
+
+#if DEBUG
+                    data = fileData;
+#else
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
@@ -110,6 +114,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     {
                         data = fileData;
                     }
+#endif
                 }
                 else if (fileData == null || fileData.Length == 0)
                 {
@@ -151,11 +156,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Got '{data?.Length}' bytes to write to storage");
+#if (!DEBUG)
                 if (SharedUtilities.IsWindowsPlatform() && data.Length != 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Protecting the data");
                     data = ProtectedData.Protect(data, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
                 }
+#endif
 
                 WriteDataCore(data);
             }

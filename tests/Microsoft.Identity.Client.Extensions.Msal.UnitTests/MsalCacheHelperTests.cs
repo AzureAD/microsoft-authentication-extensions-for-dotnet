@@ -106,5 +106,55 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Make sure thread2 cleaned up after itself as well
             Assert.IsNull(helper2.CacheLock);
         }
+
+        [TestMethod]
+        public async Task TwoRegisteredCachesRemainInSyncTestAsync()
+        {
+            if (File.Exists(s_storageCreationProperties.CacheFilePath))
+            {
+                File.Delete(s_storageCreationProperties.CacheFilePath);
+            }
+
+            var helper = await MsalCacheHelper.CreateAsync(s_storageCreationProperties).ConfigureAwait(true);
+            helper._cacheWatcher.EnableRaisingEvents = false;
+
+            await File.WriteAllTextAsync(s_storageCreationProperties.CacheFilePath, "Something to start with").ConfigureAwait(true);
+
+            var cache1 = new MockTokenCache();
+            var cache2 = new MockTokenCache();
+
+            helper.RegisterCache(cache1);
+            helper.RegisterCache(cache2);
+
+            // One call from register
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+
+            var args1 = new TokenCacheNotificationArgs
+            {
+                TokenCache = cache1
+            };
+
+            var args2 = new TokenCacheNotificationArgs
+            {
+                TokenCache = cache2
+            };
+
+            await File.WriteAllTextAsync(s_storageCreationProperties.CacheFilePath, "Hey look, the file changed").ConfigureAwait(true);
+
+            helper.BeforeAccessNotification(args1);
+            helper.AfterAccessNotification(args1);
+
+            helper.BeforeAccessNotification(args2);
+            helper.AfterAccessNotification(args2);
+
+            // Still only one call from register
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+
+            // One call from BeforeAccess
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_ClearCache);
+        }
     }
 }
