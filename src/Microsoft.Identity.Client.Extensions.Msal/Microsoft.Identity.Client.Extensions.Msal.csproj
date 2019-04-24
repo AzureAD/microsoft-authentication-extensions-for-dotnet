@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
-    <CSFile Remove="Providers/*.cs"/>
+    <Compile Remove="Providers/*.cs"/>
     <Reference Include="System.Security" />
   </ItemGroup>
 
