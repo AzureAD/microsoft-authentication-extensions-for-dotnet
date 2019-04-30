@@ -68,7 +68,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {token != null}");
                 return token != null;
             }
-            catch (TooManyRetryAttemptsException)
+            catch (Exception ex) when (ex is TooManyRetryAttemptsException || ex is BadRequestManagedIdentityException)
             {
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, "Exceeded retry limit for Virtual Machine Managed Identity request");
                 return false;

@@ -194,8 +194,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            await Assert.ThrowsExceptionAsync<BadRequestManagedIdentityException>(async () => await provider.AvailableAsync()
-                .ConfigureAwait(false)).ConfigureAwait(false);
+            Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
