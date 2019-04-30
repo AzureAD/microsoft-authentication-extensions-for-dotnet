@@ -5,11 +5,32 @@ using Xunit;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
-    public class RunOnOSXAttribute : TestMethodAttribute
+    public class RunOnOSXAttribute : RunOnPlatformAttribute
     {
+        public RunOnOSXAttribute() : base(OSPlatform.OSX)
+        {
+        }
+    }
+
+    public class RunOnWindowsAttribute : RunOnPlatformAttribute
+    {
+        public RunOnWindowsAttribute() : base(OSPlatform.Windows)
+        {
+        }
+    }
+
+    public class RunOnPlatformAttribute : TestMethodAttribute
+    {
+        private readonly OSPlatform _platform;
+
+        protected RunOnPlatformAttribute(OSPlatform platform)
+        {
+            _platform = platform;
+        }
+
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (!RuntimeInformation.IsOSPlatform(_platform))
             {
                 return new[]
                 {

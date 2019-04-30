@@ -118,8 +118,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsNull(helper2.CacheLock);
         }
 
-        [TestMethod]
-        public async Task ThreeRegisteredCachesRemainInSyncTestAsync()
+        [RunOnWindows]
+        public async Task TwoRegisteredCachesRemainInSyncTestAsync()
         {
             if (File.Exists(s_storageCreationProperties.CacheFilePath))
             {
