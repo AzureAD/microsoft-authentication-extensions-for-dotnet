@@ -102,6 +102,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (fileData != null && fileData.Length > 0)
                 {
                     _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Unprotecting the data");
+
                     if (SharedUtilities.IsWindowsPlatform())
                     {
                         data = ProtectedData.Unprotect(fileData, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
@@ -134,7 +135,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             // If the file does not exist this returns a time in the far distant past.
             _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-            return data;
+            return data ?? new byte[0];
         }
 
         /// <summary>
@@ -173,6 +174,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Clearing the cache file");
             ClearCore();
         }
+
+        internal DateTimeOffset LastWriteTime { get => _lastWriteTime; }
 
         private byte[] ReadDataCore()
         {

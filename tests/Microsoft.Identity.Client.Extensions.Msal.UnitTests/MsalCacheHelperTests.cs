@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,13 +38,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MultiAccessSerializationAsync()
         {
+            var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
-                new MockTokenCache(),
+                cache1,
                 new MsalCacheStorage(s_storageCreationProperties, _logger),
                 _logger);
 
+            var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
-                new MockTokenCache(),
+                cache2,
                 new MsalCacheStorage(s_storageCreationProperties, _logger),
                 _logger);
 
@@ -61,7 +64,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread1 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs();
+                var args = new TokenCacheNotificationArgs
+                {
+                    TokenCache = cache1
+                };
+
                 helper1.BeforeAccessNotification(args);
                 resetEvent3.Set();
                 resetEvent1.WaitOne();
@@ -70,7 +77,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread2 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs();
+                var args = new TokenCacheNotificationArgs
+                {
+                    TokenCache = cache2
+                };
+
                 helper2.BeforeAccessNotification(args);
                 resetEvent4.Set();
                 resetEvent2.WaitOne();
@@ -105,6 +116,69 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Make sure thread2 cleaned up after itself as well
             Assert.IsNull(helper2.CacheLock);
+        }
+
+        [TestMethod]
+        public async Task TwoRegisteredCachesRemainInSyncTestAsync()
+        {
+            if (File.Exists(s_storageCreationProperties.CacheFilePath))
+            {
+                File.Delete(s_storageCreationProperties.CacheFilePath);
+            }
+
+            var helper = await MsalCacheHelper.CreateAsync(s_storageCreationProperties).ConfigureAwait(true);
+            helper._cacheWatcher.EnableRaisingEvents = false;
+
+            // Intentionally write the file after creating the MsalCacheHelper to avoid the initial inner PCA being created only to read garbage
+            string startString = "Something to start with";
+            var startBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(startString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
+            await File.WriteAllBytesAsync(s_storageCreationProperties.CacheFilePath, startBytes).ConfigureAwait(true);
+
+            var cache1 = new MockTokenCache();
+            var cache2 = new MockTokenCache();
+
+            helper.RegisterCache(cache1);
+            helper.RegisterCache(cache2);
+
+            // One call from register
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(startString, cache1.LastDeserializedString);
+            Assert.AreEqual(startString, cache2.LastDeserializedString);
+
+            var args1 = new TokenCacheNotificationArgs
+            {
+                TokenCache = cache1
+            };
+
+            var args2 = new TokenCacheNotificationArgs
+            {
+                TokenCache = cache2
+            };
+
+            File.Delete(s_storageCreationProperties.CacheFilePath);
+            var changedString = "Hey look, the file changed";
+            var changedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(changedString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
+            await File.WriteAllBytesAsync(s_storageCreationProperties.CacheFilePath, changedBytes).ConfigureAwait(true);
+
+            helper.BeforeAccessNotification(args1);
+            helper.AfterAccessNotification(args1);
+
+            helper.BeforeAccessNotification(args2);
+            helper.AfterAccessNotification(args2);
+
+            // Still only one call from register
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+
+            // One call from BeforeAccess
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
+            Assert.AreEqual(1, cache2.DeserializeMsalV3_ClearCache);
+
+            Assert.AreEqual(changedString, cache1.LastDeserializedString);
+            Assert.AreEqual(changedString, cache2.LastDeserializedString);
+
+            File.Delete(s_storageCreationProperties.CacheFilePath);
         }
     }
 }
