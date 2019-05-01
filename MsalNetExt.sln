@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTestForTokenProvider
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppTestWithAzureSDK", "tests\WebAppTestWithAzureSDK\WebAppTestWithAzureSDK.csproj", "{2F233ADD-658B-4E3F-86CA-4E031CAD97A5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.Extensions.Abstractions", "src\Microsoft.Identity.Client.Extensions.Abstractions\Microsoft.Identity.Client.Extensions.Abstractions.csproj", "{F9EE77DE-42FE-4044-9811-53A4E357E9ED}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Shared\Shared.projitems*{f575599f-41ad-4cdd-b0ad-3b659a43ee84}*SharedItemsImports = 13
@@ -148,6 +150,18 @@ Global
 		{2F233ADD-658B-4E3F-86CA-4E031CAD97A5}.Release|x64.Build.0 = Release|Any CPU
 		{2F233ADD-658B-4E3F-86CA-4E031CAD97A5}.Release|x86.ActiveCfg = Release|Any CPU
 		{2F233ADD-658B-4E3F-86CA-4E031CAD97A5}.Release|x86.Build.0 = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|x64.Build.0 = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Debug|x86.Build.0 = Debug|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|x64.ActiveCfg = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|x64.Build.0 = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|x86.ActiveCfg = Release|Any CPU
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -163,6 +177,7 @@ Global
 		{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
 		{39DFF90A-37E3-4505-950C-E1AB1B23BCEA} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
 		{2F233ADD-658B-4E3F-86CA-4E031CAD97A5} = {B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}
+		{F9EE77DE-42FE-4044-9811-53A4E357E9ED} = {FF6F9ABE-66F6-42F0-BB6C-D0C8C7372150}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {92BA1502-D540-4EF8-93F0-4D7EA682B10B}

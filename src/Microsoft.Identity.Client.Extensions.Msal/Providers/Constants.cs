@@ -28,8 +28,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         /// <summary>
         ///     AzurePreferredAccountUsernameEnvName is the username of an account in the Shared Token Cache. If there
-        ///     have been multiple accounts logged in via MSFT develper tools, this will filter the accounts to use a
-        ///     specific username rather than selecting the first.
+        ///     have been multiple accounts logged in via Microsoft developer tools, this will filter the accounts to
+        ///     use a specific username rather than selecting the first.
         /// </summary>
         public static readonly string AzurePreferredAccountUsernameEnvName = "AZURE_PREFERRED_ACCOUNT_USERNAME";
 
@@ -108,6 +108,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <summary>
         /// AzureResourceManagerDefaultScope is the default scope for Azure Resource Manager
         /// </summary>
-        public static readonly string AzureResourceManagerDefaultScope = @"https://management.azure.com/.default";
+        public static readonly string AzureResourceManagerResourceUri = @"https://management.azure.com/";
+
+        /// <summary>
+        /// AzureResourceManagerDefaultScope is the default scope for Azure Resource Manager
+        /// </summary>
+        public static readonly string AzureResourceManagerDefaultScope = $"{AzureResourceManagerResourceUri}.default";
     }
 }

@@ -7,14 +7,16 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
     /// <summary>
-    /// SharedTokenCacheProbe (wip) provides shared access to tokens from the Microsoft family of products.
+    /// SharedTokenCacheProbe provides shared access to tokens from the Microsoft family of products.
     /// This probe will provided access to tokens from accounts that have been authenticated in other Microsoft products to provide a single sign-on experience.
     /// </summary>
     public class SharedTokenCacheProvider : ITokenProvider
@@ -61,7 +63,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync()
+        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
             var accounts = await GetAccountsAsync().ConfigureAwait(false);
@@ -71,7 +73,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
             var accounts = (await GetAccountsAsync().ConfigureAwait(false)).ToList();
@@ -79,7 +81,26 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             {
                 throw new InvalidOperationException("there are no accounts available to acquire a token");
             }
-            var res = await _app.AcquireTokenSilent(scopes, accounts.First()).ExecuteAsync().ConfigureAwait(false);
+            var res = await _app.AcquireTokenSilent(scopes, accounts.First())
+                .ExecuteAsync(cancel)
+                .ConfigureAwait(false);
+            return new AccessTokenWithExpiration { ExpiresOn = res.ExpiresOn, AccessToken = res.AccessToken };
+        }
+
+        /// <inheritdoc />
+        public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
+        {
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
+            var accounts = (await GetAccountsAsync().ConfigureAwait(false)).ToList();
+            if(!accounts.Any())
+            {
+                throw new InvalidOperationException("there are no accounts available to acquire a token");
+            }
+
+            var scopes = new List<string>{resourceUri + "/.default"};
+            var res = await _app.AcquireTokenSilent(scopes, accounts.First())
+                .ExecuteAsync(cancel)
+                .ConfigureAwait(false);
             return new AccessTokenWithExpiration { ExpiresOn = res.ExpiresOn, AccessToken = res.AccessToken };
         }
 
@@ -88,7 +109,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var accounts = (await _app.GetAccountsAsync().ConfigureAwait(false)).ToList();
             if (accounts.Any())
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"found the following account usernames: {string.Join(", ", accounts.Select(i => i.Username))}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information,
+                    $"found the following account usernames: {string.Join(", ", accounts.Select(i => i.Username))}");
             }
             else
             {
@@ -96,13 +118,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, msg);
             }
             var username = _config.GetValue<string>(Constants.AzurePreferredAccountUsernameEnvName);
-            if (!string.IsNullOrWhiteSpace(username))
+
+            if (string.IsNullOrWhiteSpace(username))
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"since {Constants.AzurePreferredAccountUsernameEnvName} is set accounts will be filtered by username: {username}");
-                return accounts.Where(i => i.Username == username);
+                return accounts;
             }
 
-            return accounts;
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,
+                $"since {Constants.AzurePreferredAccountUsernameEnvName} is set accounts will be filtered by username: {username}");
+            return accounts.Where(i => i.Username == username);
         }
 
         private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")

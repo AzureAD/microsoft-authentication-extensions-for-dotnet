@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -34,11 +36,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync()
+        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
         {
             foreach (var p in _providers)
             {
-                if (await p.AvailableAsync().ConfigureAwait(false))
+                if (await p.AvailableAsync(cancel).ConfigureAwait(false))
                 {
                     return true;
                 }
@@ -48,12 +50,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
             ITokenProvider provider = null;
             foreach (var p in _providers)
             {
-                if (!await p.AvailableAsync().ConfigureAwait(false))
+                if (!await p.AvailableAsync(cancel).ConfigureAwait(false))
                 {
                     continue;
                 }
@@ -67,7 +69,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 throw new NoProvidersAvailableException();
             }
 
-            return await provider.GetTokenAsync(scopes).ConfigureAwait(false);
+            return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
+        {
+            ITokenProvider provider = null;
+            foreach (var p in _providers)
+            {
+                if (!await p.AvailableAsync(cancel).ConfigureAwait(false))
+                {
+                    continue;
+                }
+
+                provider = p;
+                break;
+            }
+
+            if (provider == null)
+            {
+                throw new NoProvidersAvailableException();
+            }
+
+            return await provider.GetTokenWithResourceUriAsync(resourceUri, cancel)
+                .ConfigureAwait(false);
         }
     }
 

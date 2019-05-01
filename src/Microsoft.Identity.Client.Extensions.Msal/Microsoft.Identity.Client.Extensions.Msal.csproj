@@ -31,10 +31,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.8" />
+    <!-- TODO: Change this to a PackageReference after initial publication of Microsoft.Identity.Client.Extensions.Abstractions -->
+    <ProjectReference Include="..\Microsoft.Identity.Client.Extensions.Abstractions\Microsoft.Identity.Client.Extensions.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
-    <Compile Remove="Providers/*.cs"/>
+    <Compile Remove="Providers/*.cs" />
     <Reference Include="System.Security" />
   </ItemGroup>
 
@@ -44,7 +46,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
@@ -52,7 +54,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0"/>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -7,9 +7,11 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -36,7 +38,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         // Async method lacks 'await' operators and will run synchronously
         /// <inheritdoc />
-        public Task<bool> AvailableAsync()
+        public Task<bool> AvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information,  "checking if provider is available");
             var available = IsClientSecret() || IsClientCertificate();
@@ -46,11 +48,20 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
 
         /// <inheritdoc />
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
             var provider = await ProviderAsync().ConfigureAwait(false);
-            Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"fetching token");
-            return await provider.GetTokenAsync(scopes).ConfigureAwait(false);
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "fetching token");
+            return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
+        {
+            var provider = await ProviderAsync().ConfigureAwait(false);
+            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "fetching token");
+            var scopes = new List<string>{resourceUri + "/.default"};
+            return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
         }
 
         private async Task<InternalServicePrincipalTokenProvider> ProviderAsync()
@@ -150,7 +161,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var tenantAndClient = new List<string> { _config.TenantId, _config.ClientId };
             if (tenantAndClient.All(item => !string.IsNullOrWhiteSpace(item)))
             {
-                // TODO add certificate distinguished name and test
                 return !string.IsNullOrWhiteSpace(_config.CertificateBase64) ||
                        !string.IsNullOrWhiteSpace(_config.CertificateThumbprint) ||
                        !string.IsNullOrWhiteSpace(_config.CertificateSubjectDistinguishedName);
@@ -254,7 +264,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     {
         private readonly IConfidentialClientApplication _client;
 
-        internal InternalServicePrincipalTokenProvider(string authority, string tenantId, string clientId, string secret, IMsalHttpClientFactory clientFactory)
+        internal InternalServicePrincipalTokenProvider(string authority, string tenantId, string clientId, string secret, IMsalHttpClientFactory clientFactory = null)
         {
             _client = ConfidentialClientApplicationBuilder.Create(clientId)
                 .WithTenantId(tenantId)
@@ -287,25 +297,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         { }
 
         /// <summary>
-        ///     ServicePrincipalCredentialProvider constructor to build the provider with a string secret
-        /// </summary>
-        /// <param name="authority">Hostname of the security token service (STS) from which MSAL.NET will acquire the tokens. Ex: login.microsoftonline.com
-        /// </param>
-        /// <param name="tenantId">A string representation for a GUID, which is the ID of the tenant where the account resides</param>
-        /// <param name="clientId">A string representation for a GUID ClientId (application ID) of the application</param>
-        /// <param name="secret">A string secret for the application</param>
-        public InternalServicePrincipalTokenProvider(string authority, string tenantId, string clientId, string secret)
-            : this(authority, tenantId, clientId, secret, null)
-        { }
-
-        /// <summary>
         ///     GetTokenAsync returns a token for a given set of scopes
         /// </summary>
         /// <param name="scopes">Scopes requested to access a protected API</param>
+        /// <param name="cancel">Cancellation token to cancel the HTTP token request</param>
         /// <returns>A token with expiration</returns>
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel)
         {
-            var res = await _client.AcquireTokenForClient(scopes).ExecuteAsync().ConfigureAwait(false);
+            var res = await _client.AcquireTokenForClient(scopes)
+                .ExecuteAsync(cancel)
+                .ConfigureAwait(false);
             return new AccessTokenWithExpiration { ExpiresOn = res.ExpiresOn, AccessToken = res.AccessToken };
         }
     }

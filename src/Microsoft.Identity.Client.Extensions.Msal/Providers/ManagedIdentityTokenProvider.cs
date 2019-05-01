@@ -3,13 +3,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -45,11 +46,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             : this(null, config, overrideClientId, logger: logger) { }
 
         /// <inheritdoc />
-        /// <summary>
-        ///     Check if the probe is available for use in the current environment
-        /// </summary>
-        /// <returns>True if a credential provider can be built</returns>
-        public async Task<bool> AvailableAsync()
+        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
         {
             // check App Service MSI
             if (IsAppService())
@@ -64,7 +61,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, "Attempting to fetch test token with Virtual Machine Managed Identity");
                 // if service is listening on VM IP check if a token can be acquired
                 var provider = BuildInternalProvider(maxRetries: 2, httpClient: _httpClient);
-                var token = await provider.GetTokenAsync(new List<string> { Constants.AzureResourceManagerDefaultScope }).ConfigureAwait(false);
+                var token = await provider.GetTokenAsync(Constants.AzureResourceManagerResourceUri, cancel)
+                    .ConfigureAwait(false);
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {token != null}");
                 return token != null;
             }
@@ -76,16 +74,33 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        /// <summary>
-        ///     GetTokenAsync returns a token for a given set of scopes
-        /// </summary>
-        /// <param name="scopes">Scopes requested to access a protected API</param>
-        /// <returns>A token with expiration</returns>
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
+        {
+            const string resourceDefaultSuffix = @".default";
+            var internalProvider = BuildInternalProvider(httpClient: _httpClient);
+
+            var resourceUriInScopes = scopes?.FirstOrDefault(i => i.EndsWith(resourceDefaultSuffix, StringComparison.OrdinalIgnoreCase));
+            if (resourceUriInScopes == null)
+            {
+                throw new NoResourceUriInScopesException();
+            }
+
+            var resourceUri = resourceUriInScopes.Substring(0, resourceUriInScopes.Length - resourceDefaultSuffix.Length);
+            if (resourceUri.EndsWith("//"))
+            {
+                resourceUri = resourceUri.Substring(0, resourceUri.Length - 1);
+            }
+
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"Attempting to fetch token with resourceUri: {resourceUri} from scope: {resourceUriInScopes}");
+            return await internalProvider.GetTokenAsync(resourceUri, cancel).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
         {
             var internalProvider = BuildInternalProvider(httpClient: _httpClient);
-            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"Attempting to fetch token with scopes {string.Join(", ", scopes)}");
-            return await internalProvider.GetTokenAsync(scopes).ConfigureAwait(false);
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"Attempting to fetch token with resourceUri: {resourceUri}");
+            return await internalProvider.GetTokenAsync(resourceUri, cancel).ConfigureAwait(false);
         }
 
 
@@ -151,19 +166,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <summary>
         ///     GetTokenAsync returns a token for a given set of scopes
         /// </summary>
-        /// <param name="scopes">Scopes requested to access a protected API</param>
+        /// <param name="resourceUri">Resource URI of the protected API requested to access</param>
+        /// <param name="cancel">Cancellation token for the HTTP requests</param>
         /// <returns>A token with expiration</returns>
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(string resourceUri, CancellationToken cancel)
         {
-            var resourceUriInScopes = scopes?.FirstOrDefault(i => i.EndsWith(@"/.default", StringComparison.OrdinalIgnoreCase));
-            if (resourceUriInScopes == null)
-            {
-                throw new NoResourceUriInScopesException();
-            }
-
-            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"fetching token with retry and scopes {string.Join(", ", scopes)}");
-            var resourceUri = resourceUriInScopes.Substring(0, resourceUriInScopes.Length - 8);
-            return await _client.FetchTokenWithRetryAsync(resourceUri).ConfigureAwait(false);
+            return await _client.FetchTokenWithRetryAsync(resourceUri, cancel).ConfigureAwait(false);
         }
 
         private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
@@ -191,7 +199,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         protected abstract DateTimeOffset ParseExpiresOn(TokenResponse tokenResponse);
 
 
-        public async Task<IToken> FetchTokenWithRetryAsync(string resourceUri)
+        public async Task<IToken> FetchTokenWithRetryAsync(string resourceUri, CancellationToken cancel)
         {
             var strategy = new RetryWithExponentialBackoff(_maxRetries, 50, 60000);
             HttpResponseMessage res = null;
@@ -199,7 +207,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             {
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, $"fetching resource uri {resourceUri}");
                 var req = BuildTokenRequest(resourceUri);
-                res = await _client.SendAsync(req).ConfigureAwait(false);
+                res = await _client.SendAsync(req, HttpCompletionOption.ResponseContentRead, cancel).ConfigureAwait(false);
 
                 var intCode = (int)res.StatusCode;
                 Log(Microsoft.Extensions.Logging.LogLevel.Information, $"received status code {intCode}");

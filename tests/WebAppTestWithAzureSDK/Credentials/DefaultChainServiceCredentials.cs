@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 using Microsoft.Identity.Client.Extensions.Msal.Providers;
 using Microsoft.Rest;
-using ITokenProvider = Microsoft.Identity.Client.Extensions.Msal.Providers.ITokenProvider;
+using ITokenProvider = Microsoft.Identity.Client.Extensions.Abstractions.ITokenProvider;
 
 namespace WebAppTestWithAzureSDK.Credentials
 {
@@ -40,24 +40,18 @@ namespace WebAppTestWithAzureSDK.Credentials
                 if (_tokenCache.ContainsKey(resourceUri))
                 {
                     var token = _tokenCache[resourceUri];
-                    if (!token.ExpiresOn.HasValue || !(token.ExpiresOn < DateTime.Now.Subtract(new TimeSpan(0, 5, 0))))
+                    if (!token.ExpiresOn.HasValue ||
+                        !(token.ExpiresOn < DateTime.Now.Subtract(new TimeSpan(0, 5, 0))))
                     {
                         return _tokenCache[resourceUri];
                     }
+                }
 
-                    token = _tokenProvider.GetTokenAsync(new List<string> {$"{resourceUri}/.default"})
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                    _tokenCache[resourceUri] = token;
-                }
-                else
-                {
-                    var token = _tokenProvider.GetTokenAsync(new List<string> {$"{resourceUri}/.default"})
-                        .ConfigureAwait(false).GetAwaiter().GetResult();
-                    _tokenCache[resourceUri] = token;
-                }
+                var newToken = _tokenProvider.GetTokenWithResourceUriAsync(resourceUri)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                _tokenCache[resourceUri] = newToken;
+                return _tokenCache[resourceUri];
             }
-
-            return _tokenCache[resourceUri];
         }
     }
 }

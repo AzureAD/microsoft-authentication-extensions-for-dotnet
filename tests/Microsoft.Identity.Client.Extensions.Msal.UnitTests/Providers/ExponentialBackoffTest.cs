@@ -28,7 +28,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         [TestCategory("ExponentialBackoffTests")]
         public void ExponentialBackoffTestShouldProgressExponentially()
         {
-            var maxDelay = 500000;
+            const int maxDelay = 500000;
             var maxLog = (int)Math.Ceiling(Math.Log(maxDelay, 2));
             var subject = new ExponentialBackoff(20, 1, maxDelay);
             for(var i = 0; i < maxLog; i++)

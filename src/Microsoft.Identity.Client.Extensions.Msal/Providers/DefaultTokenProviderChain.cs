@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
@@ -37,19 +38,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync()
+        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking if any provider is available");
-            var available = await _chain.AvailableAsync().ConfigureAwait(false);
+            var available = await _chain.AvailableAsync(cancel).ConfigureAwait(false);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {available}");
             return available;
         }
 
         /// <inheritdoc />
-        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes)
+        public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "getting token");
-            var token = await _chain.GetTokenAsync(scopes).ConfigureAwait(false);
+            var token = await _chain.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, token != null ?
+                $"token was returned and will expire on {token.ExpiresOn}" :
+                "no token was returned");
+            return token;
+        }
+
+        /// <inheritdoc />
+        public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
+        {
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "getting token");
+            var token = await _chain.GetTokenWithResourceUriAsync(resourceUri, cancel).ConfigureAwait(false);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, token != null ?
                 $"token was returned and will expire on {token.ExpiresOn}" :
                 "no token was returned");

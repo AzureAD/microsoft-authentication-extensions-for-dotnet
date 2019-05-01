@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -131,7 +132,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         [TestMethod]
         [TestCategory("ServicePrincipalTests")]
-        public async Task ProbeShouldThrowIfNotAvailablesAsync()
+        public async Task ProbeShouldThrowIfNotAvailableAsync()
         {
             var provider = new ServicePrincipalTokenProvider(config: FakeConfiguration());
             Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
@@ -168,7 +169,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var clientFactory = new ClientFactory(new HttpClient(handler));
             var clientId = Guid.NewGuid();
             var provider = new InternalServicePrincipalTokenProvider(authority, "tenantid", clientId.ToString(), "someSecret", clientFactory);
-            var token = await provider.GetTokenAsync(new List<string> { @"https://management.azure.com//.default" }).ConfigureAwait(false);
+            var scopes = new List<string> {@"https://management.azure.com//.default"};
+            var token = await provider.GetTokenAsync(scopes, CancellationToken.None)
+                .ConfigureAwait(false);
             Assert.IsNotNull(token);
         }
 
@@ -241,7 +244,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         [TestMethod]
         [TestCategory("ServicePrincipalTests")]
-        public async Task ProbeShouldNotBeAvailableWithoutTenantIDAsync()
+        public async Task ProbeShouldNotBeAvailableWithoutTenantIdAsync()
         {
             var config = FakeConfiguration(new List<KeyValuePair<string, string>>
             {

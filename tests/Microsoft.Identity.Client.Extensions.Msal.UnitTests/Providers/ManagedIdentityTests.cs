@@ -115,6 +115,42 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         [TestMethod]
         [TestCategory("ManagedIdentityTests")]
+        public async Task ProbeShouldFetchTokenFromAppServiceManagedIdentityWithResourceUriAsync()
+        {
+            var handler = new MockManagedIdentityHttpMessageHandler();
+            handler.Responders.Add(new Responder
+            {
+                Matcher = (req, state) =>
+                {
+                    var apiVersion = Constants.ManagedIdentityAppServiceApiVersion;
+                    return req.RequestUri.ToString() == "http://127.0.0.1/foo?resource=https://management.azure.com/&api-version=" + apiVersion &&
+                           req.Headers.GetValues("Secret").FirstOrDefault() == "secret";
+                },
+                MockResponse = (req, state) =>
+                {
+                    var resp = new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new MockJsonContent(AzureAppServiceManagedIdentityJson)
+                    };
+                    return resp;
+                }
+            });
+            var client = new HttpClient(handler);
+            var config = FakeConfiguration(new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>(Constants.ManagedIdentityEndpointEnvName, "http://127.0.0.1/foo"),
+                new KeyValuePair<string, string>(Constants.ManagedIdentitySecretEnvName, "secret")
+
+            });
+            var provider = new ManagedIdentityTokenProvider(httpClient: client, config: config);
+            var token = await provider.GetTokenWithResourceUriAsync("https://management.azure.com/").ConfigureAwait(false);
+            Assert.IsNotNull(token);
+            Assert.AreEqual(DateTimeOffset.Parse("4/10/19 6:27:14 AM +00:00", CultureInfo.InvariantCulture), token.ExpiresOn);
+            Assert.AreEqual(AccessToken, token.AccessToken);
+        }
+
+        [TestMethod]
+        [TestCategory("ManagedIdentityTests")]
         public async Task ProbeShouldFetchTokenWithClientIdFromManagedIdentityServiceAsync()
         {
             var handler = new MockManagedIdentityHttpMessageHandler();

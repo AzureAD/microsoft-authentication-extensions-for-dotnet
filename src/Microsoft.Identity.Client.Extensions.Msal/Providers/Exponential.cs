@@ -23,16 +23,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <param name="maxDelayMilliseconds">maximum delay in milliseconds (default 2000)</param>
         public RetryWithExponentialBackoff(int maxRetries = 50, int delayMilliseconds = 100, int maxDelayMilliseconds = 2000)
         {
-            const string errMsgGE = "should be greater than or equal 0";
+            const string errMsgGe = "should be greater than or equal 0";
             const string errMsgG = "should be greater than 0";
             if (maxRetries < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGE);
+                throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGe);
 
             if (delayMilliseconds <= 0)
                 throw new ArgumentOutOfRangeException(nameof(delayMilliseconds), delayMilliseconds, errMsgG);
 
             if (maxDelayMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGE);
+                throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGe);
 
             _maxRetries = maxRetries;
             _delayMilliseconds = delayMilliseconds;
@@ -78,16 +78,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <param name="maxDelayMilliseconds">maximum delay in milliseconds</param>
         public ExponentialBackoff(int maxRetries, int delayMilliseconds, int maxDelayMilliseconds)
         {
-            const string errMsgGE = "should be greater than or equal 0";
+            const string errMsgGe = "should be greater than or equal 0";
             const string errMsgG = "should be greater than 0";
             if (maxRetries < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGE);
+                throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGe);
 
             if (delayMilliseconds <= 0)
                 throw new ArgumentOutOfRangeException(nameof(delayMilliseconds), delayMilliseconds, errMsgG);
 
             if (maxDelayMilliseconds < 0)
-                throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGE);
+                throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGe);
 
             _maxRetries = maxRetries;
             _delayTicks = delayMilliseconds * TimeSpan.TicksPerMillisecond;
@@ -119,7 +119,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             {
                 ticks = (long)Math.Pow(2, retryCount) *_delayTicks;
             }
-            long waitTicks = Math.Min(ticks, _maxDelayTicks);
+            var waitTicks = Math.Min(ticks, _maxDelayTicks);
             return TimeSpan.FromTicks(waitTicks);
         }
     }

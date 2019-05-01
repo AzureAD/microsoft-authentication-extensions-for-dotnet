@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client.Extensions.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
@@ -62,9 +64,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public bool Available { get; set; }
 
 
-        public Task<bool> AvailableAsync() => Task.FromResult(Available);
+        public Task<bool> AvailableAsync(CancellationToken c = default) => Task.FromResult(Available);
 
-        public Task<IToken> GetTokenAsync(IEnumerable<string> scopes) => Task.FromResult(Token);
+        public Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken c = default)
+        {
+           return Task.FromResult(Token);
+        }
+
+        public Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken c = default)
+        {
+            return Task.FromResult(Token);
+        }
     }
 
     public class MockToken : IToken
