@@ -132,7 +132,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         private string ClientId => string.IsNullOrWhiteSpace(_overrideClientId) ? _config.ClientId : _overrideClientId;
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             _logger?.Log(level, $"{nameof(ManagedIdentityTokenProvider)}.{memberName} :: {message}");
         }
@@ -178,7 +178,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return await _client.FetchTokenWithRetryAsync(resourceUri, cancel).ConfigureAwait(false);
         }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             _logger?.Log(level, $"{nameof(InternalManagedIdentityCredentialProvider)}.{memberName} :: {message}");
         }
@@ -238,7 +238,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         protected string Endpoint { get; }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             Logger?.Log(level, $"{nameof(ManagedIdentityClient)}.{memberName} :: {message}");
         }
@@ -279,7 +279,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             throw new FailedParseOfManagedIdentityExpirationException();
         }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             Logger?.Log(level, $"{nameof(ManagedIdentityVmClient)}.{memberName} :: {message}");
         }
@@ -314,7 +314,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             throw new FailedParseOfManagedIdentityExpirationException();
         }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             Logger?.Log(level, $"{nameof(ManagedIdentityAppServiceClient)}.{memberName} :: {message}");
         }

@@ -178,7 +178,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return false;
         }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             _logger?.Log(level, $"{nameof(ServicePrincipalTokenProvider)}.{memberName} :: {message}");
         }

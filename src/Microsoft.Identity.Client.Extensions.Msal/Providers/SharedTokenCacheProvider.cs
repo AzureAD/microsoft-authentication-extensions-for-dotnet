@@ -129,7 +129,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             return accounts.Where(i => i.Username == username);
         }
 
-        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = "")
+        private void Log(Microsoft.Extensions.Logging.LogLevel level, string message, [CallerMemberName] string memberName = default)
         {
             _logger?.Log(level, $"{nameof(SharedTokenCacheProvider)}.{memberName} :: {message}");
         }
