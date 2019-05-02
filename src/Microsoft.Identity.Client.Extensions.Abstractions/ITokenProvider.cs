@@ -17,7 +17,7 @@ namespace Microsoft.Identity.Client.Extensions.Abstractions
         /// </summary>
         /// <param name="cancel">Cancellation token for early termination of the operation</param>
         /// <returns>True if a credential provider can be built</returns>
-        Task<bool> AvailableAsync(CancellationToken cancel = default);
+        Task<bool> IsAvailableAsync(CancellationToken cancel = default);
 
         /// <summary>
         /// GetTokenAsync will attempt to fetch a token for a given set of scopes

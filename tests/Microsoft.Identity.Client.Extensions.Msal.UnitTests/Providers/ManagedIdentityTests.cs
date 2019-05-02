@@ -58,7 +58,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
             var probe = new ManagedIdentityTokenProvider(config: FakeConfiguration());
             var st = DateTime.Now;
-            Assert.IsFalse(await probe.AvailableAsync().ConfigureAwait(false));
+            Assert.IsFalse(await probe.IsAvailableAsync().ConfigureAwait(false));
             Assert.IsTrue(DateTime.Now - st < TimeSpan.FromMilliseconds(800), "should take less than 800 milliseconds");
         }
 
@@ -74,7 +74,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
             });
             var probe = new ManagedIdentityTokenProvider(config: config);
-            Assert.IsTrue(await probe.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await probe.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -210,7 +210,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -230,7 +230,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsFalse(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -263,7 +263,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -298,7 +298,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -338,7 +338,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             });
             var client = new HttpClient(handler);
             var provider = new ManagedIdentityTokenProvider(httpClient: client, config: FakeConfiguration());
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
     }
 

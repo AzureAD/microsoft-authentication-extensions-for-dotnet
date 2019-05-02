@@ -63,7 +63,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
+        public async Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking for accounts in shared developer tool cache");
             var accounts = await GetAccountsAsync().ConfigureAwait(false);

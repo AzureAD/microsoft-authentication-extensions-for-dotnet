@@ -46,7 +46,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             : this(null, config, overrideClientId, logger: logger) { }
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
+        public async Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
             // check App Service MSI
             if (IsAppService())

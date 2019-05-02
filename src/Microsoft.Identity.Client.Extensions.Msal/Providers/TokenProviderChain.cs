@@ -36,11 +36,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         }
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
+        public async Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
             foreach (var p in _providers)
             {
-                if (await p.AvailableAsync(cancel).ConfigureAwait(false))
+                if (await p.IsAvailableAsync(cancel).ConfigureAwait(false))
                 {
                     return true;
                 }
@@ -55,7 +55,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             ITokenProvider provider = null;
             foreach (var p in _providers)
             {
-                if (!await p.AvailableAsync(cancel).ConfigureAwait(false))
+                if (!await p.IsAvailableAsync(cancel).ConfigureAwait(false))
                 {
                     continue;
                 }
@@ -78,7 +78,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             ITokenProvider provider = null;
             foreach (var p in _providers)
             {
-                if (!await p.AvailableAsync(cancel).ConfigureAwait(false))
+                if (!await p.IsAvailableAsync(cancel).ConfigureAwait(false))
                 {
                     continue;
                 }

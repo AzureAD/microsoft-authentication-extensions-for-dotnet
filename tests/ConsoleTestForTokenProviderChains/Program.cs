@@ -25,7 +25,7 @@ namespace ConsoleTestForTokenProviderChains
 
             var logger = lf.CreateLogger<DefaultTokenProviderChain>();
             var chain = new DefaultTokenProviderChain(logger: logger);
-            var available = chain.AvailableAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            var available = chain.IsAvailableAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             logger.Log(LogLevel.Information, available ? "Available" : "Not Available");
 
             if (available)

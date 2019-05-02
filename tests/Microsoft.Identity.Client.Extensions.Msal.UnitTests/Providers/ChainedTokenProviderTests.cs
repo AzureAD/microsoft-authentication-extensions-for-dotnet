@@ -64,7 +64,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public bool Available { get; set; }
 
 
-        public Task<bool> AvailableAsync(CancellationToken c = default) => Task.FromResult(Available);
+        public Task<bool> IsAvailableAsync(CancellationToken c = default) => Task.FromResult(Available);
 
         public Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken c = default)
         {

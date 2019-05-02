@@ -38,7 +38,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         // Async method lacks 'await' operators and will run synchronously
         /// <inheritdoc />
-        public Task<bool> AvailableAsync(CancellationToken cancel = default)
+        public Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information,  "checking if provider is available");
             var available = IsClientSecret() || IsClientCertificate();
@@ -66,7 +66,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
         private async Task<InternalServicePrincipalTokenProvider> ProviderAsync()
         {
-            var available = await AvailableAsync().ConfigureAwait(false);
+            var available = await IsAvailableAsync().ConfigureAwait(false);
             if (!available)
             {
                 Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is not available");

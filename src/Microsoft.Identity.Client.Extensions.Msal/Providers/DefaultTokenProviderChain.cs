@@ -38,10 +38,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
 
         /// <inheritdoc />
-        public async Task<bool> AvailableAsync(CancellationToken cancel = default)
+        public async Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking if any provider is available");
-            var available = await _chain.AvailableAsync(cancel).ConfigureAwait(false);
+            var available = await _chain.IsAvailableAsync(cancel).ConfigureAwait(false);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {available}");
             return available;
         }

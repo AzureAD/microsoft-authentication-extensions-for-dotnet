@@ -127,7 +127,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
 
             var provider = new ServicePrincipalTokenProvider(config: FakeConfiguration());
-            Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsFalse(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
 
         [TestMethod]
@@ -135,7 +135,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public async Task ProbeShouldThrowIfNotAvailableAsync()
         {
             var provider = new ServicePrincipalTokenProvider(config: FakeConfiguration());
-            Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsFalse(await provider.IsAvailableAsync().ConfigureAwait(false));
             var ex = await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await provider.GetTokenAsync(new List<string>{"foo"})
                 .ConfigureAwait(false)).ConfigureAwait(false);
             Assert.AreEqual("The required environment variables are not available.", ex.Message);
@@ -152,7 +152,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.AzureTenantIdEnvName, "Bazz")
             });
             var provider = new ServicePrincipalTokenProvider(config: config);
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
             Assert.IsFalse(provider.IsClientCertificate());
             Assert.IsTrue(provider.IsClientSecret());
         }
@@ -186,7 +186,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.AzureTenantIdEnvName, "Bazz")
             });
             var provider = new ServicePrincipalTokenProvider(config: config);
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
             Assert.IsTrue(provider.IsClientCertificate());
             Assert.IsFalse(provider.IsClientSecret());
         }
@@ -237,7 +237,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.AzureTenantIdEnvName, "Bazz")
             });
             var provider = new ServicePrincipalTokenProvider(config: config);
-            Assert.IsTrue(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsTrue(await provider.IsAvailableAsync().ConfigureAwait(false));
             Assert.IsTrue(provider.IsClientCertificate());
             Assert.IsFalse(provider.IsClientSecret());
         }
@@ -253,7 +253,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 new KeyValuePair<string, string>(Constants.AzureCertificateStoreEnvName, "My")
             });
             var provider = new ServicePrincipalTokenProvider(config: config);
-            Assert.IsFalse(await provider.AvailableAsync().ConfigureAwait(false));
+            Assert.IsFalse(await provider.IsAvailableAsync().ConfigureAwait(false));
         }
     }
 
