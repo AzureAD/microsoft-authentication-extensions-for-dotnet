@@ -110,9 +110,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 
                 if (certs.Count < 1)
                 {
-                    var msg = !string.IsNullOrEmpty(_config.CertificateSubjectDistinguishedName)
-                        ? $"Unable to find certificate with distinguished name '{_config.CertificateSubjectDistinguishedName}' in certificate store named '{StoreNameWithDefault}' and store location {StoreLocationFromEnv}"
-                        : $"Unable to find certificate with thumbprint '{_config.CertificateThumbprint}' in certificate store named '{StoreNameWithDefault}' and store location {StoreLocationFromEnv}";
+                    var msg = string.IsNullOrEmpty(_config.CertificateSubjectDistinguishedName)
+                        ? $"Unable to find certificate with thumbprint '{_config.CertificateThumbprint}' in certificate store named '{StoreNameWithDefault}' and store location {StoreLocationFromEnv}"
+                        : $"Unable to find certificate with distinguished name '{_config.CertificateSubjectDistinguishedName}' in certificate store named '{StoreNameWithDefault}' and store location {StoreLocationFromEnv}";
+
                     throw new InvalidOperationException(msg);
                 }
 
