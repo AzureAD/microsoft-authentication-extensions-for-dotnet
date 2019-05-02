@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.8" />
-    <!-- TODO: Change this to a PackageReference after initial publication of Microsoft.Identity.Client.Extensions.Abstractions -->
     <ProjectReference Include="..\Microsoft.Identity.Client.Extensions.Abstractions\Microsoft.Identity.Client.Extensions.Abstractions.csproj" />
   </ItemGroup>
 
