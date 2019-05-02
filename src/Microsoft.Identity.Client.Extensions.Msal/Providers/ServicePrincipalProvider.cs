@@ -73,8 +73,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 throw new InvalidOperationException("The required environment variables are not available.");
             }
 
-            var authorityWithTenant = string.Format(CultureInfo.InvariantCulture, AadAuthority.AadCanonicalAuthorityTemplate, _config.Authority, _config.TenantId);
-
+            var authorityWithTenant = AadAuthority.CreateFromAadCanonicalAuthorityTemplate(_config.Authority, _config.TenantId);
             if (!IsClientCertificate())
             {
                 Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is configured to use client certificates");
