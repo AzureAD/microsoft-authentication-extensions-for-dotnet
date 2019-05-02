@@ -110,7 +110,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <returns></returns>
         private bool IsAppService()
         {
-            var vars = new List<string> { _config.ManagedIdentitySecret, _config.ManagedIdentityEndpoint };
+            var vars = new List<string>
+            {
+                _config.ManagedIdentitySecret,
+                _config.ManagedIdentityEndpoint
+            };
             return vars.All(item => !string.IsNullOrWhiteSpace(item));
         }
 
@@ -266,7 +270,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         protected override DateTimeOffset ParseExpiresOn(TokenResponse tokenResponse)
         {
             var startOfUnixTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
             if (double.TryParse(tokenResponse.ExpiresOn, out var seconds))
             {
                 return startOfUnixTime.AddSeconds(seconds);

@@ -149,7 +149,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         internal bool IsClientSecret()
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and {Constants.AzureClientSecretEnvName} are set");
-            var vars = new List<string> { _config.TenantId, _config.ClientId, _config.ClientSecret };
+            var vars = new List<string>
+            {
+                _config.TenantId,
+                _config.ClientId,
+                _config.ClientSecret
+            };
             var isClientSecret = vars.All(item => !string.IsNullOrWhiteSpace(item));
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"set: {isClientSecret}");
             return isClientSecret;
@@ -158,7 +163,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         internal bool IsClientCertificate()
         {
             Log(Microsoft.Extensions.Logging.LogLevel.Information, $"checking if {Constants.AzureTenantIdEnvName}, {Constants.AzureClientIdEnvName} and ({Constants.AzureCertificateEnvName} or {Constants.AzureCertificateThumbprintEnvName} or {Constants.AzureCertificateSubjectDistinguishedNameEnvName}) are set");
-            var tenantAndClient = new List<string> { _config.TenantId, _config.ClientId };
+            var tenantAndClient = new List<string>
+            {
+                _config.TenantId,
+                _config.ClientId
+            };
             if (tenantAndClient.All(item => !string.IsNullOrWhiteSpace(item)))
             {
                 return !string.IsNullOrWhiteSpace(_config.CertificateBase64) ||
