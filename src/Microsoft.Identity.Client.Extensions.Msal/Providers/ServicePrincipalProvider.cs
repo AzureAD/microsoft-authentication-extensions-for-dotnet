@@ -40,9 +40,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public Task<bool> IsAvailableAsync(CancellationToken cancel = default)
         {
-            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "checking if provider is available");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "checking if provider is available");
             var available = IsClientSecret() || IsClientCertificate();
-            Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"provider available: {available}");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, $"provider available: {available}");
             return Task.FromResult(available);
         }
 
@@ -51,7 +51,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
             var provider = await ProviderAsync().ConfigureAwait(false);
-            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "fetching token");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "fetching token");
             return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
         }
 
@@ -59,7 +59,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
         {
             var provider = await ProviderAsync().ConfigureAwait(false);
-            Log(Microsoft.Extensions.Logging.LogLevel.Information,  "fetching token");
+            Log(Microsoft.Extensions.Logging.LogLevel.Information, "fetching token");
             var scopes = new List<string>{resourceUri + "/.default"};
             return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
         }
@@ -69,41 +69,41 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var available = await IsAvailableAsync().ConfigureAwait(false);
             if (!available)
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is not available");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "provider is not available");
                 throw new InvalidOperationException("The required environment variables are not available.");
             }
 
             var authorityWithTenant = AadAuthority.CreateFromAadCanonicalAuthorityTemplate(_config.Authority, _config.TenantId);
             if (!IsClientCertificate())
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information,  "provider is configured to use client certificates");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, "provider is configured to use client certificates");
                 return new InternalServicePrincipalTokenProvider(authorityWithTenant, _config.TenantId, _config.ClientId, _config.ClientSecret);
             }
 
             X509Certificate2 cert;
             if (!string.IsNullOrWhiteSpace(_config.CertificateBase64))
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"decoding certificate from base64 directly from environment variable {Constants.AzureCertificateEnvName}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"decoding certificate from base64 directly from environment variable {Constants.AzureCertificateEnvName}");
                 // If the certificate is provided as base64 encoded string in env, decode and hydrate a x509 cert
                 var decoded = Convert.FromBase64String(_config.CertificateBase64);
                 cert = new X509Certificate2(decoded);
             }
             else
             {
-                Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"using certificate store with name {StoreNameWithDefault} and location {StoreLocationFromEnv}");
+                Log(Microsoft.Extensions.Logging.LogLevel.Information, $"using certificate store with name {StoreNameWithDefault} and location {StoreLocationFromEnv}");
                 // Try to use the certificate store
                 var store = new X509Store(StoreNameWithDefault, StoreLocationFromEnv);
                 store.Open(OpenFlags.ReadOnly);
                 X509Certificate2Collection certs;
                 if (!string.IsNullOrEmpty(_config.CertificateSubjectDistinguishedName))
                 {
-                    Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"finding certificates in store by distinguished name {_config.CertificateSubjectDistinguishedName}");
+                    Log(Microsoft.Extensions.Logging.LogLevel.Information, $"finding certificates in store by distinguished name {_config.CertificateSubjectDistinguishedName}");
                     certs = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName,
                         _config.CertificateSubjectDistinguishedName, true);
                 }
                 else
                 {
-                    Log(Microsoft.Extensions.Logging.LogLevel.Information,  $"finding certificates in store by thumbprint {_config.CertificateThumbprint}");
+                    Log(Microsoft.Extensions.Logging.LogLevel.Information, $"finding certificates in store by thumbprint {_config.CertificateThumbprint}");
                     certs = store.Certificates.Find(X509FindType.FindByThumbprint, _config.CertificateThumbprint, true);
                 }
 
