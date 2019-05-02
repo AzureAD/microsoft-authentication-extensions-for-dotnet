@@ -21,7 +21,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
             Unix,
             DateTimeString
-        };
+        }
 
         // MSI endpoint return access_token
         [DataMember(Name = "access_token", IsRequired = false)]

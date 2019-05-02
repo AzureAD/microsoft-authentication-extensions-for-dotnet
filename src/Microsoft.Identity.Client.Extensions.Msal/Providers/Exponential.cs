@@ -26,13 +26,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             const string errMsgGe = "should be greater than or equal 0";
             const string errMsgG = "should be greater than 0";
             if (maxRetries < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGe);
+            }
 
             if (delayMilliseconds <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(delayMilliseconds), delayMilliseconds, errMsgG);
+            }
 
             if (maxDelayMilliseconds < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGe);
+            }
 
             _maxRetries = maxRetries;
             _delayMilliseconds = delayMilliseconds;
@@ -81,13 +87,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             const string errMsgGe = "should be greater than or equal 0";
             const string errMsgG = "should be greater than 0";
             if (maxRetries < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(maxRetries), maxRetries, errMsgGe);
+            }
 
             if (delayMilliseconds <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(delayMilliseconds), delayMilliseconds, errMsgG);
+            }
 
             if (maxDelayMilliseconds < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(maxDelayMilliseconds), maxDelayMilliseconds, errMsgGe);
+            }
 
             _maxRetries = maxRetries;
             _delayTicks = delayMilliseconds * TimeSpan.TicksPerMillisecond;
