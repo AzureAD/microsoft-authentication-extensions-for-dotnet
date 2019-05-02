@@ -120,7 +120,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 throw new TooManyRetryAttemptsException();
             }
 
-            var delay = GetDelay(++_retries);
+            _retries++;
+            var delay = GetDelay(_retries);
             await Task.Delay(delay).ConfigureAwait(false);
         }
 
