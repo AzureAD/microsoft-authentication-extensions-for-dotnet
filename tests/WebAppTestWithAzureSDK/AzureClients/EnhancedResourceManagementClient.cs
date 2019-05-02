@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 using System;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Extensions.Configuration;
