@@ -50,7 +50,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public async Task<IToken> GetTokenAsync(IEnumerable<string> scopes, CancellationToken cancel = default)
         {
-            var provider = await ProviderAsync().ConfigureAwait(false);
+            var provider = await CreateProviderAsync().ConfigureAwait(false);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "fetching token");
             return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
         }
@@ -58,13 +58,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         /// <inheritdoc />
         public async Task<IToken> GetTokenWithResourceUriAsync(string resourceUri, CancellationToken cancel = default)
         {
-            var provider = await ProviderAsync().ConfigureAwait(false);
+            var provider = await CreateProviderAsync().ConfigureAwait(false);
             Log(Microsoft.Extensions.Logging.LogLevel.Information, "fetching token");
             var scopes = new List<string>{resourceUri + "/.default"};
             return await provider.GetTokenAsync(scopes, cancel).ConfigureAwait(false);
         }
 
-        private async Task<InternalServicePrincipalTokenProvider> ProviderAsync()
+        private async Task<InternalServicePrincipalTokenProvider> CreateProviderAsync()
         {
             var available = await IsAvailableAsync().ConfigureAwait(false);
             if (!available)
