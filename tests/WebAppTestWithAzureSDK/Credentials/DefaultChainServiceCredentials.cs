@@ -20,25 +20,27 @@ namespace WebAppTestWithAzureSDK.Credentials
     {
         private readonly ITokenProvider _tokenProvider;
         private readonly IDictionary<string, IToken> _tokenCache = new Dictionary<string, IToken>();
-        private readonly object _tokenCacheLock = new object();
+        private SemaphoreSlim Semaphore { get; }
 
         public DefaultChainServiceCredentials(IConfiguration config = null, ILogger<DefaultChainServiceCredentials> logger = null)
         {
             _tokenProvider = new DefaultTokenProviderChain(config: config, logger: logger);
+            Semaphore = new SemaphoreSlim(1, 1);
         }
 
-        public override Task ProcessHttpRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public override async Task ProcessHttpRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             // TODO: probably should be asking the ServiceClient what the resourceUri is...
             const string resourceUri = "https://management.azure.com";
-            var token = GetToken(resourceUri);
+            var token = await GetTokenAsync(resourceUri).ConfigureAwait(false);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
-            return base.ProcessHttpRequestAsync(request, cancellationToken);
+            await base.ProcessHttpRequestAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
-        private IToken GetToken(string resourceUri)
+        private async Task<IToken> GetTokenAsync(string resourceUri)
         {
-            lock (_tokenCacheLock)
+            Semaphore.Wait();
+            try
             {
                 if (_tokenCache.ContainsKey(resourceUri))
                 {
@@ -50,10 +52,14 @@ namespace WebAppTestWithAzureSDK.Credentials
                     }
                 }
 
-                var newToken = _tokenProvider.GetTokenWithResourceUriAsync(resourceUri)
-                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                var newToken = await _tokenProvider.GetTokenWithResourceUriAsync(resourceUri)
+                    .ConfigureAwait(false);
                 _tokenCache[resourceUri] = newToken;
                 return _tokenCache[resourceUri];
+            }
+            finally
+            {
+                Semaphore.Release();
             }
         }
     }
