@@ -72,7 +72,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
 
         // Triggered right before ADAL needs to access the cache.
         // Reload the cache from the persistent store in case it changed since the last access.
-        private void BeforeAccessNotification(TokenCacheNotificationArgs args)
+        // Internal for testing.
+        internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
@@ -114,7 +115,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         }
 
         // Triggered right after ADAL accessed the cache.
-        private void AfterAccessNotification(TokenCacheNotificationArgs args)
+        // Internal for testing.
+        internal void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
 

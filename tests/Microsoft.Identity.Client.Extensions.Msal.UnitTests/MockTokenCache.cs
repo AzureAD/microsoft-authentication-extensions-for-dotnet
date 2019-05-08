@@ -71,7 +71,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public byte[] SerializeMsalV3()
         {
-            throw new NotImplementedException();
+            return Encoding.UTF8.GetBytes(LastDeserializedString);
         }
 
         public CacheData SerializeUnifiedAndAdalCache()

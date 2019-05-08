@@ -20,7 +20,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         internal readonly StorageCreationProperties _creationProperties;
         private readonly TraceSource _logger;
 
-        private DateTimeOffset _lastWriteTime;
+        // This is set to empty string here. During a file read, if the token isn't available, we will create a new guid, so we will always read the first time.
+        private string _lastVersionToken = string.Empty;
 
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
@@ -33,26 +34,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             _creationProperties = creationProperties;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(MsalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
-
-            // When calling get last writetimeUtc and the file is not found, the time returned is not the minimum date time or datetime offset.
-            // Get a baseline value by trying to get the last write time of a file we know doesn't exist. Then HasChanged will return false
-            // if the cache file actually doesn't exist.
-            DateTimeOffset fileNotFoundOffset;
-            try
-            {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Getting last write file time for a missing file in localappdata");
-                fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
-            }
-            catch (Exception e)
-            {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}");
-                fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
-            }
-
-            _lastWriteTime = fileNotFoundOffset;
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Finished initializing '{nameof(MsalCacheStorage)}'");
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initialized '{nameof(MsalCacheStorage)}'");
         }
 
         /// <summary>
@@ -60,23 +42,60 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         public string CacheFilePath => _creationProperties.CacheFilePath;
 
+        internal string VersionFilePath => CacheFilePath + ".version";
+
+        internal string LastVersionToken => string.Copy(_lastVersionToken);
+
         /// <summary>
-        /// Gets a value indicating whether the persist file has changed before load it to cache
+        /// Gets a value indicating whether the persisted file has changed since we last read it.
         /// </summary>
         public bool HasChanged
         {
             get
             {
+                bool versionFileExists = File.Exists(VersionFilePath);
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Has the store changed");
-                bool cacheFileExists = File.Exists(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file exists '{cacheFileExists}'");
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"VersionFileExists '{versionFileExists}'");
 
-                DateTimeOffset currentWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                bool hasChanged = currentWriteTime != _lastWriteTime;
+                if (!versionFileExists)
+                {
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"The version file does not exist, treat as 'changed'.");
+                    return true;
+                }
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'");
+                string currentVersion = File.ReadAllText(VersionFilePath);
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Current version '{currentVersion}' Last version '{_lastVersionToken}'");
+
+                bool hasChanged = !currentVersion.Equals(_lastVersionToken, StringComparison.OrdinalIgnoreCase);
+
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache has changed '{hasChanged}'");
                 return hasChanged;
+            }
+        }
+
+        private void WriteVersionFile()
+        {
+            try
+            {
+                string newVersion = Guid.NewGuid().ToString();
+                File.WriteAllText(VersionFilePath, newVersion);
+                _lastVersionToken = newVersion;
+            }
+            catch (IOException ex)
+            {
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to write version file due to exception: '{ex.Message}'");
+            }
+        }
+
+        private void CacheLastReadVersion()
+        {
+            try
+            {
+                _lastVersionToken = File.ReadAllText(VersionFilePath);
+            }
+            catch (IOException ex)
+            {
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to read version file due to exception: '{ex.Message}'");
             }
         }
 
@@ -94,6 +113,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             bool alreadyLoggedException = false;
             try
             {
+                // Guarantee that the version file exists so that we can know if it changes.
+                if (!File.Exists(VersionFilePath))
+                {
+                    WriteVersionFile();
+                }
+                else
+                {
+                    CacheLastReadVersion();
+                }
+
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
                 byte[] fileData = ReadDataCore();
 
@@ -133,8 +162,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 ClearCore();
             }
 
-            // If the file does not exist this returns a time in the far distant past.
-            _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
             return data ?? new byte[0];
         }
 
@@ -174,8 +201,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, "Clearing the cache file");
             ClearCore();
         }
-
-        internal DateTimeOffset LastWriteTime { get => _lastWriteTime; }
 
         private byte[] ReadDataCore()
         {
@@ -259,7 +284,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 throw new ArgumentNullException(nameof(data));
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Write Data core, goign to write '{data.Length}' to the storage");
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Write Data core, going to write '{data.Length}' to the storage");
 
             if (SharedUtilities.IsMacPlatform() || SharedUtilities.IsLinuxPlatform())
             {
@@ -325,7 +350,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             TryProcessFile(() =>
             {
                 File.WriteAllBytes(CacheFilePath, data);
-                _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
+                WriteVersionFile();
             });
         }
 
@@ -347,8 +372,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Problem deleting the cache file '{e}'");
                 }
 
-                _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last write time is '{_lastWriteTime}'");
+                WriteVersionFile();
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last version token is '{_lastVersionToken}'");
             });
 
             if (SharedUtilities.IsMacPlatform())
