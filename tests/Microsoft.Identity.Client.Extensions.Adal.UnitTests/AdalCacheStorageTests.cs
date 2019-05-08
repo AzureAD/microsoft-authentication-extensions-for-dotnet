@@ -55,8 +55,9 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         public void AdalNewStoreNoFile()
         {
             var store = new AdalCacheStorage(s_storageCreationProperties, logger: _logger);
-            Assert.IsFalse(store.HasChanged);
+            Assert.IsTrue(store.HasChanged);
             Assert.IsFalse(store.ReadData().Any());
+            Assert.IsFalse(store.HasChanged);
         }
 
         [TestMethod]

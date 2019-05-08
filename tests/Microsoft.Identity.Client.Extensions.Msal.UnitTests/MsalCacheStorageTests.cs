@@ -56,8 +56,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void MsalNewStoreNoFile()
         {
             var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
-            Assert.IsFalse(store.HasChanged);
+            Assert.IsTrue(store.HasChanged);
             Assert.IsFalse(store.ReadData().Any());
+            Assert.IsFalse(store.HasChanged);
         }
 
         [TestMethod]
@@ -98,6 +99,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void MsalTestClear()
         {
             var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            Assert.IsTrue(store.HasChanged);
+            var tempData = store.ReadData();
+            Assert.IsFalse(store.HasChanged);
+
             var store2 = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
             Assert.IsNotNull(Exception<ArgumentNullException>(() => store.WriteData(null)));
 

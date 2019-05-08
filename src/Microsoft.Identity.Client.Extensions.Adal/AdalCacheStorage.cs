@@ -28,12 +28,10 @@ namespace Microsoft.Identity.Client.Extensions.Adal
 
         private readonly TraceSource _logger;
 
-        // When the file is not found when calling get last writetimeUtc it does not return the minimum date time or datetime offset
-        // lets make sure we get what the actual value is on the runtime we are executing under.
-        private readonly DateTimeOffset _fileNotFoundOffset;
         internal StorageCreationProperties CreationProperties { get; }
 
-        private DateTimeOffset _lastWriteTime;
+        // This is set to empty string here. During a file read, if the token isn't available, we will create a new guid, so we will always read the first time.
+        private string _lastVersionToken = string.Empty;
 
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
@@ -46,24 +44,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         {
             _logger = logger ?? s_staticLogger.Value;
             CreationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
-
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing '{nameof(AdalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
-
-            try
-            {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Getting last write file time for a missing file in localappdata");
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
-            }
-            catch (Exception e)
-            {
-                logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Problem getting last file write time for missing file, trying temp path('{Path.GetTempPath()}'). {e.Message}");
-                _fileNotFoundOffset = File.GetLastWriteTimeUtc(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().FormatGuidAsString()}.dll"));
-            }
-
-            CacheFilePath = Path.Combine(creationProperties.CacheDirectory, creationProperties.CacheFileName);
-
-            _lastWriteTime = _fileNotFoundOffset;
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Finished initializing '{nameof(AdalCacheStorage)}'");
+            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initialized '{nameof(AdalCacheStorage)}' with cacheFilePath '{creationProperties.CacheDirectory}'");
         }
 
         /// <summary>
@@ -80,29 +61,59 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <summary>
         /// Gets cache file path
         /// </summary>
-        public string CacheFilePath
-        {
-            get;
-            private set;
-        }
+        public string CacheFilePath => CreationProperties.CacheFilePath;
 
         /// <summary>
-        /// Gets a value indicating whether the persist file has changed before load it to cache
+        /// Gets the guid representing the last time the cache was changed on disk.
+        /// </summary>
+        internal string LastVersionToken => _lastVersionToken;
+
+        /// <summary>
+        /// Gets the file path containing the guid representing the last time the cache was changed on disk.
+        /// </summary>
+        private string VersionFilePath => CacheFilePath + ".version";
+
+        /// <summary>
+        /// Gets a value indicating whether the persisted file has changed since we last read it.
         /// </summary>
         public bool HasChanged
         {
             get
             {
+                bool versionFileExists = File.Exists(VersionFilePath);
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Has the store changed");
-                bool cacheFileExists = File.Exists(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache file exists '{cacheFileExists}'");
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"VersionFileExists '{versionFileExists}'");
 
-                DateTimeOffset currentWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                bool hasChanged = currentWriteTime != _lastWriteTime;
+                if (!versionFileExists)
+                {
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"The version file does not exist, treat as 'changed'.");
+                    return true;
+                }
 
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"CurrentWriteTime '{currentWriteTime}' LastWriteTime '{_lastWriteTime}'");
+                string currentVersion = File.ReadAllText(VersionFilePath);
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Current version '{currentVersion}' Last version '{_lastVersionToken}'");
+
+                bool hasChanged = !currentVersion.Equals(_lastVersionToken, StringComparison.OrdinalIgnoreCase);
+
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache has changed '{hasChanged}'");
                 return hasChanged;
+            }
+        }
+
+        /// <summary>
+        /// Writes a new guid to the file at <see cref="VersionFilePath"/>, and updates <see cref="LastVersionToken"/>.
+        /// </summary>
+        private void WriteVersionFile()
+        {
+            try
+            {
+                string newVersion = Guid.NewGuid().ToString();
+                File.WriteAllText(VersionFilePath, newVersion);
+                _lastVersionToken = newVersion;
+            }
+            catch (IOException ex)
+            {
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to write version file due to exception: '{ex.Message}'");
             }
         }
 
@@ -120,6 +131,12 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             bool alreadyLoggedException = false;
             try
             {
+                // Guarantee that the version file exists so that we can know if it changes.
+                if (!File.Exists(VersionFilePath))
+                {
+                    WriteVersionFile();
+                }
+
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
                 byte[] fileData = ReadDataCore();
 
@@ -158,8 +175,6 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                 ClearCore();
             }
 
-            // If the file does not exist this
-            _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
             return data;
         }
 
@@ -349,7 +364,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             TryProcessFile(() =>
             {
                 File.WriteAllBytes(CacheFilePath, data);
-                _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
+                WriteVersionFile();
             });
         }
 
@@ -371,8 +386,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Problem deleting the cache file '{e}'");
                 }
 
-                _lastWriteTime = File.GetLastWriteTimeUtc(CacheFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last write time is '{_lastWriteTime}'");
+                WriteVersionFile();
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last write time is '{_lastVersionToken}'");
             });
 
             if (SharedUtilities.IsMacPlatform())

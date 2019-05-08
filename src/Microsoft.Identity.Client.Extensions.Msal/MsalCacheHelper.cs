@@ -39,9 +39,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         internal CrossPlatLock CacheLock { get; private set; }
 
         /// <summary>
-        /// Storage that handles the storing of the adal cache file on disk.
+        /// Storage that handles the storing of the adal cache file on disk. Internal for testing.
         /// </summary>
-        private readonly MsalCacheStorage _store;
+        internal readonly MsalCacheStorage _store;
 
         /// <summary>
         /// Logger to log events to.
@@ -78,7 +78,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Contains a reference to all caches currently registered to synchronize with this MsalCacheHelper, along with
         /// timestamp of the cache file the last time they deserialized.
         /// </summary>
-        private readonly Dictionary<ITokenCache, DateTimeOffset> _registeredCaches = new Dictionary<ITokenCache, DateTimeOffset>();
+        internal readonly Dictionary<ITokenCache, string> _registeredCaches = new Dictionary<ITokenCache, string>();
 
         /// <summary>
         /// Creates a new instance of <see cref="MsalCacheHelper"/>.
@@ -248,8 +248,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     }
                 }
 
-                _registeredCaches[tokenCache] = _store.LastWriteTime;
-
+                _registeredCaches[tokenCache] = _store.LastVersionToken;
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
             }
         }
@@ -318,14 +317,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             lock (_lockObject)
             {
-                if ((!_registeredCaches.ContainsKey(args.TokenCache)) || _registeredCaches[args.TokenCache] < _store.LastWriteTime)
+                if ((!_registeredCaches.ContainsKey(args.TokenCache)) || _registeredCaches[args.TokenCache] != _store.LastVersionToken)
                 {
 
                     try
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
                         args.TokenCache.DeserializeMsalV3(_cachedStoreData, shouldClearExistingCache: true);
-                        _registeredCaches[args.TokenCache] = _store.LastWriteTime;
+                        _registeredCaches[args.TokenCache] = _store.LastVersionToken;
                     }
                     catch (Exception e)
                     {
@@ -358,9 +357,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     {
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before Write Store");
                         byte[] data = args.TokenCache.SerializeMsalV3();
+                        _cachedStoreData = data;
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Serializing '{data.Length}' bytes");
                         _store.WriteData(data);
 
+                        try
+                        {
+                            // Hack: The _store.LastVersionToken is written when we call _store.ReadData, but we know that we're
+                            // up-to-date here, so read the actual version from the file, so we can skip deserializing next time.
+                            var versionToken = File.ReadAllText(_store.VersionFilePath);
+                            _registeredCaches[args.TokenCache] = versionToken;
+                        }
+                        catch (IOException ex)
+                        {
+                            _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"MsalCacheHelper: Unable to read version file due to exception: '{ex.Message}'");
+                        }
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After write store");
                     }
                     catch (Exception e)

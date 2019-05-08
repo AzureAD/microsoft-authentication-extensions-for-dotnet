@@ -119,7 +119,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        public async Task TwoRegisteredCachesRemainInSyncTestAsync()
+        public async Task ThreeRegisteredCachesRemainInSyncTestAsync()
         {
             if (File.Exists(s_storageCreationProperties.CacheFilePath))
             {
@@ -136,15 +136,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var cache1 = new MockTokenCache();
             var cache2 = new MockTokenCache();
+            var cache3 = new MockTokenCache();
 
             helper.RegisterCache(cache1);
             helper.RegisterCache(cache2);
+            helper.RegisterCache(cache3);
+
+            var storeVersion0 = helper._store.LastVersionToken;
 
             // One call from register
             Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache3.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(startString, cache1.LastDeserializedString);
             Assert.AreEqual(startString, cache2.LastDeserializedString);
+            Assert.AreEqual(startString, cache3.LastDeserializedString);
 
             var args1 = new TokenCacheNotificationArgs
             {
@@ -156,29 +162,53 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 TokenCache = cache2
             };
 
-            File.Delete(s_storageCreationProperties.CacheFilePath);
+            var args3 = new TokenCacheNotificationArgs
+            {
+                TokenCache = cache3
+            };
+
             var changedString = "Hey look, the file changed";
-            var changedBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(changedString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
-            await File.WriteAllBytesAsync(s_storageCreationProperties.CacheFilePath, changedBytes).ConfigureAwait(true);
 
             helper.BeforeAccessNotification(args1);
+            cache1.LastDeserializedString = changedString;
+            args1.HasStateChanged = true;
             helper.AfterAccessNotification(args1);
+
+            // Note: Here, we haven't yet read anything in, so helper._store.LastVersionToken is out of date.
+            // Validate that we at least have updated the version of the cache that was serialized.
+            var cache1Version = helper._registeredCaches[cache1];
+            Assert.AreNotEqual(storeVersion0, cache1Version);
 
             helper.BeforeAccessNotification(args2);
             helper.AfterAccessNotification(args2);
 
+            var storeVersion1 = helper._store.LastVersionToken;
+            Assert.AreEqual(cache1Version, storeVersion1);
+
+            helper.BeforeAccessNotification(args3);
+            helper.AfterAccessNotification(args3);
+
+            var storeVersion2 = helper._store.LastVersionToken;
+            Assert.AreEqual(storeVersion1, storeVersion2);
+
             // Still only one call from register
             Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(1, cache3.DeserializeMsalV3_MergeCache);
 
-            // One call from BeforeAccess
-            Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
+            // Cache 1 shouldn't need to deserialize because it wrote the new data.
+            Assert.AreEqual(0, cache1.DeserializeMsalV3_ClearCache);
+
+            // Caches 2 and three should need to deserialize
             Assert.AreEqual(1, cache2.DeserializeMsalV3_ClearCache);
+            Assert.AreEqual(1, cache3.DeserializeMsalV3_ClearCache);
 
             Assert.AreEqual(changedString, cache1.LastDeserializedString);
             Assert.AreEqual(changedString, cache2.LastDeserializedString);
+            Assert.AreEqual(changedString, cache3.LastDeserializedString);
 
             File.Delete(s_storageCreationProperties.CacheFilePath);
+            File.Delete(s_storageCreationProperties.CacheFilePath + ".version");
         }
     }
 }
