@@ -317,7 +317,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             lock (_lockObject)
             {
-                if ((!_registeredCaches.ContainsKey(args.TokenCache)) || _registeredCaches[args.TokenCache] != _store.LastVersionToken)
+                if ((!_registeredCaches.ContainsKey(args.TokenCache)) || !string.Equals(_registeredCaches[args.TokenCache], _store.LastVersionToken, StringComparison.OrdinalIgnoreCase))
                 {
 
                     try
@@ -363,7 +363,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                         try
                         {
-                            // Hack: The _store.LastVersionToken is written when we call _store.ReadData, but we know that we're
+                            // The _store.LastVersionToken is written when we call _store.ReadData, but we know that we're
                             // up-to-date here, so read the actual version from the file, so we can skip deserializing next time.
                             var versionToken = File.ReadAllText(_store.VersionFilePath);
                             _registeredCaches[args.TokenCache] = versionToken;

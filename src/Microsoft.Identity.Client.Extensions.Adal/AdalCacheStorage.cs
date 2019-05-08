@@ -117,6 +117,18 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             }
         }
 
+        private void CacheLastReadVersion()
+        {
+            try
+            {
+                _lastVersionToken = File.ReadAllText(VersionFilePath);
+            }
+            catch (IOException ex)
+            {
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to read version file due to exception: '{ex.Message}'");
+            }
+        }
+
         /// <summary>
         /// Read and unprotect adal cache data
         /// </summary>
@@ -135,6 +147,10 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                 if (!File.Exists(VersionFilePath))
                 {
                     WriteVersionFile();
+                }
+                else
+                {
+                    CacheLastReadVersion();
                 }
 
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
