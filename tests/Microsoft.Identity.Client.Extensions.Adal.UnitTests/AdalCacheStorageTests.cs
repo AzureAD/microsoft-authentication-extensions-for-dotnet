@@ -55,9 +55,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         public void AdalNewStoreNoFile()
         {
             var store = new AdalCacheStorage(s_storageCreationProperties, logger: _logger);
-            Assert.IsTrue(store.HasChanged);
             Assert.IsFalse(store.ReadData().Any());
-            Assert.IsFalse(store.HasChanged);
         }
 
         [TestMethod]
@@ -80,18 +78,13 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
             byte[] data = { 2, 2, 3 };
             byte[] data2 = { 2, 2, 3, 4, 4 };
             store.WriteData(data);
-            Assert.IsFalse(store.HasChanged);
-            Enumerable.SequenceEqual(store.ReadData(), data);
+            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data));
 
             store.WriteData(data);
-            Assert.IsFalse(store.HasChanged);
             store.WriteData(data2);
-            Assert.IsFalse(store.HasChanged);
             store.WriteData(data);
-            Assert.IsFalse(store.HasChanged);
             store.WriteData(data2);
-            Assert.IsFalse(store.HasChanged);
-            Enumerable.SequenceEqual(store.ReadData(), data2);
+            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data2));
         }
 
         [TestMethod]
@@ -103,18 +96,12 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
 
             byte[] data = { 2, 2, 3 };
             store.WriteData(data);
-
-            Assert.IsFalse(store.HasChanged);
-            Assert.IsTrue(store2.HasChanged);
-
             store2.ReadData();
 
-            Enumerable.SequenceEqual(store.ReadData(), data);
+            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data));
             Assert.IsTrue(File.Exists(CacheFilePath));
 
             store.Clear();
-            Assert.IsFalse(store.HasChanged);
-            Assert.IsTrue(store2.HasChanged);
 
             Assert.IsFalse(store.ReadData().Any());
             Assert.IsFalse(store2.ReadData().Any());

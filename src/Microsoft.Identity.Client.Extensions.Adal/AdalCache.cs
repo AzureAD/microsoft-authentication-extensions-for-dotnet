@@ -80,37 +80,34 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
             _cacheLock = new CrossPlatLock(Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile");
 
-            if (_store.HasChanged)
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
+            byte[] fileData = _store.ReadData();
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
+
+            if (fileData != null && fileData.Length > 0)
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
-                byte[] fileData = _store.ReadData();
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
-
-                if (fileData != null && fileData.Length > 0)
+                try
                 {
-                    try
-                    {
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
-                        DeserializeAdalV3(fileData);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}");
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
-
-                        // Clear the memory cache
-                        DeserializeAdalV3(null);
-                        _store.Clear();
-                        throw;
-                    }
+                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
+                    DeserializeAdalV3(fileData);
                 }
-                else
+                catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}");
+                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
 
                     // Clear the memory cache
                     DeserializeAdalV3(null);
+                    _store.Clear();
+                    throw;
                 }
+            }
+            else
+            {
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+
+                // Clear the memory cache
+                DeserializeAdalV3(null);
             }
         }
 

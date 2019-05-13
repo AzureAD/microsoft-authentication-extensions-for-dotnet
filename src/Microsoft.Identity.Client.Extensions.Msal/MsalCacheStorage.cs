@@ -20,9 +20,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         internal readonly StorageCreationProperties _creationProperties;
         private readonly TraceSource _logger;
 
-        // This is set to empty string here. During a file read, if the token isn't available, we will create a new guid, so we will always read the first time.
-        private string _lastVersionToken = string.Empty;
-
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
         /// <summary>
@@ -42,10 +39,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         public string CacheFilePath => _creationProperties.CacheFilePath;
 
-        internal string VersionFilePath => CacheFilePath + ".version";
-
-        internal string LastVersionToken => string.Copy(_lastVersionToken);
-
         /// <summary>
         /// Gets a value indicating whether the persisted file has changed since we last read it.
         /// </summary>
@@ -53,49 +46,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             get
             {
-                bool versionFileExists = File.Exists(VersionFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Has the store changed");
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"VersionFileExists '{versionFileExists}'");
-
-                if (!versionFileExists)
-                {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"The version file does not exist, treat as 'changed'.");
-                    return true;
-                }
-
-                string currentVersion = File.ReadAllText(VersionFilePath);
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Current version '{currentVersion}' Last version '{_lastVersionToken}'");
-
-                bool hasChanged = !currentVersion.Equals(_lastVersionToken, StringComparison.OrdinalIgnoreCase);
-
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Cache has changed '{hasChanged}'");
-                return hasChanged;
-            }
-        }
-
-        private void WriteVersionFile()
-        {
-            try
-            {
-                string newVersion = Guid.NewGuid().ToString();
-                File.WriteAllText(VersionFilePath, newVersion);
-                _lastVersionToken = newVersion;
-            }
-            catch (IOException ex)
-            {
-                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to write version file due to exception: '{ex.Message}'");
-            }
-        }
-
-        private void CacheLastReadVersion()
-        {
-            try
-            {
-                _lastVersionToken = File.ReadAllText(VersionFilePath);
-            }
-            catch (IOException ex)
-            {
-                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Unable to read version file due to exception: '{ex.Message}'");
+                // Attempts to make this more refined have all resulted in some form of cache inconsistency. Just returning
+                // true here so we always load from disk.
+                return true;
             }
         }
 
@@ -113,16 +66,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             bool alreadyLoggedException = false;
             try
             {
-                // Guarantee that the version file exists so that we can know if it changes.
-                if (!File.Exists(VersionFilePath))
-                {
-                    WriteVersionFile();
-                }
-                else
-                {
-                    CacheLastReadVersion();
-                }
-
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Reading Data");
                 byte[] fileData = ReadDataCore();
 
@@ -350,7 +293,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             TryProcessFile(() =>
             {
                 File.WriteAllBytes(CacheFilePath, data);
-                WriteVersionFile();
             });
         }
 
@@ -372,8 +314,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"Problem deleting the cache file '{e}'");
                 }
 
-                WriteVersionFile();
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file. Last version token is '{_lastVersionToken}'");
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After deleting the cache file.");
             });
 
             if (SharedUtilities.IsMacPlatform())
