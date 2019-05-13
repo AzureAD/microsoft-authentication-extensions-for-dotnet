@@ -142,8 +142,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             helper.RegisterCache(cache2);
             helper.RegisterCache(cache3);
 
-            var storeVersion0 = helper._store.LastVersionToken;
-
             // One call from register
             Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
@@ -174,32 +172,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             args1.HasStateChanged = true;
             helper.AfterAccessNotification(args1);
 
-            // Note: Here, we haven't yet read anything in, so helper._store.LastVersionToken is out of date.
-            // Validate that we at least have updated the version of the cache that was serialized.
-            var cache1Version = helper._registeredCaches[cache1];
-            Assert.AreNotEqual(storeVersion0, cache1Version);
-
             helper.BeforeAccessNotification(args2);
             helper.AfterAccessNotification(args2);
 
-            var storeVersion1 = helper._store.LastVersionToken;
-            Assert.AreEqual(cache1Version, storeVersion1);
-
             helper.BeforeAccessNotification(args3);
             helper.AfterAccessNotification(args3);
-
-            var storeVersion2 = helper._store.LastVersionToken;
-            Assert.AreEqual(storeVersion1, storeVersion2);
 
             // Still only one call from register
             Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
             Assert.AreEqual(1, cache3.DeserializeMsalV3_MergeCache);
 
-            // Cache 1 shouldn't need to deserialize because it wrote the new data.
-            Assert.AreEqual(0, cache1.DeserializeMsalV3_ClearCache);
+            // Cache 1 should deserialize, in spite of just writing, just in case another process wrote in the intervening time
+            Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
 
-            // Caches 2 and three should need to deserialize
+            // Caches 2 and 3 simply need to deserialize
             Assert.AreEqual(1, cache2.DeserializeMsalV3_ClearCache);
             Assert.AreEqual(1, cache3.DeserializeMsalV3_ClearCache);
 
