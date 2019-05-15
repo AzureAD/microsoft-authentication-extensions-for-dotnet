@@ -21,7 +21,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     [TestClass]
     public class ManagedIdentityTests
     {
-        [SuppressMessage("Microsoft.Security", "CS001:SecretInline", Justification = "Fake Secret")]
+        [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification = "Fake Secret")]
         private const string AccessToken = "abcdefg"; 
         private const string RefreshToken = "hijklmn";
         private const string ExpiresOn = "1506484173";
