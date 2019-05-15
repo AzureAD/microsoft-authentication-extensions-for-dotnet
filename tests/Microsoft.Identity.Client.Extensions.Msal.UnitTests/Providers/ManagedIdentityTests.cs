@@ -14,14 +14,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
     [TestClass]
     public class ManagedIdentityTests
     {
-        private const string AccessToken = "abcdefg";
+        [SuppressMessage("Microsoft.Security", "CS001:SecretInline", Justification = "Fake Secret")]
+        private const string AccessToken = "abcdefg"; 
         private const string RefreshToken = "hijklmn";
         private const string ExpiresOn = "1506484173";
         private const string AzureManagementVMManagedIdentityJson = @"{
