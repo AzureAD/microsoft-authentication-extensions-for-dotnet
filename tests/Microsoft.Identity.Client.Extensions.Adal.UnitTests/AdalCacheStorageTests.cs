@@ -8,6 +8,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Microsoft.DotNet.PlatformAbstractions;
+using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
@@ -48,7 +50,10 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         [TestMethod]
         public void AdalTestUserDirectory()
         {
-            Assert.AreEqual(AdalCacheStorage.UserRootDirectory, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+            Assert.AreEqual(AdalCacheStorage.UserRootDirectory,
+                Environment.OSVersion.Platform == PlatformID.Win32NT
+                    ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+                    : Environment.GetEnvironmentVariable("HOME"));
         }
 
         [TestMethod]

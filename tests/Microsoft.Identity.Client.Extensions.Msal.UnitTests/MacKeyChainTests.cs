@@ -2,14 +2,17 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Identity.Client.Extensions.Msal.UnitTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit.Sdk;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
     [TestClass]
-    [Ignore("Unable to run these tests on Windows, ignoring for now")]
     public class MacKeyChainTests
     {
         private const string ServiceName = "foo";
@@ -18,16 +21,22 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         [TestInitialize]
         public void TestInitialize()
         {
-            MacKeyChain.DeleteKey(ServiceName, AccountName);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                MacKeyChain.DeleteKey(ServiceName, AccountName);
+            }
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            MacKeyChain.DeleteKey(ServiceName, AccountName);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                MacKeyChain.DeleteKey(ServiceName, AccountName);
+            }
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestWriteKey()
         {
             string data = "applesauce";
@@ -36,7 +45,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestWriteSameKeyTwice()
         {
             string data = "applesauce";
@@ -48,7 +57,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestWriteSameKeyTwiceWithDifferentData()
         {
             string data = "applesauce";
@@ -60,7 +69,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestRetrieveKey()
         {
             string data = "applesauce";
@@ -69,13 +78,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestRetrieveNonExistingKey()
         {
             VerifyKeyIsNull(ServiceName, AccountName);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestDeleteKey()
         {
             string data = "applesauce";
@@ -87,7 +96,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             VerifyKeyIsNull(ServiceName, AccountName);
         }
 
-        [TestMethod]
+        [RunOnOSX]
         public void TestDeleteNonExistingKey()
         {
             MacKeyChain.DeleteKey(ServiceName, AccountName);

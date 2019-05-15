@@ -51,16 +51,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 _logger);
 
             //Test signalling thread 1
-            var resetEvent1 = new ManualResetEvent(initialState: false);
+            var resetEvent1 = new ManualResetEventSlim(initialState: false);
 
             //Test signalling thread 2
-            var resetEvent2 = new ManualResetEvent(initialState: false);
+            var resetEvent2 = new ManualResetEventSlim(initialState: false);
 
             //Thread 1 signalling test
-            var resetEvent3 = new ManualResetEvent(initialState: false);
+            var resetEvent3 = new ManualResetEventSlim(initialState: false);
 
             // Thread 2 signalling test
-            var resetEvent4 = new ManualResetEvent(initialState: false);
+            var resetEvent4 = new ManualResetEventSlim(initialState: false);
 
             var thread1 = new Thread(() =>
             {
@@ -71,7 +71,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
                 helper1.BeforeAccessNotification(args);
                 resetEvent3.Set();
-                resetEvent1.WaitOne();
+                resetEvent1.Wait();
                 helper1.AfterAccessNotification(args);
             });
 
@@ -84,14 +84,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
                 helper2.BeforeAccessNotification(args);
                 resetEvent4.Set();
-                resetEvent2.WaitOne();
+                resetEvent2.Wait();
                 helper2.AfterAccessNotification(args);
                 resetEvent4.Set();
             });
 
             // Let thread 1 start and get the lock
             thread1.Start();
-            resetEvent3.WaitOne();
+            resetEvent3.Wait();
 
             // Start thread 2 and give it enough time to get blocked on the lock
             thread2.Start();
@@ -103,7 +103,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Allow thread1 to give up the lock, and wait for helper2 to get it
             resetEvent1.Set();
-            resetEvent4.WaitOne();
+            resetEvent4.Wait();
             resetEvent4.Reset();
 
             // Make sure helper1 gave it up properly, and helper2 now owns the lock
@@ -112,14 +112,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Allow thread2 to give up the lock, and wait for it to complete
             resetEvent2.Set();
-            resetEvent4.WaitOne();
+            resetEvent4.Wait();
 
             // Make sure thread2 cleaned up after itself as well
             Assert.IsNull(helper2.CacheLock);
         }
 
-        [TestMethod]
-        public async Task ThreeRegisteredCachesRemainInSyncTestAsync()
+        [RunOnWindows]
+        public async Task TwoRegisteredCachesRemainInSyncTestAsync()
         {
             if (File.Exists(s_storageCreationProperties.CacheFilePath))
             {

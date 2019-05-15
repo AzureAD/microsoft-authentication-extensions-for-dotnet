@@ -1,0 +1,2 @@
+[config]
+project = tests/WebAppTestWithAzureSDK/WebAppTestWithAzureSDK.csproj
