@@ -9,10 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client.Extensions.Abstractions;
 using Microsoft.Identity.Client.Extensions.Msal.Providers;
 using Microsoft.Rest;
-using ITokenProvider = Microsoft.Identity.Client.Extensions.Abstractions.ITokenProvider;
+using ITokenProvider = Microsoft.Identity.Client.Extensions.Msal.Providers.ITokenProvider;
 
 namespace WebAppTestWithAzureSDK.Credentials
 {

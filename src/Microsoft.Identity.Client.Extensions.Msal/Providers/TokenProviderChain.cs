@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client.Extensions.Abstractions;
 using Microsoft.Identity.Client.Extensions.Msal.Providers.Exceptions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Providers

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Identity.Client.Extensions.Abstractions
+namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
     /// <summary>
     /// ITokenProvider describes the interface for fetching an access token
