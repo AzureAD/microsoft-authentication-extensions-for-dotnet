@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.Identity.Client.Extensions.Abstractions
+namespace Microsoft.Identity.Client.Extensions.Msal.Providers
 {
     /// <summary>
     /// IToken is an AAD access token with an expiration

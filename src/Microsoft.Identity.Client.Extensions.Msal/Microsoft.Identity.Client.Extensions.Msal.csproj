@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Client" Version="3.0.8" />
-    <ProjectReference Include="..\Microsoft.Identity.Client.Extensions.Abstractions\Microsoft.Identity.Client.Extensions.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
