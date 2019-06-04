@@ -4,13 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Cache;
 
 #pragma warning disable CS0618 // Type or member is obsolete (CacheData)
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
-    internal class MockTokenCache : ITokenCache
+    internal class MockTokenCache : ITokenCache, ITokenCacheSerializer
     {
         private TokenCacheCallback _beforeAccess;
         private TokenCacheCallback _afterAccess;
@@ -84,15 +85,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             _afterAccess = afterAccess;
         }
 
+        public void SetAfterAccessAsync(Func<TokenCacheNotificationArgs, Task> afterAccess) => throw new NotImplementedException();
+
         public void SetBeforeAccess(TokenCacheCallback beforeAccess)
         {
             _beforeAccess = beforeAccess;
         }
 
+        public void SetBeforeAccessAsync(Func<TokenCacheNotificationArgs, Task> beforeAccess) => throw new NotImplementedException();
+
         public void SetBeforeWrite(TokenCacheCallback beforeWrite)
         {
             throw new NotImplementedException();
         }
+
+        public void SetBeforeWriteAsync(Func<TokenCacheNotificationArgs, Task> beforeWrite) => throw new NotImplementedException();
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -57,70 +57,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Session
             }
 
             _signedInUser = user;
-            LoadUserTokenCacheFromSession();
-        }
-
-        /// <summary>
-        /// Loads the user token cache from http session.
-        /// </summary>
-        private void LoadUserTokenCacheFromSession()
-        {
-            _httpContext.Session.LoadAsync().Wait();
-
-            string cacheKey = GetSignedInUsersUniqueId();
-
-            if (string.IsNullOrWhiteSpace(cacheKey))
-            {
-                return;
-            }
-
-            s_sessionLock.EnterReadLock();
-            try
-            {
-                byte[] blob;
-                if (_httpContext.Session.TryGetValue(cacheKey, out blob))
-                {
-                    Debug.WriteLine($"INFO: Deserializing session {_httpContext.Session.Id}, cacheId {cacheKey}");
-                    _userTokenCache.DeserializeMsalV3(blob);
-                }
-                else
-                {
-                    Debug.WriteLine($"INFO: cacheId {cacheKey} not found in session {_httpContext.Session.Id}");
-                }
-            }
-            finally
-            {
-                s_sessionLock.ExitReadLock();
-            }
-        }
-
-        /// <summary>
-        /// Persists the user token blob to the Http session.
-        /// </summary>
-        private void PersistUserTokenCache()
-        {
-            string cacheKey = GetSignedInUsersUniqueId();
-
-            if (string.IsNullOrWhiteSpace(cacheKey))
-            {
-                return;
-            }
-
-            s_sessionLock.EnterWriteLock();
-
-            try
-            {
-                Debug.WriteLine($"INFO: Serializing session {_httpContext.Session.Id}, cacheId {cacheKey}");
-
-                // Reflect changes in the persistent store
-                byte[] blob = _userTokenCache.SerializeMsalV3();
-                _httpContext.Session.Set(cacheKey, blob);
-                _httpContext.Session.CommitAsync().Wait();
-            }
-            finally
-            {
-                s_sessionLock.ExitWriteLock();
-            }
         }
 
         /// <summary>
@@ -149,9 +85,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Session
             {
                 s_sessionLock.ExitWriteLock();
             }
-
-            // Nulls the currently deserialized instance
-            LoadUserTokenCacheFromSession();
         }
 
         /// <summary>
@@ -175,7 +108,28 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Session
             // if the access operation resulted in a cache update
             if (args.HasStateChanged)
             {
-                PersistUserTokenCache();
+                string cacheKey = GetSignedInUsersUniqueId();
+
+                if (string.IsNullOrWhiteSpace(cacheKey))
+                {
+                    return;
+                }
+
+                s_sessionLock.EnterWriteLock();
+
+                try
+                {
+                    Debug.WriteLine($"INFO: Serializing session {_httpContext.Session.Id}, cacheId {cacheKey}");
+
+                    // Reflect changes in the persistent store
+                    byte[] blob = args.TokenCache.SerializeMsalV3();
+                    _httpContext.Session.Set(cacheKey, blob);
+                    _httpContext.Session.CommitAsync().Wait();
+                }
+                finally
+                {
+                    s_sessionLock.ExitWriteLock();
+                }
             }
         }
 
@@ -198,7 +152,33 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Session
         /// <param name="args">Contains parameters used by the MSAL call accessing the cache.</param>
         private void UserTokenCacheBeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            LoadUserTokenCacheFromSession();
+            _httpContext.Session.LoadAsync().Wait();
+
+            string cacheKey = GetSignedInUsersUniqueId();
+
+            if (string.IsNullOrWhiteSpace(cacheKey))
+            {
+                return;
+            }
+
+            s_sessionLock.EnterReadLock();
+            try
+            {
+                byte[] blob;
+                if (_httpContext.Session.TryGetValue(cacheKey, out blob))
+                {
+                    Debug.WriteLine($"INFO: Deserializing session {_httpContext.Session.Id}, cacheId {cacheKey}");
+                    args.TokenCache.DeserializeMsalV3(blob);
+                }
+                else
+                {
+                    Debug.WriteLine($"INFO: cacheId {cacheKey} not found in session {_httpContext.Session.Id}");
+                }
+            }
+            finally
+            {
+                s_sessionLock.ExitReadLock();
+            }
         }
 
         /// <summary>

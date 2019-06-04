@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 using System;
@@ -20,7 +20,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     /// </summary>
     public class SharedTokenCacheProvider : ITokenProvider
     {
-        private static readonly string CacheFilePath =
+        private static readonly string s_cacheFilePath =
             Path.Combine(SharedUtilities.GetUserRootDirectory(), "msal.cache");
         private readonly IPublicClientApplication _app;
         private readonly MsalCacheHelper _cacheHelper;
@@ -36,8 +36,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             const string serviceName = "Microsoft.Developer.IdentityService";
             const string clientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
             var storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
-                Path.GetFileName(CacheFilePath),
-                Path.GetDirectoryName(CacheFilePath),
+                Path.GetFileName(s_cacheFilePath),
+                Path.GetDirectoryName(s_cacheFilePath),
                 clientId)
                 .WithMacKeyChain(serviceName: serviceName, accountName: "MSALCache")
                 .WithLinuxKeyring(

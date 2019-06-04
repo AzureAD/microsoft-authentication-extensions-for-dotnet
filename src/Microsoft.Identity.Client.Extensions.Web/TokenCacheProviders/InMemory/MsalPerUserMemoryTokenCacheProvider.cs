@@ -66,8 +66,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
                 // No users signed in yet, so we return
                 return;
             }
-
-            LoadUserTokenCacheFromMemory();
         }
 
         /// <summary>
@@ -83,38 +81,12 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
             return null;
         }
 
-        /// <summary>Loads the user token cache from memory.</summary>
-        private void LoadUserTokenCacheFromMemory()
-        {
-            string cacheKey = GetMsalAccountId();
-
-            if (string.IsNullOrWhiteSpace(cacheKey))
-            {
-                return;
-            }
-
-            byte[] tokenCacheBytes = (byte[])_memoryCache.Get(GetMsalAccountId());
-            _userTokenCache.DeserializeMsalV3(tokenCacheBytes);
-        }
-
-        /// <summary>
-        /// Persists the user token blob to the memoryCache.
-        /// </summary>
-        private void PersistUserTokenCache()
-        {
-            // Ideally, methods that load and persist should be thread safe.MemoryCache.Get() is thread safe.
-            _memoryCache.Set(GetMsalAccountId(), _userTokenCache.SerializeMsalV3(), _cacheOptions.AbsoluteExpiration);
-        }
-
         /// <summary>
         /// Clears the TokenCache's copy of this user's cache.
         /// </summary>
         public void Clear()
         {
             _memoryCache.Remove(GetMsalAccountId());
-
-            // Nulls the currently deserialized instance
-            LoadUserTokenCacheFromMemory();
         }
 
         /// <summary>
@@ -128,7 +100,8 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
             // if the access operation resulted in a cache update
             if (args.HasStateChanged)
             {
-                PersistUserTokenCache();
+                // Ideally, methods that load and persist should be thread safe.MemoryCache.Get() is thread safe.
+                _memoryCache.Set(GetMsalAccountId(), args.TokenCache.SerializeMsalV3(), _cacheOptions.AbsoluteExpiration);
             }
         }
 
@@ -139,7 +112,15 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
         /// <param name="args">Contains parameters used by the MSAL call accessing the cache.</param>
         private void UserTokenCacheBeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            LoadUserTokenCacheFromMemory();
+            string cacheKey = GetMsalAccountId();
+
+            if (string.IsNullOrWhiteSpace(cacheKey))
+            {
+                return;
+            }
+
+            byte[] tokenCacheBytes = (byte[])_memoryCache.Get(GetMsalAccountId());
+            args.TokenCache.DeserializeMsalV3(tokenCacheBytes);
         }
 
         /// <summary>

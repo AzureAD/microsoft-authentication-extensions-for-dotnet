@@ -82,8 +82,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
             ApptokenCache.SetBeforeAccess(AppTokenCacheBeforeAccessNotification);
             ApptokenCache.SetAfterAccess(AppTokenCacheAfterAccessNotification);
             ApptokenCache.SetBeforeWrite(AppTokenCacheBeforeWriteNotification);
-
-            LoadAppTokenCacheFromMemory();
         }
 
         /// <summary>
@@ -96,32 +94,11 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
         }
 
         /// <summary>
-        /// Loads the application's token from memory cache.
-        /// </summary>
-        private void LoadAppTokenCacheFromMemory()
-        {
-            byte[] tokenCacheBytes = (byte[])_memoryCache.Get(_appCacheId);
-            ApptokenCache.DeserializeMsalV3(tokenCacheBytes);
-        }
-
-        /// <summary>
-        /// Persists the application's token to the cache.
-        /// </summary>
-        private void PersistAppTokenCache()
-        {
-            // Reflect changes in the persistence store
-            _memoryCache.Set(_appCacheId, ApptokenCache.SerializeMsalV3(), _cacheOptions.AbsoluteExpiration);
-        }
-
-        /// <summary>
         /// Clears the token cache for this app
         /// </summary>
         public void Clear()
         {
             _memoryCache.Remove(_appCacheId);
-
-            // Nulls the currently deserialized instance
-            LoadAppTokenCacheFromMemory();
         }
 
         /// <summary>
@@ -130,7 +107,8 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
         /// <param name="args">Contains parameters used by the MSAL call accessing the cache.</param>
         private void AppTokenCacheBeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            LoadAppTokenCacheFromMemory();
+            byte[] tokenCacheBytes = (byte[])_memoryCache.Get(_appCacheId);
+            args.TokenCache.DeserializeMsalV3(tokenCacheBytes);
         }
 
         /// <summary>
@@ -142,7 +120,8 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
             // if the access operation resulted in a cache update
             if (args.HasStateChanged)
             {
-                PersistAppTokenCache();
+                // Reflect changes in the persistence store
+                _memoryCache.Set(_appCacheId, args.TokenCache.SerializeMsalV3(), _cacheOptions.AbsoluteExpiration);
             }
         }
     }

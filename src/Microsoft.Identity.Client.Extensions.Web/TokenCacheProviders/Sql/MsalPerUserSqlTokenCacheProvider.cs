@@ -90,7 +90,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             }
 
             _signedInUser = user;
-            ReadCacheForSignedInUser();
         }
 
         /// <summary>
@@ -122,7 +121,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
         /// <param name="args">Contains parameters used by the MSAL call accessing the cache.</param>
         private void UserTokenCacheBeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            ReadCacheForSignedInUser();
+            ReadCacheForSignedInUser(args.TokenCache);
         }
 
         /// <summary>
@@ -147,7 +146,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
                     };
                 }
 
-                _inMemoryCache.CacheBits = _dataProtector.Protect(_userTokenCache.SerializeMsalV3());
+                _inMemoryCache.CacheBits = _dataProtector.Protect(args.TokenCache.SerializeMsalV3());
                 _inMemoryCache.LastWrite = DateTime.Now;
 
                 try
@@ -162,7 +161,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
                 catch (DbUpdateConcurrencyException)
                 {
                     // Record already updated on a different thread, so just read the updated record
-                    ReadCacheForSignedInUser();
+                    ReadCacheForSignedInUser(args.TokenCache);
                 }
             }
         }
@@ -183,7 +182,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
         /// <summary>
         /// Reads the cache data from the backend database.
         /// </summary>
-        private void ReadCacheForSignedInUser()
+        private void ReadCacheForSignedInUser(ITokenCacheSerializer tokenCache)
         {
             if (_inMemoryCache == null) // first time access
             {
@@ -203,7 +202,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             }
 
             // Send data to the TokenCache instance
-            _userTokenCache.DeserializeMsalV3((_inMemoryCache == null) ? null : _dataProtector.Unprotect(_inMemoryCache.CacheBits));
+            tokenCache.DeserializeMsalV3((_inMemoryCache == null) ? null : _dataProtector.Unprotect(_inMemoryCache.CacheBits));
         }
 
         /// <summary>
@@ -215,9 +214,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             var cacheEntries = _tokenCacheDb.UserTokenCache.Where(c => c.WebUserUniqueId == GetSignedInUsersUniqueId());
             _tokenCacheDb.UserTokenCache.RemoveRange(cacheEntries);
             _tokenCacheDb.SaveChanges();
-
-            // Nulls the currently deserialized instance
-            ReadCacheForSignedInUser();
         }
 
         private IOrderedQueryable<UserTokenCache> GetLatestUserRecordQuery()
