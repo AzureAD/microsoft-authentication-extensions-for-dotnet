@@ -72,8 +72,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             _apptokenCache.SetBeforeAccess(AppTokenCacheBeforeAccessNotification);
             _apptokenCache.SetAfterAccess(AppTokenCacheAfterAccessNotification);
             _apptokenCache.SetBeforeWrite(AppTokenCacheBeforeWriteNotification);
-
-            ReadCacheForSignedInApp();
         }
 
         /// <summary>
@@ -105,7 +103,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
                     };
                 }
 
-                _inMemoryCache.CacheBits = _dataProtector.Protect(_apptokenCache.SerializeMsalV3());
+                _inMemoryCache.CacheBits = _dataProtector.Protect(args.TokenCache.SerializeMsalV3());
                 _inMemoryCache.LastWrite = DateTime.Now;
 
                 try
@@ -117,7 +115,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
                 catch (DbUpdateConcurrencyException)
                 {
                     // Record already updated on a different thread, so just read the updated record
-                    ReadCacheForSignedInApp();
+                    ReadCacheForSignedInApp(args.TokenCache);
                 }
             }
         }
@@ -130,9 +128,6 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             var cacheEntries = _tokenCacheDb.AppTokenCache.Where(c => c.ClientID == _activeClientId);
             _tokenCacheDb.AppTokenCache.RemoveRange(cacheEntries);
             _tokenCacheDb.SaveChanges();
-
-            // Nulls the currently deserialized instance
-            ReadCacheForSignedInApp();
         }
 
         /// <summary>
@@ -142,13 +137,13 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
         /// <param name="args">Contains parameters used by the MSAL call accessing the cache.</param>
         private void AppTokenCacheBeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            ReadCacheForSignedInApp();
+            ReadCacheForSignedInApp(args.TokenCache);
         }
 
         /// <summary>
         /// Reads the cache data from the backend database.
         /// </summary>
-        private void ReadCacheForSignedInApp()
+        private void ReadCacheForSignedInApp(ITokenCacheSerializer tokenCache)
         {
             if (_inMemoryCache == null) // first time access
             {
@@ -168,7 +163,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.Sql
             }
 
             // Send data to the TokenCache instance
-            _apptokenCache.DeserializeMsalV3((_inMemoryCache == null) ? null : _dataProtector.Unprotect(_inMemoryCache.CacheBits));
+            tokenCache.DeserializeMsalV3((_inMemoryCache == null) ? null : _dataProtector.Unprotect(_inMemoryCache.CacheBits));
         }
 
         private IOrderedQueryable<AppTokenCache> GetLatestAppRecordQuery()

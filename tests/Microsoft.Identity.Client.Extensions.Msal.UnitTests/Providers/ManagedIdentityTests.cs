@@ -349,7 +349,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
             var responder = Responders.FirstOrDefault(i => i.Matcher(request, i.State));
             if (responder == null)
+            {
                 Assert.Fail($"responder was not found that matched the request: {request}");
+            }
+
             return Task.FromResult(responder.MockResponse(request, responder.State));
         }
 

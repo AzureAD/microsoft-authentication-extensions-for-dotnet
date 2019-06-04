@@ -112,10 +112,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             if (File.Exists(storageCreationProperties.CacheFilePath))
             {
                 var pca = PublicClientApplicationBuilder.Create(storageCreationProperties.ClientId).Build();
-                var tempCache = new MsalCacheStorage(storageCreationProperties, s_staticLogger.Value);
 
-                // We're using ReadData here so that decryption is gets handled within the store.
-                pca.UserTokenCache.DeserializeMsalV3(tempCache.ReadData());
+                pca.UserTokenCache.SetBeforeAccess((args) =>
+                {
+                    var tempCache = new MsalCacheStorage(storageCreationProperties, s_staticLogger.Value);
+                    // We're using ReadData here so that decryption is gets handled within the store.
+                    args.TokenCache.DeserializeMsalV3(tempCache.ReadData());
+                });
 
                 var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
 
@@ -234,18 +237,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         _cachedStoreData = _store.ReadData();
                         _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{_cachedStoreData?.Length}' bytes from storage");
                     }
-
-                    try
-                    {
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing data into memory");
-                        _userTokenCache.DeserializeMsalV3(_cachedStoreData);
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(MsalCacheHelper)} : {e}");
-
-                        Clear();
-                    }
                 }
 
                 _registeredCaches.Add(tokenCache); // Ignore return value, since we already bail if _registeredCaches contains tokenCache earlier
@@ -253,7 +244,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
             }
         }
-
 
         /// <summary>
         /// Unregisters a token cache so it no longer synchronizes with on disk storage.

@@ -64,10 +64,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread1 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs
-                {
-                    TokenCache = cache1
-                };
+                var args = new TokenCacheNotificationArgs(cache1, string.Empty, null, false);
 
                 helper1.BeforeAccessNotification(args);
                 resetEvent3.Set();
@@ -77,11 +74,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var thread2 = new Thread(() =>
             {
-                var args = new TokenCacheNotificationArgs
-                {
-                    TokenCache = cache2
-                };
-
+                var args = new TokenCacheNotificationArgs(cache2, string.Empty, null, false);
                 helper2.BeforeAccessNotification(args);
                 resetEvent4.Set();
                 resetEvent2.Wait();
@@ -142,28 +135,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             helper.RegisterCache(cache2);
             helper.RegisterCache(cache3);
 
-            // One call from register
-            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
-            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
-            Assert.AreEqual(1, cache3.DeserializeMsalV3_MergeCache);
-            Assert.AreEqual(startString, cache1.LastDeserializedString);
-            Assert.AreEqual(startString, cache2.LastDeserializedString);
-            Assert.AreEqual(startString, cache3.LastDeserializedString);
+            // No calls at register
+            Assert.AreEqual(0, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(0, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(0, cache3.DeserializeMsalV3_MergeCache);
+            Assert.IsNull(cache1.LastDeserializedString);
+            Assert.IsNull(cache2.LastDeserializedString);
+            Assert.IsNull(cache3.LastDeserializedString);
 
-            var args1 = new TokenCacheNotificationArgs
-            {
-                TokenCache = cache1
-            };
-
-            var args2 = new TokenCacheNotificationArgs
-            {
-                TokenCache = cache2
-            };
-
-            var args3 = new TokenCacheNotificationArgs
-            {
-                TokenCache = cache3
-            };
+            var args1 = new TokenCacheNotificationArgs(cache1, string.Empty, null, false);
+            var args2 = new TokenCacheNotificationArgs(cache2, string.Empty, null, false);
+            var args3 = new TokenCacheNotificationArgs(cache3, string.Empty, null, false);
 
             var changedString = "Hey look, the file changed";
 
@@ -178,10 +160,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             helper.BeforeAccessNotification(args3);
             helper.AfterAccessNotification(args3);
 
-            // Still only one call from register
-            Assert.AreEqual(1, cache1.DeserializeMsalV3_MergeCache);
-            Assert.AreEqual(1, cache2.DeserializeMsalV3_MergeCache);
-            Assert.AreEqual(1, cache3.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(0, cache1.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(0, cache2.DeserializeMsalV3_MergeCache);
+            Assert.AreEqual(0, cache3.DeserializeMsalV3_MergeCache);
 
             // Cache 1 should deserialize, in spite of just writing, just in case another process wrote in the intervening time
             Assert.AreEqual(1, cache1.DeserializeMsalV3_ClearCache);
