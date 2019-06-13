@@ -22,43 +22,52 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     {
         private static readonly string s_cacheFilePath =
             Path.Combine(SharedUtilities.GetUserRootDirectory(), "msal.cache");
+        private const string ServiceName = "Microsoft.Developer.IdentityService";
+        private const string AzureCliClientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
+        private const string MsalClientVersion = "1.0.0.0";
+        private const string MsalAccountName = "MSALCache";
         private readonly IPublicClientApplication _app;
         private readonly MsalCacheHelper _cacheHelper;
         private readonly IConfiguration _config;
         private readonly ILogger _logger;
 
-        /// <inheritdoc />
-        public SharedTokenCacheProvider(IConfiguration config = null, ILogger logger = null)
+        internal SharedTokenCacheProvider(StorageCreationPropertiesBuilder builder, IConfiguration config = null, ILogger logger = null)
         {
             _logger = logger;
             _config = config ?? new ConfigurationBuilder().AddEnvironmentVariables().Build();
 
-            const string serviceName = "Microsoft.Developer.IdentityService";
-            const string clientId = "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
-            var storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
-                Path.GetFileName(s_cacheFilePath),
-                Path.GetDirectoryName(s_cacheFilePath),
-                clientId)
-                .WithMacKeyChain(serviceName: serviceName, accountName: "MSALCache")
-                .WithLinuxKeyring(
-                    schemaName: "msal.cache",
-                    collection: "default",
-                    secretLabel: "MSALCache",
-                    attribute1: new KeyValuePair<string, string>("MsalClientID", serviceName),
-                    attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+            var authority = _config.GetValue<string>(Constants.AadAuthorityEnvName) ??
+                string.Format(CultureInfo.InvariantCulture,
+                    AadAuthority.AadCanonicalAuthorityTemplate,
+                    AadAuthority.DefaultTrustedHost,
+                    "common");
 
-            var authority = string.Format(CultureInfo.InvariantCulture,
-                AadAuthority.AadCanonicalAuthorityTemplate,
-                AadAuthority.DefaultTrustedHost,
-                "common");
             _app = PublicClientApplicationBuilder
-                .Create(clientId)
+                .Create(AzureCliClientId)
                 .WithAuthority(new Uri(authority))
                 .Build();
 
-            var cacheStore = new MsalCacheStorage(storageCreationPropertiesBuilder.Build());
+            var cacheStore = new MsalCacheStorage(builder.Build());
             _cacheHelper = new MsalCacheHelper(_app.UserTokenCache, cacheStore);
             _cacheHelper.RegisterCache(_app.UserTokenCache);
+        }
+
+        /// <inheritdoc />
+        public SharedTokenCacheProvider(IConfiguration config = null, ILogger logger = null) :
+            this(new StorageCreationPropertiesBuilder(
+                Path.GetFileName(s_cacheFilePath),
+                Path.GetDirectoryName(s_cacheFilePath),
+                AzureCliClientId)
+            .WithMacKeyChain(serviceName: ServiceName, accountName: MsalAccountName)
+            .WithLinuxKeyring(
+                schemaName: "msal.cache",
+                collection: "default",
+                secretLabel: "MSALCache",
+                attribute1: new KeyValuePair<string, string>("MsalClientID", ServiceName),
+                attribute2: new KeyValuePair<string, string>("MsalClientVersion", MsalClientVersion)),
+                config,
+                logger)
+        {
         }
 
         /// <inheritdoc />
