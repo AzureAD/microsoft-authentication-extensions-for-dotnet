@@ -22,7 +22,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     public class ManagedIdentityTests
     {
         [SuppressMessage("Microsoft.Security", "CS002:SecretInNextLine", Justification = "Fake Secret")]
-        private const string AccessToken = "abcdefg"; 
+        private const string AccessToken = "abcdefg";
         private const string RefreshToken = "hijklmn";
         private const string ExpiresOn = "1506484173";
         private const string AzureManagementVMManagedIdentityJson = @"{
@@ -61,6 +61,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             var st = DateTime.Now;
             Assert.IsFalse(await probe.IsAvailableAsync().ConfigureAwait(false));
             Assert.IsTrue(DateTime.Now - st < TimeSpan.FromMilliseconds(800), "should take less than 800 milliseconds");
+            VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage((DateTime.Now - st).ToString());
         }
 
         [TestMethod]

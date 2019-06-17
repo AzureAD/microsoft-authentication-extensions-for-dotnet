@@ -39,8 +39,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public MsalCacheStorage(StorageCreationProperties creationProperties, TraceSource logger = null)
         {
             _creationProperties = creationProperties;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initialized '{nameof(MsalCacheStorage)}'");
+            _logger = logger ?? s_staticLogger.Value;
+            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initialized '{nameof(MsalCacheStorage)}'");
         }
 
         /// <summary>
