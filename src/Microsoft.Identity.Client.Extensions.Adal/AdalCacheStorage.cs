@@ -24,7 +24,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         });
 
         private const int FileLockRetryCount = 20;
-        private const int FileLockRetryWaitInMs = 200;
+        private const int FileLockRetryDelayInMs = 200;
 
         private readonly TraceSource _logger;
 
@@ -394,7 +394,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                 }
                 catch (Exception e)
                 {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(FileLockRetryWaitInMs));
+                    Thread.Sleep(TimeSpan.FromMilliseconds(FileLockRetryDelayInMs));
 
                     if (tryCount == FileLockRetryCount)
                     {

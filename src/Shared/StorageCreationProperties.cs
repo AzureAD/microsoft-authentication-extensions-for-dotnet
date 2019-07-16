@@ -32,7 +32,9 @@ public class StorageCreationProperties
             string keyringSecretLabel,
             KeyValuePair<string, string> keyringAttribute1,
             KeyValuePair<string, string> keyringAttribute2,
-            string clientId)
+            string clientId,
+            int lockRetryDelay,
+            int lockRetryCount)
         {
             CacheFileName = cacheFileName;
             CacheDirectory = cacheDirectory;
@@ -44,6 +46,8 @@ public class StorageCreationProperties
             KeyringAttribute1 = keyringAttribute1;
             KeyringAttribute2 = keyringAttribute2;
             ClientId = clientId;
+            LockRetryDelay = lockRetryDelay;
+            LockRetryCount = lockRetryCount;
         }
 
         /// <summary>
@@ -95,6 +99,16 @@ public class StorageCreationProperties
         /// Additional linux keyring attribute.
         /// </summary>
         public readonly KeyValuePair<string, string> KeyringAttribute2;
+
+        /// <summary>
+        /// The delay between retries if a lock is contended and a retry is requested. (in ms)
+        /// </summary>
+        public readonly int LockRetryDelay;
+
+        /// <summary>
+        /// The number of time to retry the lock if it is contended and retrying is possible
+        /// </summary>
+        public readonly int LockRetryCount;
 
         /// <summary>
         /// The client id

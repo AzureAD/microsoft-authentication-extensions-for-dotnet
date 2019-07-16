@@ -19,11 +19,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
 {
     internal class CrossPlatLock : IDisposable
     {
-        private const int LockfileRetryWait = 100;
-        private const int LockfileRetryCount = 60000 / LockfileRetryWait;
+        internal const int LockfileRetryDelayDefault = 100;
+        internal const int LockfileRetryCountDefault = 60000 / LockfileRetryDelayDefault;
         private FileStream _lockFileStream;
 
-        public CrossPlatLock(string lockfilePath)
+        public CrossPlatLock(string lockfilePath, int lockFileRetryDelay = LockfileRetryDelayDefault, int lockFileRetryCount = LockfileRetryCountDefault)
         {
             Exception exception = null;
             FileStream fileStream = null;
@@ -31,7 +31,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
             // Create lock file dir if it doesn't already exist
             Directory.CreateDirectory(Path.GetDirectoryName(lockfilePath));
 
-            for (int tryCount = 0; tryCount < LockfileRetryCount; tryCount++)
+            for (int tryCount = 0; tryCount < lockFileRetryCount; tryCount++)
             {
 
                 try
@@ -60,12 +60,12 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 catch (IOException ex)
                 {
                     exception = ex;
-                    Thread.Sleep(LockfileRetryWait);
+                    Thread.Sleep(lockFileRetryDelay);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
                     exception = ex;
-                    Thread.Sleep(LockfileRetryCount);
+                    Thread.Sleep(lockFileRetryCount);
                 }
             }
 
