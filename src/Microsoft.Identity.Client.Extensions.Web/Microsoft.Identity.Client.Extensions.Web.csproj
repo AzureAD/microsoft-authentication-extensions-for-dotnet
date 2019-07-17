@@ -43,6 +43,6 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.1.0" />
   </ItemGroup>
 </Project>
