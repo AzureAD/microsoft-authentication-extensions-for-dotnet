@@ -114,7 +114,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void LockTimeoutTest()
         {
             // Total of 1000ms delay
-            _storageCreationPropertiesBuilder.WithlockRetry(20, 100);
+            _storageCreationPropertiesBuilder.CustomizeLockRetry(20, 100);
             var properties = _storageCreationPropertiesBuilder.Build();
             
 
@@ -164,10 +164,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 getTime.Start();
                 try
                 {
-                    
+
                     helper2.BeforeAccessNotification(args);
-                }catch(InvalidOperationException)
+                }
+                catch (InvalidOperationException)
                 {
+                    // Invalid operation is the exception thrown if the lock cannot be acquired
                     getTime.Stop();
                 }
 
