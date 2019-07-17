@@ -163,6 +163,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             finally
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
+                // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
+                // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
                 var localLockCopy = _cacheLock;
                 _cacheLock = null;
                 localLockCopy?.Dispose();

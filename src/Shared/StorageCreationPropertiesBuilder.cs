@@ -27,8 +27,8 @@ public class StorageCreationPropertiesBuilder
         private string _keyringSecretLabel;
         private KeyValuePair<string, string> _keyringAttribute1;
         private KeyValuePair<string, string> _keyringAttribute2;
-        private int _lockFileRetryDelay = CrossPlatLock.LockfileRetryDelayDefault;
-        private int _lockFileRetryCount = CrossPlatLock.LockfileRetryCountDefault;
+        private int _lockRetryDelay = CrossPlatLock.LockfileRetryDelayDefault;
+        private int _lockRetryCount = CrossPlatLock.LockfileRetryCountDefault;
 
         /// <summary>
         /// Constructs a new instance of this builder associated with the given cache file.
@@ -60,8 +60,8 @@ public class StorageCreationPropertiesBuilder
                 _keyringAttribute1,
                 _keyringAttribute2,
                 _clientId,
-                _lockFileRetryDelay,
-                _lockFileRetryCount);
+                _lockRetryDelay,
+                _lockRetryCount);
         }
 
         /// <summary>
@@ -78,12 +78,12 @@ public class StorageCreationPropertiesBuilder
         }
 
         /// <summary>
-        /// Augments this builder with a custom retry ammount and delay between retries in the cases where a file lock is used.
+        /// Augments this builder with a custom retry ammount and delay between retries in the cases where a lock is used.
         /// </summary>
         /// <param name="lockRetryDelay">Delay between retries in ms, must be 1 or more</param>
         /// <param name="lockRetryCount">Number of retries, must be 1 or more</param>
         /// <returns>The augmented builder</returns>
-        public StorageCreationPropertiesBuilder WithlockRetry(int lockRetryDelay, int lockRetryCount)
+        public StorageCreationPropertiesBuilder CustomizeLockRetry(int lockRetryDelay, int lockRetryCount)
         {
             if(lockRetryDelay < 1)
             {
@@ -95,8 +95,8 @@ public class StorageCreationPropertiesBuilder
                 throw new ArgumentOutOfRangeException(nameof(lockRetryCount));
             }
 
-            _lockFileRetryCount = lockRetryCount;
-            _lockFileRetryDelay = lockRetryDelay;
+            _lockRetryCount = lockRetryCount;
+            _lockRetryDelay = lockRetryDelay;
             return this;
         }
 
