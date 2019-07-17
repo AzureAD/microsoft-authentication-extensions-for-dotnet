@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 
 #if ADAL
@@ -26,6 +27,8 @@ public class StorageCreationPropertiesBuilder
         private string _keyringSecretLabel;
         private KeyValuePair<string, string> _keyringAttribute1;
         private KeyValuePair<string, string> _keyringAttribute2;
+        private int _lockRetryDelay = CrossPlatLock.LockfileRetryDelayDefault;
+        private int _lockRetryCount = CrossPlatLock.LockfileRetryCountDefault;
 
         /// <summary>
         /// Constructs a new instance of this builder associated with the given cache file.
@@ -56,7 +59,9 @@ public class StorageCreationPropertiesBuilder
                 _keyringSecretLabel,
                 _keyringAttribute1,
                 _keyringAttribute2,
-                _clientId);
+                _clientId,
+                _lockRetryDelay,
+                _lockRetryCount);
         }
 
         /// <summary>
@@ -69,6 +74,29 @@ public class StorageCreationPropertiesBuilder
         {
             _macKeyChainServiceName = serviceName;
             _macKeyChainAccountName = accountName;
+            return this;
+        }
+
+        /// <summary>
+        /// Augments this builder with a custom retry ammount and delay between retries in the cases where a lock is used.
+        /// </summary>
+        /// <param name="lockRetryDelay">Delay between retries in ms, must be 1 or more</param>
+        /// <param name="lockRetryCount">Number of retries, must be 1 or more</param>
+        /// <returns>The augmented builder</returns>
+        public StorageCreationPropertiesBuilder CustomizeLockRetry(int lockRetryDelay, int lockRetryCount)
+        {
+            if(lockRetryDelay < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(lockRetryDelay));
+            }
+
+            if (lockRetryCount < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(lockRetryCount));
+            }
+
+            _lockRetryCount = lockRetryCount;
+            _lockRetryDelay = lockRetryDelay;
             return this;
         }
 

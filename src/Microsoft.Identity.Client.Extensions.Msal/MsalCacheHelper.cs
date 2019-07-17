@@ -281,7 +281,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         private static CrossPlatLock CreateCrossPlatLock(StorageCreationProperties storageCreationProperties)
         {
-            return new CrossPlatLock(storageCreationProperties.CacheFilePath + ".lockfile");
+            return new CrossPlatLock(storageCreationProperties.CacheFilePath + ".lockfile", storageCreationProperties.LockRetryDelay, storageCreationProperties.LockRetryCount);
         }
 
         /// <summary>
@@ -328,10 +328,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="args">Callback parameters from MSAL</param>
         internal void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
-
             try
             {
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
+   
                 // if the access operation resulted in a cache update
                 if (args.HasStateChanged)
                 {
@@ -359,9 +359,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             finally
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
-                CacheLock?.Dispose();
+                // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
+                // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
+                var localDispose = CacheLock;
                 CacheLock = null;
+                localDispose?.Dispose();
+                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Released lock");
             }
         }
     }

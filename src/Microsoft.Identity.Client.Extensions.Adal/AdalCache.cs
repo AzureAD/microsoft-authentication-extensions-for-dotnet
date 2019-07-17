@@ -32,16 +32,31 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// </summary>
         private readonly TraceSource _logger;
         private CrossPlatLock _cacheLock;
+        private readonly int _lockFileRetryDelay;
+        private readonly int _lockFileRetryCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AdalCache"/> class.
         /// </summary>
         /// <param name="storage">Adal cache storage</param>
         /// <param name="logger">Logger</param>
-        public AdalCache(AdalCacheStorage storage, TraceSource logger)
+        public AdalCache(AdalCacheStorage storage, TraceSource logger) : this(storage, logger, CrossPlatLock.LockfileRetryDelayDefault, CrossPlatLock.LockfileRetryCountDefault)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AdalCache"/> class.
+        /// </summary>
+        /// <param name="storage">Adal cache storage</param>
+        /// <param name="logger">Logger</param>
+        /// <param name="lockRetryDelay">Delay in ms between retries if cache lock is contended</param>
+        /// <param name="lockRetryCount">Number of retries if cache lock is contended</param>
+        public AdalCache(AdalCacheStorage storage, TraceSource logger, int lockRetryDelay, int lockRetryCount)
+        { 
             _logger = logger ?? s_staticLogger.Value;
             _store = storage ?? throw new ArgumentNullException(nameof(storage));
+            _lockFileRetryCount = lockRetryCount;
+            _lockFileRetryDelay = lockRetryDelay;
 
             AfterAccess = AfterAccessNotification;
             BeforeAccess = BeforeAccessNotification;
@@ -70,15 +85,15 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
         }
 
-        // Triggered right before ADAL needs to access the cache.
-        // Reload the cache from the persistent store in case it changed since the last access.
-        // Internal for testing.
-        internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
+    // Triggered right before ADAL needs to access the cache.
+    // Reload the cache from the persistent store in case it changed since the last access.
+    // Internal for testing.
+    internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
-            _cacheLock = new CrossPlatLock(Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile");
+            _cacheLock = new CrossPlatLock(Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile", this._lockFileRetryDelay, this._lockFileRetryCount);
 
             _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
             byte[] fileData = _store.ReadData();
@@ -148,8 +163,12 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             finally
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
-                _cacheLock?.Dispose();
+                // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
+                // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
+                var localLockCopy = _cacheLock;
                 _cacheLock = null;
+                localLockCopy?.Dispose();
+
             }
         }
     }
