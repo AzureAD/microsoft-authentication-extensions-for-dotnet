@@ -359,10 +359,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             finally
             {
+                // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
+                // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
                 var localDispose = CacheLock;
                 CacheLock = null;
                 localDispose?.Dispose();
-
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Released lock");
             }
         }
