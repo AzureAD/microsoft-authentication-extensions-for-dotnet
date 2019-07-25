@@ -20,5 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)SharedUtilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StorageCreationProperties.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StorageCreationPropertiesBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TraceSourceLogger.cs" />
   </ItemGroup>
 </Project>

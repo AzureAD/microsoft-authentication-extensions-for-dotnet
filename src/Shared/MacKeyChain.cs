@@ -100,7 +100,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <param name="accountName">Account name.</param>
         /// <param name="logger">Logger</param>
         /// <returns>null if key corresponding to given serviceName and accountName is not found</returns>
-        public static byte[] RetrieveKey(string serviceName, string accountName, TraceSource logger = null)
+        public static byte[] RetrieveKey(string serviceName, string accountName, TraceSourceLogger logger = null)
         {
             IntPtr itemRef = IntPtr.Zero;
             IntPtr valuePtr = IntPtr.Zero;
@@ -149,7 +149,17 @@ namespace Microsoft.Identity.Client.Extensions.Web
             finally
             {
                 ReleaseItemRefAndValuePtr(ref itemRef, ref valuePtr);
-                logger?.TraceEvent(eventType, /* id */ 0, logging.ToString());
+                if (logger != null)
+                {
+                    if (eventType == TraceEventType.Information)
+                    {
+                        logger.LogInformation(logging.ToString());
+                    }
+                    else
+                    {
+                        logger.LogError(logging.ToString());
+                    }
+                }
             }
 
             return valueBuffer;

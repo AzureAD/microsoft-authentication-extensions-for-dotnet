@@ -40,13 +40,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
                 cache1,
-                new MsalCacheStorage(_storageCreationPropertiesBuilder.Build(), _logger),
+                MsalCacheStorage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
                 _logger);
 
             var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
                 cache2,
-                new MsalCacheStorage(_storageCreationPropertiesBuilder.Build(), _logger),
+                MsalCacheStorage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
                 _logger);
 
             //Test signalling thread 1
@@ -121,13 +121,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
                 cache1,
-                new MsalCacheStorage(properties, _logger),
+                MsalCacheStorage.Create(properties, _logger),
                 _logger);
 
             var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
                 cache2,
-                new MsalCacheStorage(properties, _logger),
+                MsalCacheStorage.Create(properties, _logger),
                 _logger);
 
             //Test signalling thread 1
