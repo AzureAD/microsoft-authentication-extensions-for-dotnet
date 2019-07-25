@@ -17,9 +17,9 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <summary>
         /// A default logger for use if the user doesn't want to provide their own.
         /// </summary>
-        private static readonly Lazy<TraceSource> s_staticLogger = new Lazy<TraceSource>(() =>
+        private static readonly Lazy<TraceSourceLogger> s_staticLogger = new Lazy<TraceSourceLogger>(() =>
         {
-            return (TraceSource)EnvUtils.GetNewTraceSource(nameof(AdalCache) + "Singleton");
+            return new TraceSourceLogger((TraceSource)EnvUtils.GetNewTraceSource(nameof(AdalCache) + "Singleton"));
         });
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <summary>
         /// Logger to log events to.
         /// </summary>
-        private readonly TraceSource _logger;
+        private readonly TraceSourceLogger _logger;
         private CrossPlatLock _cacheLock;
         private readonly int _lockFileRetryDelay;
         private readonly int _lockFileRetryCount;
@@ -53,7 +53,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         /// <param name="lockRetryCount">Number of retries if cache lock is contended</param>
         public AdalCache(AdalCacheStorage storage, TraceSource logger, int lockRetryDelay, int lockRetryCount)
         { 
-            _logger = logger ?? s_staticLogger.Value;
+            _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             _store = storage ?? throw new ArgumentNullException(nameof(storage));
             _lockFileRetryCount = lockRetryCount;
             _lockFileRetryDelay = lockRetryDelay;
@@ -61,28 +61,28 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             AfterAccess = AfterAccessNotification;
             BeforeAccess = BeforeAccessNotification;
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Initializing adal cache");
+            _logger.LogInformation($"Initializing adal cache");
 
             byte[] data = _store.ReadData();
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{data?.Length}' bytes from storage");
+            _logger.LogInformation($"Read '{data?.Length}' bytes from storage");
 
             if (data != null && data.Length > 0)
             {
                 try
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing data into memory");
+                    _logger.LogInformation($"Deserializing data into memory");
                     DeserializeAdalV3(data);
                 }
                 catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"An exception was encountered while deserializing the data during initialization of {nameof(AdalCache)} : {e}");
+                    _logger.LogInformation($"An exception was encountered while deserializing the data during initialization of {nameof(AdalCache)} : {e}");
                     DeserializeAdalV3(null);
                     _store.Clear();
                 }
             }
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Done initializing");
+            _logger.LogInformation($"Done initializing");
         }
 
     // Triggered right before ADAL needs to access the cache.
@@ -90,26 +90,26 @@ namespace Microsoft.Identity.Client.Extensions.Adal
     // Internal for testing.
     internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access");
+            _logger.LogInformation($"Before access");
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Acquiring lock for token cache");
+            _logger.LogInformation($"Acquiring lock for token cache");
             _cacheLock = new CrossPlatLock(Path.Combine(_store.CreationProperties.CacheDirectory, _store.CreationProperties.CacheFileName) + ".lockfile", this._lockFileRetryDelay, this._lockFileRetryCount);
 
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before access, the store has changed");
+            _logger.LogInformation($"Before access, the store has changed");
             byte[] fileData = _store.ReadData();
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Read '{fileData?.Length}' bytes from storage");
+            _logger.LogInformation($"Read '{fileData?.Length}' bytes from storage");
 
             if (fileData != null && fileData.Length > 0)
             {
                 try
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Deserializing the store");
+                    _logger.LogInformation($"Deserializing the store");
                     DeserializeAdalV3(fileData);
                 }
                 catch (Exception e)
                 {
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}");
-                    _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+                    _logger.LogError($"An exception was encountered while deserializing the {nameof(AdalCache)} : {e}");
+                    _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
                     // Clear the memory cache
                     DeserializeAdalV3(null);
@@ -119,7 +119,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             }
             else
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+                _logger.LogInformation($"No data found in the store, clearing the cache in memory.");
 
                 // Clear the memory cache
                 DeserializeAdalV3(null);
@@ -130,28 +130,28 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         // Internal for testing.
         internal void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
+            _logger.LogInformation($"After access");
 
             try
             {
                 // if the access operation resulted in a cache update
                 if (HasStateChanged)
                 {
-                    _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access, cache in memory HasChanged");
+                    _logger.LogInformation($"After access, cache in memory HasChanged");
                     try
                     {
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Before Write Store");
+                        _logger.LogInformation($"Before Write Store");
                         byte[] data = SerializeAdalV3();
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Serializing '{data.Length}' bytes");
+                        _logger.LogInformation($"Serializing '{data.Length}' bytes");
                         _store.WriteData(data);
 
-                        _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After write store");
+                        _logger.LogInformation($"After write store");
                         HasStateChanged = false;
                     }
                     catch (Exception e)
                     {
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"An exception was encountered while serializing the {nameof(AdalCache)} : {e}");
-                        _logger.TraceEvent(TraceEventType.Error, /*id*/ 0, $"No data found in the store, clearing the cache in memory.");
+                        _logger.LogError($"An exception was encountered while serializing the {nameof(AdalCache)} : {e}");
+                        _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
                         DeserializeAdalV3(null);
@@ -162,7 +162,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             }
             finally
             {
-                _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"Releasing lock");
+                _logger.LogInformation($"Releasing lock");
                 // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
                 // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
                 var localLockCopy = _cacheLock;

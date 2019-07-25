@@ -47,7 +47,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
                 .WithAuthority(new Uri(authority))
                 .Build();
 
-            var cacheStore = new MsalCacheStorage(builder.Build());
+            var cacheStore = MsalCacheStorage.Create(builder.Build());
             _cacheHelper = new MsalCacheHelper(_app.UserTokenCache, cacheStore);
             _cacheHelper.RegisterCache(_app.UserTokenCache);
         }

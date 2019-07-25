@@ -58,14 +58,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalNewStoreNoFile()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsFalse(store.ReadData().Any());
         }
 
         [TestMethod]
         public void MsalWriteEmptyData()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             store.WriteData(new byte[0]);
@@ -76,7 +76,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalWriteGoodData()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             byte[] data = { 2, 2, 3 };
@@ -94,10 +94,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalTestClear()
         {
-            var store = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             var tempData = store.ReadData();
 
-            var store2 = new MsalCacheStorage(s_storageCreationProperties, logger: _logger);
+            var store2 = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsNotNull(Exception<ArgumentNullException>(() => store.WriteData(null)));
 
             byte[] data = { 2, 2, 3 };
