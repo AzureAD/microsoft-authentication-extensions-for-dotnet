@@ -38,7 +38,7 @@ namespace Microsoft.Identity.Client.Extensions.Web.TokenCacheProviders.InMemory
         {
             _memoryCache = cache;
 
-            if (option != null)
+            if (option == null)
             {
                 _cacheOptions = new MsalMemoryTokenCacheOptions();
             }
