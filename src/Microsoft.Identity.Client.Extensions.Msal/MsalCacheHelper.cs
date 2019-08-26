@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -154,13 +155,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             try
             {
-                var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
+                IEnumerable<string> added = Enumerable.Empty<string>();
+                IEnumerable<string> removed = Enumerable.Empty<string>();
 
-                var intersect = currentAccountIds.Intersect(_knownAccountIds);
-                var removed = _knownAccountIds.Except(intersect);
-                var added = currentAccountIds.Except(intersect);
+                using (CreateCrossPlatLock(_storageCreationProperties))
+                {
+                    var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
 
-                _knownAccountIds = currentAccountIds;
+                    var intersect = currentAccountIds.Intersect(_knownAccountIds);
+                    removed = _knownAccountIds.Except(intersect);
+                    added = currentAccountIds.Except(intersect);
+
+                    _knownAccountIds = currentAccountIds;
+                }
 
                 if (added.Any() || removed.Any())
                 {
@@ -331,7 +338,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
-   
+
                 // if the access operation resulted in a cache update
                 if (args.HasStateChanged)
                 {
