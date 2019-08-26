@@ -152,25 +152,28 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
         {
-            try
+            using (CreateCrossPlatLock(_storageCreationProperties))
             {
-                var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
-
-                var intersect = currentAccountIds.Intersect(_knownAccountIds);
-                var removed = _knownAccountIds.Except(intersect);
-                var added = currentAccountIds.Except(intersect);
-
-                _knownAccountIds = currentAccountIds;
-
-                if (added.Any() || removed.Any())
+                try
                 {
-                    CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                    var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
+
+                    var intersect = currentAccountIds.Intersect(_knownAccountIds);
+                    var removed = _knownAccountIds.Except(intersect);
+                    var added = currentAccountIds.Except(intersect);
+
+                    _knownAccountIds = currentAccountIds;
+
+                    if (added.Any() || removed.Any())
+                    {
+                        CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                // Never let this throw, just log errors
-                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Exception within File Watcher : {e}");
+                catch (Exception e)
+                {
+                    // Never let this throw, just log errors
+                    _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Exception within File Watcher : {e}");
+                }
             }
         }
 
