@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -152,28 +153,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
         {
-            using (CreateCrossPlatLock(_storageCreationProperties))
+            try
             {
-                try
+                IEnumerable<string> added = Enumerable.Empty<string>();
+                IEnumerable<string> removed = Enumerable.Empty<string>();
+
+                using (CreateCrossPlatLock(_storageCreationProperties))
                 {
                     var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
 
                     var intersect = currentAccountIds.Intersect(_knownAccountIds);
-                    var removed = _knownAccountIds.Except(intersect);
-                    var added = currentAccountIds.Except(intersect);
+                    removed = _knownAccountIds.Except(intersect);
+                    added = currentAccountIds.Except(intersect);
 
                     _knownAccountIds = currentAccountIds;
+                }
 
-                    if (added.Any() || removed.Any())
-                    {
-                        CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
-                    }
-                }
-                catch (Exception e)
+                if (added.Any() || removed.Any())
                 {
-                    // Never let this throw, just log errors
-                    _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Exception within File Watcher : {e}");
+                    CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
                 }
+            }
+            catch (Exception e)
+            {
+                // Never let this throw, just log errors
+                _logger.TraceEvent(TraceEventType.Warning, /*id*/ 0, $"Exception within File Watcher : {e}");
             }
         }
 
@@ -334,7 +338,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.TraceEvent(TraceEventType.Information, /*id*/ 0, $"After access");
-   
+
                 // if the access operation resulted in a cache update
                 if (args.HasStateChanged)
                 {
