@@ -7,8 +7,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF6F9ABE-66F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B8139910-E45E-4FC3-AD98-FDE9FEAFD45D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Client.Extensions.Web", "src\Microsoft.Identity.Client.Extensions.Web\Microsoft.Identity.Client.Extensions.Web.csproj", "{C1FABF57-2E87-4514-BE8F-FB727B93F3B5}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Shared", "src\Shared\Shared.shproj", "{F575599F-41AD-4CDD-B0AD-3B659A43EE84}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Client.Extensions.Adal", "src\Microsoft.Identity.Client.Extensions.Adal\Microsoft.Identity.Client.Extensions.Adal.csproj", "{A037E740-83F9-49A4-8974-42D589B0503A}"
@@ -18,8 +16,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Client.Extensions.Adal.UnitTests", "tests\Microsoft.Identity.Client.Extensions.Adal.UnitTests\Microsoft.Identity.Client.Extensions.Adal.UnitTests.csproj", "{27BFA98C-2EAB-45C1-9E38-80C278A7E782}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Identity.Client.Extensions.Msal.UnitTests", "tests\Microsoft.Identity.Client.Extensions.Msal.UnitTests\Microsoft.Identity.Client.Extensions.Msal.UnitTests.csproj", "{BF90B8C4-CF40-4994-A599-D6658C038819}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Identity.Client.Extensions.Web.UnitTests", "tests\Microsoft.Identity.Client.Extensions.Web.UnitTests\Microsoft.Identity.Client.Extensions.Web.UnitTests.csproj", "{C302F8DE-75D7-4C12-ABD8-5FE37B877A7E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManualTestApp", "tests\ManualTestApp\ManualTestApp.csproj", "{BB4E8B9A-FC60-4B3B-9E32-58F19C7AF6CE}"
 EndProject
