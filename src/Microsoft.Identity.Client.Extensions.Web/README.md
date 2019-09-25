@@ -9,4 +9,4 @@ to enable them to work with the Microsoft identity platform (formerly named Azur
 
 The source code is currently available part of a sample: https://github.com/Azure-Samples/active-directory-aspnetcore-webapp-openidconnect-v2/tree/master/Microsoft.Identity.Web
 
-The documentation is available from [Microsoft.Identity.Web/README.md](https://raw.githubusercontent.com/Azure-Samples/active-directory-aspnetcore-webapp-openidconnect-v2/master/Microsoft.Identity.Web/README.md)
+The documentation is available from [Microsoft.Identity.Web/README.md](https://github.com/Azure-Samples/active-directory-aspnetcore-webapp-openidconnect-v2/tree/master/Microsoft.Identity.Web#microsoft-identity-web)
