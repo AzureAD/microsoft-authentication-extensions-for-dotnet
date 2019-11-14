@@ -23,6 +23,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTestForTokenProvider
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAppTestWithAzureSDK", "tests\WebAppTestWithAzureSDK\WebAppTestWithAzureSDK.csproj", "{2F233ADD-658B-4E3F-86CA-4E031CAD97A5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6543F66-0A93-4D0B-9A31-11A57C22BC99}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Shared\Shared.projitems*{f575599f-41ad-4cdd-b0ad-3b659a43ee84}*SharedItemsImports = 13

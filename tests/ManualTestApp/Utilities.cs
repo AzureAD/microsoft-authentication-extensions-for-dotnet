@@ -35,7 +35,8 @@ namespace ManualTestApp
             Console.WriteLine($"GetPublicClient for authority: '{authority}' ValidateAuthority: '{validateAuthority}'");
 
             Uri authorityUri = new Uri(authority);
-            var appBuilder = PublicClientApplicationBuilder.Create(clientId).WithAuthority(authorityUri, validateAuthority);
+            var appBuilder = PublicClientApplicationBuilder.Create(clientId).WithAuthority(authorityUri, validateAuthority)
+                .WithRedirectUri("http://localhost");
             var app = appBuilder.Build();
             Console.WriteLine($"Built public client");
 
