@@ -7,29 +7,22 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class MsalCacheStorageLinux : MsalCacheStorage
+    internal class CacheAccessorLinux : ICacheAccessor
     {
+        private readonly StorageCreationProperties _creationProperties;
+        private readonly TraceSourceLogger _logger;
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="creationProperties"></param>
-        /// <param name="logger"></param>
-        public MsalCacheStorageLinux(StorageCreationProperties creationProperties, TraceSource logger = null) : base(creationProperties, logger)
+        public CacheAccessorLinux(StorageCreationProperties creationProperties, TraceSourceLogger logger)
         {
+            _creationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected override void ClearCore()
+        public void Clear()
         {
             _logger.LogInformation("Clearing cache");
-            DeleteCacheFile(CacheFilePath);
+            FileIOWithRetries.DeleteCacheFile(_creationProperties.CacheFilePath, _logger);
 
             _logger.LogInformation($"Before deletring secret from linux keyring");
 
@@ -61,11 +54,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("After deleting secret from linux keyring");
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override byte[] ReadDataCore()
+        public byte[] Read()
         {
             _logger.LogInformation("ReadDataCore");
 
@@ -111,11 +100,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             return fileData;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        protected override void WriteDataCore(byte[] data)
+        public void Write(byte[] data)
         {
             _logger.LogInformation("Before saving to linux keyring");
 
@@ -150,9 +135,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("After saving to linux keyring");
 
             // Change data to 1 byte so we can write it to the cache file to update the last write time using the same write code used for windows.
-            WriteDataToFile(CacheFilePath, new byte[] { 1 });
+            FileIOWithRetries.WriteDataToFile(_creationProperties.CacheFilePath, new byte[] { 1 }, _logger);
         }
 
+        
         private IntPtr GetLibsecretSchema()
         {
             if (_libsecretSchema == IntPtr.Zero)

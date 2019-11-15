@@ -191,7 +191,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             _store = store;
-            _storageCreationProperties = store._creationProperties;
+            _storageCreationProperties = store.CreationProperties;
 
             RegisterCache(userTokenCache);
         }

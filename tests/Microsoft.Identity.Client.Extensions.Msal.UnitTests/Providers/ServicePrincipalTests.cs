@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
     [TestClass]
     public class ServicePrincipalTests
     {
-        private static readonly Responder DiscoveryResponder = new Responder
+        private static readonly Responder s_discoveryResponder = new Responder
         {
             Matcher = (req, state) => req.RequestUri.ToString().StartsWith("https://login.microsoftonline.com/common/discovery/instance", StringComparison.InvariantCulture),
             MockResponse = (req, state) =>
@@ -64,7 +64,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             }
         };
 
-        private static readonly Func<string, Responder> TenantDiscoveryResponder = authority =>
+        private static readonly Func<string, Responder> s_tenantDiscoveryResponder = authority =>
         {
             return new Responder
             {
@@ -96,7 +96,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
             };
         };
 
-        private static readonly Responder ClientCredentialTokenResponder = new Responder
+        private static readonly Responder s_clientCredentialTokenResponder = new Responder
         {
             Matcher = (req, state) => req.RequestUri.ToString().EndsWith("oauth2/v2.0/token") && req.Method == HttpMethod.Post,
             MockResponse = (req, state) =>
@@ -163,9 +163,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Providers
         {
             const string authority = "https://login.microsoftonline.com/tenantid/";
             var handler = new MockManagedIdentityHttpMessageHandler();
-            handler.Responders.Add(DiscoveryResponder);
-            handler.Responders.Add(TenantDiscoveryResponder(authority));
-            handler.Responders.Add(ClientCredentialTokenResponder);
+            handler.Responders.Add(s_discoveryResponder);
+            handler.Responders.Add(s_tenantDiscoveryResponder(authority));
+            handler.Responders.Add(s_clientCredentialTokenResponder);
             var clientFactory = new ClientFactory(new HttpClient(handler));
             var clientId = Guid.NewGuid();
             var provider = new InternalServicePrincipalTokenProvider(authority, "tenantid", clientId.ToString(), "someSecret", clientFactory);

@@ -1,54 +1,44 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class MsalCacheStorageWindows : MsalCacheStorage
+    internal class CacheAccessorWindows : ICacheAccessor
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="creationProperties"></param>
-        /// <param name="logger"></param>
-        public MsalCacheStorageWindows(StorageCreationProperties creationProperties, TraceSource logger = null) : base(creationProperties, logger)
+        private readonly string _cacheFilePath;
+        private readonly TraceSourceLogger _logger;
+
+        public CacheAccessorWindows(string cacheFilePath, TraceSourceLogger logger)
         {
+            _cacheFilePath = cacheFilePath;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected override void ClearCore()
+        public void Clear()
         {
             _logger.LogInformation("Clearing cache");
-            DeleteCacheFile(CacheFilePath);
+            FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        protected override byte[] ReadDataCore()
+        public byte[] Read()
         {
             _logger.LogInformation("ReadDataCore");
 
             byte[] fileData = null;
-            bool cacheFileExists = File.Exists(CacheFilePath);
+            bool cacheFileExists = File.Exists(_cacheFilePath);
             _logger.LogInformation($"ReadDataCore Cache file exists '{cacheFileExists}'");
 
             if (cacheFileExists)
             {
-                TryProcessFile(() =>
+                FileIOWithRetries.TryProcessFile(() =>
                 {
-                    fileData = File.ReadAllBytes(CacheFilePath);
+                    fileData = File.ReadAllBytes(_cacheFilePath);
                     _logger.LogInformation($"ReadDataCore, read '{fileData.Length}' bytes from the file");
-                });
+                }, _logger);
             }
 
             if (fileData != null && fileData.Length > 0)
@@ -60,11 +50,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             return fileData;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        protected override void WriteDataCore(byte[] data)
+        public void Write(byte[] data)
         {
             if (data.Length != 0)
             {
@@ -72,7 +58,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 data = ProtectedData.Protect(data, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
             }
 
-            WriteDataToFile(CacheFilePath, data);
+            FileIOWithRetries.WriteDataToFile(_cacheFilePath, data, _logger);
         }
     }
 }

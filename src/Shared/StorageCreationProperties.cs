@@ -38,8 +38,11 @@ public class StorageCreationProperties
         {
             CacheFileName = cacheFileName;
             CacheDirectory = cacheDirectory;
+            CacheFilePath = Path.Combine(CacheDirectory, CacheFileName);
+
             MacKeyChainServiceName = macKeyChainServiceName;
             MacKeyChainAccountName = macKeyChainAccountName;
+
             KeyringSchemaName = keyringSchemaName;
             KeyringCollection = keyringCollection;
             KeyringSecretLabel = keyringSecretLabel;
@@ -53,7 +56,7 @@ public class StorageCreationProperties
         /// <summary>
         /// Gets the full path to the cache file, combining the directory and filename.
         /// </summary>
-        public string CacheFilePath => Path.Combine(CacheDirectory, CacheFileName);
+        public string CacheFilePath { get; }
 
         /// <summary>
         /// The name of the cache file.
