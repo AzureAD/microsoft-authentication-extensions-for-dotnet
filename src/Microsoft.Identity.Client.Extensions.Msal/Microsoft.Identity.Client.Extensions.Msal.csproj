@@ -18,6 +18,7 @@
     <RepositoryUrl>https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet</RepositoryUrl>
     <PackageTags>Microsoft Authentication Library MSAL Azure Active Directory AAD Identity .NET</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Label="Source Link">
@@ -45,12 +46,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-    </None>
   </ItemGroup>
 
   <ItemGroup Label="Build Tools" Condition="$([MSBuild]::IsOsPlatform('Windows'))">
