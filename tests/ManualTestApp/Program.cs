@@ -10,6 +10,9 @@ using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
 {
+
+    // Example usage:
+    // login-msal https://graph.microsoft.com/ 49f548d0-12b7-4169-a390-bb5304d24462 https://login.microsoftonline.com true 1d18b3b0-251b-4714-a02a-9956cec86c2d msal.ext.cache msal_exp
     class Program
     {
         private static MsalCacheHelper s_helper;
@@ -111,7 +114,8 @@ namespace ManualTestApp
                     };
                 }
 
-                var builder = app.AcquireTokenWithDeviceCode(scopes, Utilities.DeviceCodeCallbackAsync);
+                //var builder = app.AcquireTokenWithDeviceCode(scopes, Utilities.DeviceCodeCallbackAsync);
+                var builder = app.AcquireTokenInteractive(scopes);
                 var authResult = await builder.ExecuteAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
