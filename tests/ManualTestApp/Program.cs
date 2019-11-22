@@ -105,6 +105,7 @@ namespace ManualTestApp
                     accountName
                     ).ConfigureAwait(false);
 
+                // The token cache helper's main feature is this event
                 if (s_helper == null)
                 {
                     s_helper = helper;
@@ -114,9 +115,16 @@ namespace ManualTestApp
                     };
                 }
 
-                //var builder = app.AcquireTokenWithDeviceCode(scopes, Utilities.DeviceCodeCallbackAsync);
                 var builder = app.AcquireTokenInteractive(scopes);
                 var authResult = await builder.ExecuteAsync().ConfigureAwait(false);
+
+                var accounts = await app.GetAccountsAsync().ConfigureAwait(false);
+                foreach (var acc in accounts)
+                {
+                    await app.AcquireTokenSilent(scopes, acc).ExecuteAsync().ConfigureAwait(false);
+
+                    await app.RemoveAsync(acc).ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
