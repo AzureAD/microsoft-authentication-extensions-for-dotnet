@@ -8,8 +8,8 @@ This repository contains the source for 2 extension libraries that are built aga
 
 This is the main extension containing: 
 
-- A cross platform token cache serialization mechanism
-- APIs that chain several token sources togheter - MSI, Visual Studio's token cache, configuration based service principal 
+- A cross platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache)
+
 
 More functionality will be added to this extension, especially for cases where the logic implies taking a dependency on an external library, which MSAL is trying to avoid. 
 
@@ -25,7 +25,10 @@ No new functionality will be added to this extension since ADAL library is depre
 
 We releae the extensions when: 
 
-- new functionality or bug fixes are 
+- important changes are done to MSAL
+- changes are done to the extension library
+
+Please log an issue if you require an out of band release.
 
 # Contributing
 
