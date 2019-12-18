@@ -15,9 +15,17 @@ More functionality will be added to this extension, especially for cases where t
 
 ### ADAL extensions for public client applications
 
-This extension was built with the purpose of supporting dual stack implementations (ADAL + MSAL). This is relevant if you want to support older versions of ADFS.
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Adal?logo=nuget&logoColor=blue)
 
-MSAL extension for web applications is not currently published to nuget / maintained.
+This extension was built with the purpose of supporting dual stack implementations (ADAL + MSAL). This is relevant if you want to support older versions of ADFS. It contains the same token cache serialization strategy as the MSAL extensions.
+
+No new functionality will be added to this extension since ADAL library is deprecated.
+
+# Release schedule
+
+We releae the extensions when: 
+
+- new functionality or bug fixes are 
 
 # Contributing
 
