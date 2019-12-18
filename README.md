@@ -1,6 +1,6 @@
 # Contents
 
-This repository contains the source for 3 extension libraries that are built against Identity SDKs [ADAL](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet) and [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet): 
+This repository contains the source for 2 extension libraries that are built against Identity SDKs [ADAL](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet) and [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet): 
 
 ### MSAL extension for public client applications
 
