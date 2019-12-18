@@ -11,8 +11,6 @@ This is the main extension containing:
 - A cross platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache)
 
 
-More functionality will be added to this extension, especially for cases where the logic implies taking a dependency on an external library, which MSAL is trying to avoid. 
-
 ### ADAL extensions for public client applications
 
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Adal?logo=nuget&logoColor=blue)
