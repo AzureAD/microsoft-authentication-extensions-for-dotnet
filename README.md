@@ -19,6 +19,10 @@ This extension was built with the purpose of supporting dual stack implementatio
 
 No new functionality will be added to this extension since ADAL library is deprecated.
 
+## Samples
+
+We aim to have all [MSAL public client samples](https://docs.microsoft.com/en-gb/azure/active-directory/develop/sample-v2-code#desktop-and-mobile-public-client-apps) to use the extensions. 
+
 # Release schedule
 
 We releae the extensions when: 
