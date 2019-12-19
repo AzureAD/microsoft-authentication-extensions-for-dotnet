@@ -101,14 +101,19 @@ public class StorageCreationPropertiesBuilder
         }
 
         /// <summary>
-        /// Augments this builder with linux keyring values and returns the augmented builder.
+        /// Augments this builder with Linux KeyRing values and returns the augmented builder.
         /// </summary>
-        /// <param name="schemaName">Schema name</param>
-        /// <param name="collection">Collection</param>
-        /// <param name="secretLabel">Secret label</param>
-        /// <param name="attribute1">Additional attribute</param>
-        /// <param name="attribute2">Additional attribute</param>
+        /// <param name="schemaName">Schema name, e.g. "com.contoso.app". It is a logical container of secrets, similar to a namespace.</param>
+        /// <param name="collection">A collection aggregates multiple schema. KeyRing defines 2 collections - "default' is a persisted schema and "session" is an in-memory schema that is destroyed on logout.</param>
+        /// <param name="secretLabel">A user readable label for the secret, e.g. "Credentials used by Contoso apps"</param>
+        /// <param name="attribute1">Additional string attribute that will be used to decorate the secret.</param>
+        /// <param name="attribute2">Additional string attribute that will be used to decorate the secret</param>
         /// <returns>The augmented builder</returns>
+        /// <remarks>
+        /// Attributes are used like scoping keys - their name and values must match the secrets in the KeyRing.
+        /// A suggested pattern is to use a product name (or a group of products) and a version. If you need to increment the version,
+        /// the secrets associated with the old version will be ignored.
+        /// </remarks>
         public StorageCreationPropertiesBuilder WithLinuxKeyring(
             string schemaName,
             string collection,
@@ -116,6 +121,11 @@ public class StorageCreationPropertiesBuilder
             KeyValuePair<string, string> attribute1,
             KeyValuePair<string, string> attribute2)
         {
+            if (string.IsNullOrEmpty(schemaName))
+            {
+                throw new ArgumentNullException(nameof(schemaName));
+            }
+
             _keyringSchemaName = schemaName;
             _keyringCollection = collection;
             _keyringSecretLabel = secretLabel;

@@ -15,6 +15,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// </summary>
     public sealed class MsalCacheStorage
     {
+        /// <summary>
+        /// The "default" KeyRing collection, which is persisted by KeyRing. A KeyRing collection
+        /// can contain multiple KeyRing schema.
+        /// </summary>
+        /// <remarks>
+        /// See https://developer.gnome.org/libsecret/unstable/libsecret-Password-storage.html#SECRET-COLLECTION-DEFAULT:CAPS for details
+        /// </remarks>
+        public const string LinuxKeyRingDefaultCollection = "default";
+
+        /// <summary>
+        /// The "session" KeyRing collection, which is NOT persisted. It is destroyed when the user session ends.
+        /// A KeyRing collection can contain multiple KeyRing schema.
+        /// </summary>
+        public const string LinuxKeyRingSessionCollection = "session";
+
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
         internal readonly StorageCreationProperties _creationProperties;
