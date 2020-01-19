@@ -30,6 +30,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         });
 
         /// <summary>
+        /// The name of the Default KeyRing collection. Secrets stored in this collection are persisted to disk
+        /// </summary>
+        public const string LinuxKeyRingDefaultCollection = "default";
+
+        /// <summary>
+        /// The name of the Session KeyRing collection. Secrets stored in this collection are not persisted to disk, but
+        /// will be avaiable for the duration of the user session.
+        /// </summary>
+        public const string LinuxKeyRingSessionCollection = "session";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
         /// The actual cache reading and writing is OS specific:
         /// <list type="bullet">
