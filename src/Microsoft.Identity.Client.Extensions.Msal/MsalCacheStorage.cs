@@ -140,7 +140,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             catch (Exception e)
             {
                 _logger.LogError($"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
-                _cacheAccessor.Clear();
+
+                // It's unlikely that Clear will work, but try it anyway
+                Clear();
             }
 
             return data ?? new byte[0];
@@ -173,8 +175,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         public void Clear()
         {
-            _logger.LogInformation("Clearing the cache file");
-            _cacheAccessor.Clear();
+            try
+            {
+                _logger.LogInformation("Clearing the cache file");
+                _cacheAccessor.Clear();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"An exception was encountered while clearing data from {nameof(MsalCacheStorage)} : {e}");
+            }
         }
     }
 }

@@ -49,7 +49,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        public void CacheStorageCanHandleReadingNull()
+        public void CacheStorageReadCanHandleReadingNull()
         {
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
@@ -66,7 +66,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        public void CacheStorageCanHandleExceptionsWhenReading()
+        public void CacheStorageReadCanHandleExceptionsWhenReading()
         {
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
@@ -79,6 +79,25 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Act
             byte[] result = storage.ReadData();
 
+            // Assert
+            Assert.AreEqual(0, result.Length);
+        }
+
+        // Regression https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/issues/56
+        [TestMethod]
+        public void CacheStorageCanHandleMultipleExceptionsWhenReading()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var exception = new InvalidOperationException();
+            cacheAccessor.Read().Throws(exception);
+            cacheAccessor.When((x) => x.Clear()).Do(x => throw exception);
+
+            var actualLogger = new TraceSourceLogger(_logger);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            byte[] result = storage.ReadData();
 
             // Assert
             Assert.AreEqual(0, result.Length);
