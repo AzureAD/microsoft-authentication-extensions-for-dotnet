@@ -10,6 +10,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
@@ -44,6 +46,42 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void TestCleanup()
         {
             CleanTestData();
+        }
+
+        [TestMethod]
+        public void CacheStorageCanHandleReadingNull()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            cacheAccessor.Read().Returns((byte[])null);
+
+            var actualLogger = new TraceSourceLogger(_logger);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            byte[] result = storage.ReadData();
+
+            // Assert
+            Assert.AreEqual(0, result.Length);
+        }
+
+        [TestMethod]
+        public void CacheStorageCanHandleExceptionsWhenReading()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var exception = new InvalidOperationException();
+            cacheAccessor.Read().Throws(exception);
+
+            var actualLogger = new TraceSourceLogger(_logger);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            byte[] result = storage.ReadData();
+
+
+            // Assert
+            Assert.AreEqual(0, result.Length);
         }
 
         [TestMethod]

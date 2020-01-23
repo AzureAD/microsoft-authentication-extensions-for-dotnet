@@ -92,7 +92,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             return new MsalCacheStorage(creationProperties, cacheAccessor, actualLogger);
         }
 
-        private MsalCacheStorage(StorageCreationProperties creationProperties, ICacheAccessor cacheAccessor, TraceSourceLogger logger)
+        internal /* internal for test, otherwise private */ MsalCacheStorage(
+            StorageCreationProperties creationProperties,
+            ICacheAccessor cacheAccessor,
+            TraceSourceLogger logger)
         {
             CreationProperties = creationProperties;
             _logger = logger;
@@ -132,7 +135,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 _logger.LogInformation($"Reading Data");
                 data = _cacheAccessor.Read();
-                _logger.LogInformation($"Got '{data.Length}' bytes from file storage");
+                _logger.LogInformation($"Got '{data?.Length}' bytes from file storage");
             }
             catch (Exception e)
             {
