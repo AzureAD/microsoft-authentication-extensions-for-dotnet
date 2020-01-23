@@ -19,8 +19,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     public class MsalCacheStorageTests
     {
         public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-        private readonly TraceSource _logger = new TraceSource("TestSource");
+        private readonly TraceSource _logger = new TraceSource("TestSource", SourceLevels.All);
         private static StorageCreationProperties s_storageCreationProperties;
+
+        public TestContext TestContext { get; set; }
 
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
@@ -68,6 +70,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheStorageReadCanHandleExceptionsWhenReading()
         {
+            
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             var exception = new InvalidOperationException();
@@ -88,11 +91,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void CacheStorageCanHandleMultipleExceptionsWhenReading()
         {
             // Arrange
-            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
-            var exception = new InvalidOperationException();
+            var stringListener = new TraceStringListener();
+            var cacheAccessor = Substitute.For<ICacheAccessor>();
+            var exception = new InvalidOperationException("some error");
             cacheAccessor.Read().Throws(exception);
             cacheAccessor.When((x) => x.Clear()).Do(x => throw exception);
-
+            _logger.Listeners.Add(stringListener);
             var actualLogger = new TraceSourceLogger(_logger);
             var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
@@ -101,6 +105,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Assert
             Assert.AreEqual(0, result.Length);
+            Assert.IsTrue(stringListener.CurrentLog.Contains("TestSource Error"));
+            Assert.IsTrue(stringListener.CurrentLog.Contains("InvalidOperationException"));
+            Assert.IsTrue(stringListener.CurrentLog.Contains("some error"));
         }
 
         [TestMethod]
