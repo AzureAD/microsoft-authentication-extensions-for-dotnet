@@ -77,9 +77,9 @@ Libraries consuming the extension will:
 
 1. create a cache helper with a the normal `KeyRing` setup
 2. call `cacheHelper.VerifyLinuxPersistence()`
-2.1. If this throws an exception, show the user a meaningful message / URL to help page to inform them to secure their secrets storage
-2.2. Create a cache helper using `.WithLinuxPlaintextFile` using a file path that comes from either: 
-a. a well known ENV variable, e.g. DEV_TOOLS_TOKEN_CACHE
-b. if DEV_TOOLS_TOKEN_CACHE is not set, default to a well known location 
+3. If this throws an exception, show the user a meaningful message / URL to help page to inform them to secure their secrets storage
+4. Create a cache helper using `.WithLinuxPlaintextFile` using a file path that comes from either: 
+- a well known env variable, e.g. LINUX_DEV_TOOLS_TOKEN_CACHE
+- if LINUX_DEV_TOOLS_TOKEN_CACHE is not set, default to a well known location 
 
 
