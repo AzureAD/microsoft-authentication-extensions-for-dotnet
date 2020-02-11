@@ -7,7 +7,7 @@
 #### Current API
 
 ```csharp
- var storagePropertiesBuilder =
+ var storageProperties =
     // CacheFileName is used for storgae only on Win. On Mac and Linux, it's used 
     // to produce an event, but contents are empty. Actual secrets are stored in KeyRing 
     // KeyChain.
@@ -20,9 +20,10 @@
             Config.LinuxKeyRingAttr2)
         .WithMacKeyChain(
             Config.KeyChainServiceName,
-            Config.KeyChainAccountName);
+            Config.KeyChainAccountName)
+        .Build|();
 
-MsalCacheHelper cacheHelper = MsalCacheHelper.Create(storageCreationProperties);
+MsalCacheHelper cacheHelper = MsalCacheHelper.Create(storageProperties);
 cacheHelper.RegisterCache(app.UserTokenCache);
 
 ```
@@ -63,7 +64,7 @@ TODO: understand perf impact of this call. If expensive, need to inform consumer
 
 
 ```csharp
- new StorageCreationPropertiesBuier(Config.CacheFileName, Config.CacheDir, Config.ClientId) 
+ new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId) 
     .WithLinuxPlaintextFile(ConPlaintextFilePath) //new method                     
     .WithMacKeyChain(...); // no change
                      
