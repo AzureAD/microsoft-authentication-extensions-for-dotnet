@@ -184,7 +184,7 @@ namespace ManualTestApp
 
         private static async Task<IPublicClientApplication> CreatePublicClientWithCacheAsync()
         {
-            var storagePropertiesBuilder =
+            var storageProperties =
                  new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId)
                  .WithLinuxKeyring(
                      Config.LinuxKeyRingSchema,
@@ -194,12 +194,13 @@ namespace ManualTestApp
                      Config.LinuxKeyRingAttr2)
                  .WithMacKeyChain(
                      Config.KeyChainServiceName,
-                     Config.KeyChainAccountName);
+                     Config.KeyChainAccountName)
+                 .Build();
 
             IPublicClientApplication pca = await CreatePublicClientAndBindCacheAsync(
                 Config.Authority,
                 Config.ClientId,
-                storagePropertiesBuilder.Build())
+                storageProperties)
                 .ConfigureAwait(false);
 
             return pca;
@@ -220,6 +221,9 @@ namespace ManualTestApp
 
             // This hooks up the cross-platform cache into  MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties).ConfigureAwait(false);
+
+            CheckPersistence(cacheHelper);
+
             cacheHelper.RegisterCache(app.UserTokenCache);
 
             Console.WriteLine($"Cache registered");
@@ -235,6 +239,19 @@ namespace ManualTestApp
             Console.WriteLine($"Cache event wired up");
 
             return app;
+        }
+
+        private static void CheckPersistence(MsalCacheHelper cacheHelper)
+        {
+            try
+            {
+                cacheHelper.VerifyPersistence();
+            }
+            catch (MsalCachePersistenceException ex)
+            {
+                Console.WriteLine("WARNING: Cannot persist the token cache. Tokens will be held in memory only.");
+                Console.WriteLine($"Detailed error:  {ex.Message}");
+            }
         }
     }
 }

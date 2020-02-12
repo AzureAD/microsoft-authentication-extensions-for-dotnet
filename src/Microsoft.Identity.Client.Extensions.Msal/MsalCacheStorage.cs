@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
@@ -12,7 +13,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// <summary>
     /// Persist cache to file
     /// </summary>
-    public class MsalCacheStorage 
+    internal class MsalCacheStorage 
     {
         private readonly TraceSourceLogger _logger;
 
@@ -27,18 +28,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private static readonly Lazy<TraceSourceLogger> s_staticLogger = new Lazy<TraceSourceLogger>(() =>
         {
             return new TraceSourceLogger(EnvUtils.GetNewTraceSource(nameof(MsalCacheHelper) + "Singleton"));
-        });
-
-        /// <summary>
-        /// The name of the Default KeyRing collection. Secrets stored in this collection are persisted to disk
-        /// </summary>
-        public const string LinuxKeyRingDefaultCollection = "default";
-
-        /// <summary>
-        /// The name of the Session KeyRing collection. Secrets stored in this collection are not persisted to disk, but
-        /// will be avaiable for the duration of the user session.
-        /// </summary>
-        public const string LinuxKeyRingSessionCollection = "session";
+        });        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
@@ -184,6 +174,24 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 _logger.LogError($"An exception was encountered while clearing data from {nameof(MsalCacheStorage)} : {e}");
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void VerifyPersistence()
+        {
+            try
+            {
+                _logger.LogInformation($"[Verify Persistence] Reading Data ");
+                var data = _cacheAccessor.Read();
+                _logger.LogInformation($"[Verify Persistence] Got '{data?.Length}' bytes from file storage");
+            }            
+            catch(Exception ex)
+            {
+                throw new MsalCachePersistenceException("Persistence check failed. Inspect inner exception for details", ex);
+            }
+
         }
     }
 }
