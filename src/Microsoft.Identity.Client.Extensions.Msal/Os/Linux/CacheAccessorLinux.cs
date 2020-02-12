@@ -9,7 +9,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
     internal class CacheAccessorLinux : ICacheAccessor
     {
-        //private readonly StorageCreationProperties _creationProperties;
         private readonly TraceSourceLogger _logger;
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
@@ -21,7 +20,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private readonly string _attributeValue1;
         private readonly string _attributeKey2;
         private readonly string _attributeValue2;
-        private readonly TraceSourceLogger _actualLogger;
 
         public CacheAccessorLinux(
             string cacheFilePath,
@@ -67,7 +65,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _attributeValue1 = attributeValue1;
             _attributeKey2 = attributeKey2;
             _attributeValue2 = attributeValue2;
-            _actualLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public ICacheAccessor CreateForPersistenceValidation()
