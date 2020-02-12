@@ -204,7 +204,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     throw new MsalCachePersistenceException(
                         "Persistence check failed. Data written could not be read. " +
                         "Possible cause: on Linux, LibSecret is installed by D-Bus isn't running because it cannot be started over SSH.");
-
                 }
 
                 string dataRead = Encoding.UTF8.GetString(data);
@@ -218,7 +217,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 _logger.LogInformation($"[Verify Persistence] Clearing data");
                 _cacheAccessor.Clear();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is MsalCachePersistenceException))
             {
                 throw new MsalCachePersistenceException("Persistence check failed. Inspect inner exception for details", ex);
             }
