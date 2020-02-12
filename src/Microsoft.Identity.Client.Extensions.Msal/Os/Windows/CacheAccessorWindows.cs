@@ -24,6 +24,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
         }
 
+        public ICacheAccessor CreateForPersistenceValidation()
+        {
+            return new CacheAccessorWindows(_cacheFilePath + ".test", _logger);
+        }
+
         public byte[] Read()
         {
             _logger.LogInformation("ReadDataCore");

@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
@@ -13,7 +14,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// <summary>
     /// Persist cache to file
     /// </summary>
-    internal class MsalCacheStorage 
+    internal class MsalCacheStorage
     {
         private readonly TraceSourceLogger _logger;
 
@@ -28,7 +29,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private static readonly Lazy<TraceSourceLogger> s_staticLogger = new Lazy<TraceSourceLogger>(() =>
         {
             return new TraceSourceLogger(EnvUtils.GetNewTraceSource(nameof(MsalCacheHelper) + "Singleton"));
-        });        
+        });
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
@@ -71,7 +72,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             else if (SharedUtilities.IsLinuxPlatform())
             {
                 cacheAccessor = new CacheAccessorLinux(
-                   creationProperties,
+                   creationProperties.CacheFilePath,
+                   creationProperties.KeyringCollection,
+                   creationProperties.KeyringSchemaName,
+                   creationProperties.KeyringSecretLabel,
+                   creationProperties.KeyringAttribute1.Key,
+                   creationProperties.KeyringAttribute1.Value,
+                   creationProperties.KeyringAttribute2.Key,
+                   creationProperties.KeyringAttribute2.Value,
                    actualLogger);
             }
             else
@@ -181,13 +189,36 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         public void VerifyPersistence()
         {
+            const string DummyData = "dummy_data";
+
             try
             {
+                _logger.LogInformation($"[Verify Persistence] Writing Data ");
+                _cacheAccessor.Write(Encoding.UTF8.GetBytes(DummyData));
+
                 _logger.LogInformation($"[Verify Persistence] Reading Data ");
                 var data = _cacheAccessor.Read();
-                _logger.LogInformation($"[Verify Persistence] Got '{data?.Length}' bytes from file storage");
-            }            
-            catch(Exception ex)
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new MsalCachePersistenceException(
+                        "Persistence check failed. Data written could not be read. " +
+                        "Possible cause: on Linux, LibSecret is installed by D-Bus isn't running because it cannot be started over SSH.");
+
+                }
+
+                string dataRead = Encoding.UTF8.GetString(data);
+                if (!string.Equals(DummyData, dataRead, StringComparison.Ordinal))
+                {
+                    throw new MsalCachePersistenceException(
+                        $"Persistence check failed. Data written {DummyData} is different from data read {dataRead}");
+
+                }
+
+                _logger.LogInformation($"[Verify Persistence] Clearing data");
+                _cacheAccessor.Clear();
+            }
+            catch (Exception ex)
             {
                 throw new MsalCachePersistenceException("Persistence check failed. Inspect inner exception for details", ex);
             }
