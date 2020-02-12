@@ -249,8 +249,12 @@ namespace ManualTestApp
             }
             catch (MsalCachePersistenceException ex)
             {
+                Console.BackgroundColor = ConsoleColor.Red;
+
                 Console.WriteLine("WARNING: Cannot persist the token cache. Tokens will be held in memory only.");
                 Console.WriteLine($"Detailed error:  {ex}");
+
+                Console.ResetColor();
             }
         }
     }
