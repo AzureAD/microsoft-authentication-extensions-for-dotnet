@@ -22,6 +22,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         internal StorageCreationProperties CreationProperties { get; }
 
+        internal const string PersistenceValidationDummyData = "dummy_data";
+
+
 
         /// <summary>
         /// A default logger for use if the user doesn't want to provide their own.
@@ -189,12 +192,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         public void VerifyPersistence()
         {
-            const string DummyData = "dummy_data";
 
             try
             {
                 _logger.LogInformation($"[Verify Persistence] Writing Data ");
-                _cacheAccessor.Write(Encoding.UTF8.GetBytes(DummyData));
+                _cacheAccessor.Write(Encoding.UTF8.GetBytes(PersistenceValidationDummyData));
 
                 _logger.LogInformation($"[Verify Persistence] Reading Data ");
                 var data = _cacheAccessor.Read();
@@ -207,10 +209,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 }
 
                 string dataRead = Encoding.UTF8.GetString(data);
-                if (!string.Equals(DummyData, dataRead, StringComparison.Ordinal))
+                if (!string.Equals(PersistenceValidationDummyData, dataRead, StringComparison.Ordinal))
                 {
                     throw new MsalCachePersistenceException(
-                        $"Persistence check failed. Data written {DummyData} is different from data read {dataRead}");
+                        $"Persistence check failed. Data written {PersistenceValidationDummyData} is different from data read {dataRead}");
 
                 }
 
