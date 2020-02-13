@@ -22,7 +22,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         internal StorageCreationProperties CreationProperties { get; }
 
-        internal const string PersistenceValidationDummyData = "dummy_data";
+        internal const string PersistenceValidationDummyData = "msal_persistence_test";
 
 
 
@@ -189,11 +189,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public void VerifyPersistence()
         {
+            // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
+            var persitenceValidatationAccessor = _cacheAccessor.CreateForPersistenceValidation();
+
             try
             {
-                // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
-                var persitenceValidatationAccessor = _cacheAccessor.CreateForPersistenceValidation();
-
                 _logger.LogInformation($"[Verify Persistence] Writing Data ");
                 persitenceValidatationAccessor.Write(Encoding.UTF8.GetBytes(PersistenceValidationDummyData));
 
@@ -203,8 +203,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (data == null || data.Length == 0)
                 {
                     throw new MsalCachePersistenceException(
-                        "Persistence check failed. Data written could not be read. " +
-                        "Possible cause: on Linux, LibSecret is installed by D-Bus isn't running because it cannot be started over SSH.");
+                        "Persistence check failed. Data was written but it could not be read. " +
+                        "Possible cause: on Linux, LibSecret is installed but D-Bus isn't running because it cannot be started over SSH.");
                 }
 
                 string dataRead = Encoding.UTF8.GetString(data);
@@ -212,17 +212,24 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 {
                     throw new MsalCachePersistenceException(
                         $"Persistence check failed. Data written {PersistenceValidationDummyData} is different from data read {dataRead}");
-
                 }
-
-                _logger.LogInformation($"[Verify Persistence] Clearing data");
-                persitenceValidatationAccessor.Clear();
             }
             catch (Exception ex) when (!(ex is MsalCachePersistenceException))
             {
                 throw new MsalCachePersistenceException("Persistence check failed. Inspect inner exception for details", ex);
             }
-
+            finally
+            {
+                try
+                {
+                    _logger.LogInformation($"[Verify Persistence] Clearing data");
+                    persitenceValidatationAccessor.Clear();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"[Verify Persistence] Could not clear the test data: " + e);
+                }
+            }
         }
     }
 }
