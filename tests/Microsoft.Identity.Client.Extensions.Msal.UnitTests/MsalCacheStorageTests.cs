@@ -116,6 +116,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
             var exception = new InvalidOperationException("some error");
             var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
@@ -137,6 +138,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
             var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
 
@@ -155,6 +157,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
             var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
             cacheAccessor.Read().Returns(Encoding.UTF8.GetBytes("other_dummy_data"));
 
@@ -175,6 +178,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
             var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
             cacheAccessor.Read().Returns(dummyData);
 
@@ -183,6 +187,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Assert
             Received.InOrder(() => {
+                cacheAccessor.CreateForPersistenceValidation();
                 cacheAccessor.Write(Arg.Any<byte[]>());
                 cacheAccessor.Read();
                 cacheAccessor.Clear();

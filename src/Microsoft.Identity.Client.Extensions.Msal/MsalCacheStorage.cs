@@ -187,19 +187,18 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         public void VerifyPersistence()
         {
-
             try
             {
+                // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
+                var persitenceValidatationAccessor = _cacheAccessor.CreateForPersistenceValidation();
+
                 _logger.LogInformation($"[Verify Persistence] Writing Data ");
-                _cacheAccessor.Write(Encoding.UTF8.GetBytes(PersistenceValidationDummyData));
+                persitenceValidatationAccessor.Write(Encoding.UTF8.GetBytes(PersistenceValidationDummyData));
 
                 _logger.LogInformation($"[Verify Persistence] Reading Data ");
-                var data = _cacheAccessor.Read();
+                var data = persitenceValidatationAccessor.Read();
 
                 if (data == null || data.Length == 0)
                 {
@@ -217,7 +216,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 }
 
                 _logger.LogInformation($"[Verify Persistence] Clearing data");
-                _cacheAccessor.Clear();
+                persitenceValidatationAccessor.Clear();
             }
             catch (Exception ex) when (!(ex is MsalCachePersistenceException))
             {

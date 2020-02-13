@@ -387,8 +387,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
-        /// 
+        /// Performs a write -> read -> clear using the underlying persistence mechanism and
+        /// throws an <see cref="MsalCachePersistenceException"/> if something goes wrong.
         /// </summary>
+        /// <remarks>Does not overwrite the token cache. Should never fail on Windows and Mac where the cache accessors are guaranteed to exist by the OS.</remarks>
         public void VerifyPersistence()
         {
             _store.VerifyPersistence();
