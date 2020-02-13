@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Text;
 using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
@@ -12,13 +14,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// <summary>
     /// Persist cache to file
     /// </summary>
-    public class MsalCacheStorage 
+    internal class MsalCacheStorage
     {
         private readonly TraceSourceLogger _logger;
 
         private readonly ICacheAccessor _cacheAccessor;
 
         internal StorageCreationProperties CreationProperties { get; }
+
+        internal const string PersistenceValidationDummyData = "msal_persistence_test";
+
 
 
         /// <summary>
@@ -28,17 +33,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             return new TraceSourceLogger(EnvUtils.GetNewTraceSource(nameof(MsalCacheHelper) + "Singleton"));
         });
-
-        /// <summary>
-        /// The name of the Default KeyRing collection. Secrets stored in this collection are persisted to disk
-        /// </summary>
-        public const string LinuxKeyRingDefaultCollection = "default";
-
-        /// <summary>
-        /// The name of the Session KeyRing collection. Secrets stored in this collection are not persisted to disk, but
-        /// will be avaiable for the duration of the user session.
-        /// </summary>
-        public const string LinuxKeyRingSessionCollection = "session";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
@@ -81,7 +75,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             else if (SharedUtilities.IsLinuxPlatform())
             {
                 cacheAccessor = new CacheAccessorLinux(
-                   creationProperties,
+                   creationProperties.CacheFilePath,
+                   creationProperties.KeyringCollection,
+                   creationProperties.KeyringSchemaName,
+                   creationProperties.KeyringSecretLabel,
+                   creationProperties.KeyringAttribute1.Key,
+                   creationProperties.KeyringAttribute1.Value,
+                   creationProperties.KeyringAttribute2.Key,
+                   creationProperties.KeyringAttribute2.Value,
                    actualLogger);
             }
             else
@@ -183,6 +184,51 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             catch (Exception e)
             {
                 _logger.LogError($"An exception was encountered while clearing data from {nameof(MsalCacheStorage)} : {e}");
+            }
+        }
+
+        public void VerifyPersistence()
+        {
+            // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
+            var persitenceValidatationAccessor = _cacheAccessor.CreateForPersistenceValidation();
+
+            try
+            {
+                _logger.LogInformation($"[Verify Persistence] Writing Data ");
+                persitenceValidatationAccessor.Write(Encoding.UTF8.GetBytes(PersistenceValidationDummyData));
+
+                _logger.LogInformation($"[Verify Persistence] Reading Data ");
+                var data = persitenceValidatationAccessor.Read();
+
+                if (data == null || data.Length == 0)
+                {
+                    throw new MsalCachePersistenceException(
+                        "Persistence check failed. Data was written but it could not be read. " +
+                        "Possible cause: on Linux, LibSecret is installed but D-Bus isn't running because it cannot be started over SSH.");
+                }
+
+                string dataRead = Encoding.UTF8.GetString(data);
+                if (!string.Equals(PersistenceValidationDummyData, dataRead, StringComparison.Ordinal))
+                {
+                    throw new MsalCachePersistenceException(
+                        $"Persistence check failed. Data written {PersistenceValidationDummyData} is different from data read {dataRead}");
+                }
+            }
+            catch (Exception ex) when (!(ex is MsalCachePersistenceException))
+            {
+                throw new MsalCachePersistenceException("Persistence check failed. Inspect inner exception for details", ex);
+            }
+            finally
+            {
+                try
+                {
+                    _logger.LogInformation($"[Verify Persistence] Clearing data");
+                    persitenceValidatationAccessor.Clear();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"[Verify Persistence] Could not clear the test data: " + e);
+                }
             }
         }
     }

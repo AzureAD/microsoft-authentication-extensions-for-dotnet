@@ -5,10 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -108,6 +107,91 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(stringListener.CurrentLog.Contains("TestSource Error"));
             Assert.IsTrue(stringListener.CurrentLog.Contains("InvalidOperationException"));
             Assert.IsTrue(stringListener.CurrentLog.Contains("some error"));
+        }
+
+        [TestMethod]
+        public void VerifyPersistenceThrowsInnerExceptions()
+        {
+            // Arrange
+            var stringListener = new TraceStringListener();
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
+            var exception = new InvalidOperationException("some error");
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            cacheAccessor.Read().Throws(exception);
+
+            // Act
+            var ex = AssertException.Throws<MsalCachePersistenceException>(
+                () => storage.VerifyPersistence());
+
+            // Assert
+            Assert.AreEqual(ex.InnerException, exception);
+        }
+
+
+        [TestMethod]
+        public void VerifyPersistenceThrowsIfDataReadIsEmpty()
+        {
+            // Arrange
+            var stringListener = new TraceStringListener();
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+
+            // Act
+            var ex = AssertException.Throws<MsalCachePersistenceException>(
+                () => storage.VerifyPersistence());
+
+            // Assert
+            Assert.IsNull(ex.InnerException); // no more details available
+        }
+
+        [TestMethod]
+        public void VerifyPersistenceThrowsIfDataReadIsDiffrentFromDataWritten()
+        {
+            // Arrange
+            var stringListener = new TraceStringListener();
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            cacheAccessor.Read().Returns(Encoding.UTF8.GetBytes("other_dummy_data"));
+
+            // Act
+            var ex = AssertException.Throws<MsalCachePersistenceException>(
+                () => storage.VerifyPersistence());
+
+            // Assert
+            Assert.IsNull(ex.InnerException); // no more details available
+        }
+
+
+        [TestMethod]
+        public void VerifyPersistenceHappyPath()
+        {
+            // Arrange
+            byte[] dummyData = Encoding.UTF8.GetBytes(MsalCacheStorage.PersistenceValidationDummyData);
+            var stringListener = new TraceStringListener();
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = Substitute.For<ICacheAccessor>();
+            cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            cacheAccessor.Read().Returns(dummyData);
+
+            // Act
+            storage.VerifyPersistence();
+
+            // Assert
+            Received.InOrder(() => {
+                cacheAccessor.CreateForPersistenceValidation();
+                cacheAccessor.Write(Arg.Any<byte[]>());
+                cacheAccessor.Read();
+                cacheAccessor.Clear();
+            });
         }
 
         [TestMethod]

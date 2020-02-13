@@ -9,22 +9,83 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
     internal class CacheAccessorLinux : ICacheAccessor
     {
-        private readonly StorageCreationProperties _creationProperties;
         private readonly TraceSourceLogger _logger;
         private IntPtr _libsecretSchema = IntPtr.Zero;
 
-        public CacheAccessorLinux(StorageCreationProperties creationProperties, TraceSourceLogger logger)
+        private readonly string _cacheFilePath;
+        private readonly string _keyringCollection;
+        private readonly string _keyringSchemaName;
+        private readonly string _keyringSecretLabel;
+        private readonly string _attributeKey1;
+        private readonly string _attributeValue1;
+        private readonly string _attributeKey2;
+        private readonly string _attributeValue2;
+
+        public CacheAccessorLinux(
+            string cacheFilePath,
+            string keyringCollection,
+            string keyringSchemaName,
+            string keyringSecretLabel,
+            string attributeKey1,
+            string attributeValue1,
+            string attributeKey2,
+            string attributeValue2,
+            TraceSourceLogger logger)
         {
-            _creationProperties = creationProperties ?? throw new ArgumentNullException(nameof(creationProperties));
+            if (string.IsNullOrWhiteSpace(cacheFilePath))
+            {
+                throw new ArgumentNullException(nameof(cacheFilePath));
+            }
+
+            if (string.IsNullOrWhiteSpace(attributeKey1))
+            {
+                throw new ArgumentNullException(nameof(attributeKey1));
+            }
+
+            if (string.IsNullOrWhiteSpace(attributeValue1))
+            {
+                throw new ArgumentNullException(nameof(attributeValue1));
+            }
+
+            if (string.IsNullOrWhiteSpace(attributeKey2))
+            {
+                throw new ArgumentNullException(nameof(attributeKey2));
+            }
+
+            if (string.IsNullOrWhiteSpace(attributeValue2))
+            {
+                throw new ArgumentNullException(nameof(attributeValue2));
+            }
+
+            _cacheFilePath = cacheFilePath;
+            _keyringCollection = keyringCollection;
+            _keyringSchemaName = keyringSchemaName;
+            _keyringSecretLabel = keyringSecretLabel;
+            _attributeKey1 = attributeKey1;
+            _attributeValue1 = attributeValue1;
+            _attributeKey2 = attributeKey2;
+            _attributeValue2 = attributeValue2;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        public ICacheAccessor CreateForPersistenceValidation()
+        {
+            return new CacheAccessorLinux(
+                _cacheFilePath,
+                _keyringCollection,
+                _keyringSchemaName,
+                "MSAL Test",
+                _attributeKey1, "test",
+                _attributeKey2, "test",
+                _logger);
         }
 
         public void Clear()
         {
             _logger.LogInformation("Clearing cache");
-            FileIOWithRetries.DeleteCacheFile(_creationProperties.CacheFilePath, _logger);
+            FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
 
-            _logger.LogInformation($"Before deletring secret from linux keyring");
+            _logger.LogInformation($"Before deleting secret from Linux keyring");
 
             IntPtr error = IntPtr.Zero;
 
@@ -32,10 +93,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 schema: GetLibsecretSchema(),
                 cancellable: IntPtr.Zero,
                 error: out error,
-                attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                attribute1Type: _attributeKey1,
+                attribute1Value: _attributeValue1,
+                attribute2Type: _attributeKey2,
+                attribute2Value: _attributeValue2,
                 end: IntPtr.Zero);
 
             if (error != IntPtr.Zero)
@@ -54,6 +115,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("After deleting secret from linux keyring");
         }
 
+
+
         public byte[] Read()
         {
             _logger.LogInformation("ReadDataCore");
@@ -68,10 +131,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 schema: GetLibsecretSchema(),
                 cancellable: IntPtr.Zero,
                 error: out error,
-                attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                attribute1Type: _attributeKey1,
+                attribute1Value: _attributeValue1,
+                attribute2Type: _attributeKey2,
+                attribute2Value: _attributeValue2,
                 end: IntPtr.Zero);
 
             if (error != IntPtr.Zero)
@@ -108,15 +171,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             Libsecret.secret_password_store_sync(
                 schema: GetLibsecretSchema(),
-                collection: _creationProperties.KeyringCollection,
-                label: _creationProperties.KeyringSecretLabel,
+                collection: _keyringCollection,
+                label: _keyringSecretLabel,
                 password: Convert.ToBase64String(data),
                 cancellable: IntPtr.Zero,
                 error: out error,
-                attribute1Type: _creationProperties.KeyringAttribute1.Key,
-                attribute1Value: _creationProperties.KeyringAttribute1.Value,
-                attribute2Type: _creationProperties.KeyringAttribute2.Key,
-                attribute2Value: _creationProperties.KeyringAttribute2.Value,
+                attribute1Type: _attributeKey1,
+                attribute1Value: _attributeValue1,
+                attribute2Type: _attributeKey2,
+                attribute2Value: _attributeValue2,
                 end: IntPtr.Zero);
 
             if (error != IntPtr.Zero)
@@ -135,10 +198,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("After saving to linux keyring");
 
             // Change data to 1 byte so we can write it to the cache file to update the last write time using the same write code used for windows.
-            FileIOWithRetries.WriteDataToFile(_creationProperties.CacheFilePath, new byte[] { 1 }, _logger);
+            FileIOWithRetries.WriteDataToFile(_cacheFilePath, new byte[] { 1 }, _logger);
         }
 
-        
+
         private IntPtr GetLibsecretSchema()
         {
             if (_libsecretSchema == IntPtr.Zero)
@@ -146,11 +209,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 _logger.LogInformation("Before creating libsecret schema");
 
                 _libsecretSchema = Libsecret.secret_schema_new(
-                    name: _creationProperties.KeyringSchemaName,
+                    name: _keyringSchemaName,
                     flags: (int)Libsecret.SecretSchemaFlags.SECRET_SCHEMA_DONT_MATCH_NAME,
-                    attribute1: _creationProperties.KeyringAttribute1.Key,
+                    attribute1: _attributeKey1,
                     attribute1Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
-                    attribute2: _creationProperties.KeyringAttribute2.Key,
+                    attribute2: _attributeKey2,
                     attribute2Type: (int)Libsecret.SecretSchemaAttributeType.SECRET_SCHEMA_ATTRIBUTE_STRING,
                     end: IntPtr.Zero);
 

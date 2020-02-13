@@ -17,6 +17,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     public class MsalCacheHelper
     {
         /// <summary>
+        /// The name of the Default KeyRing collection. Secrets stored in this collection are persisted to disk
+        /// </summary>
+        public const string LinuxKeyRingDefaultCollection = "default";
+
+        /// <summary>
+        /// The name of the Session KeyRing collection. Secrets stored in this collection are not persisted to disk, but
+        /// will be avaiable for the duration of the user session.
+        /// </summary>
+        public const string LinuxKeyRingSessionCollection = "session";
+
+        /// <summary>
         /// A default logger for use if the user doesn't want to provide their own.
         /// </summary>
         private static readonly Lazy<TraceSourceLogger> s_staticLogger = new Lazy<TraceSourceLogger>(() =>
@@ -42,7 +53,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Storage that handles the storing of the adal cache file on disk. Internal for testing.
         /// </summary>
-        internal readonly MsalCacheStorage _store;
+        private readonly MsalCacheStorage _store;
 
         /// <summary>
         /// Logger to log events to.
@@ -373,6 +384,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 localDispose?.Dispose();
                 _logger.LogInformation($"Released lock");
             }
+        }
+
+        /// <summary>
+        /// Performs a write -> read -> clear using the underlying persistence mechanism and
+        /// throws an <see cref="MsalCachePersistenceException"/> if something goes wrong.
+        /// </summary>
+        /// <remarks>Does not overwrite the token cache. Should never fail on Windows and Mac where the cache accessors are guaranteed to exist by the OS.</remarks>
+        public void VerifyPersistence()
+        {
+            _store.VerifyPersistence();
         }
     }
 }

@@ -49,6 +49,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("After delete mac keychain");
         }
 
+       
         public byte[] Read()
         {
             _logger.LogInformation("ReadDataCore");
@@ -69,5 +70,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             // Change data to 1 byte so we can write it to the cache file to update the last write time using the same write code used for windows.
             FileIOWithRetries.WriteDataToFile(_cacheFilePath, new byte[] { 1 }, _logger);
         }
+
+        public ICacheAccessor CreateForPersistenceValidation()
+        {
+            return new CacheAccessorMac(
+                _cacheFilePath + ".test",
+                _keyChainServiceName + "test",
+                _keyChainAccountName + "test",
+                _logger);
+        }
+
     }
 }
