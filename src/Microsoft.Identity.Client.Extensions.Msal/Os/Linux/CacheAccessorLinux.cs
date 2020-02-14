@@ -74,7 +74,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 _cacheFilePath,
                 _keyringCollection,
                 _keyringSchemaName,
-                "MSAL Test",
+                "MSAL Persistence Test",
                 _attributeKey1, "test",
                 _attributeKey2, "test",
                 _logger);
