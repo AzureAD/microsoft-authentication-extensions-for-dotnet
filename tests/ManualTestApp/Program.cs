@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
@@ -37,6 +39,7 @@ namespace ManualTestApp
                         5. Display Accounts (reads the cache)
                         6. Acquire Token U/P and Silent in a loop
                         c. Clear cache
+                        e. Expire Access Tokens (TEST only!)
                         x. Exit app
                     Enter your Selection: ");
                 char.TryParse(Console.ReadLine(), out var selection);
@@ -129,7 +132,38 @@ namespace ManualTestApp
                         Console.Clear();
 
                         break;
-                    
+
+                    case 'e':
+
+                        // do smth that loads the cache first
+                        await pca.GetAccountsAsync().ConfigureAwait(false);
+
+                        string expiredValue = ((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds)
+                                .ToString(CultureInfo.InvariantCulture);
+
+                        var accessor = pca.UserTokenCache.GetType()
+                            .GetRuntimeProperties()
+                            .Single(p => p.Name == "Microsoft.Identity.Client.ITokenCacheInternal.Accessor")
+                            .GetValue(pca.UserTokenCache);
+
+                        var internalAccessTokens = accessor.GetType().GetMethod("GetAllAccessTokens").Invoke(accessor, null) as IEnumerable<object>;
+
+                        foreach (var internalAt in internalAccessTokens)
+                        {
+                            internalAt.GetType().GetRuntimeMethods().Single(m => m.Name == "set_ExpiresOnUnixTimestamp").Invoke(internalAt, new[] { expiredValue });
+                            accessor.GetType().GetMethod("SaveAccessToken").Invoke(accessor, new[] { internalAt });
+                        }
+
+                        var ctor = typeof(TokenCacheNotificationArgs).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
+
+                        var argz = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false });
+                        var task = pca.UserTokenCache.GetType().GetRuntimeMethods()
+                            .Single(m => m.Name == "Microsoft.Identity.Client.ITokenCacheInternal.OnAfterAccessAsync")
+                            .Invoke(pca.UserTokenCache, new[] { argz });
+
+                        await (task as Task).ConfigureAwait(false);
+                        break;
+
                     case 'x':
                         return;
                     }
