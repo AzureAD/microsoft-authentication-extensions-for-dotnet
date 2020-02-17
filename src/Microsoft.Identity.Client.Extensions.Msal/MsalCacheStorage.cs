@@ -12,9 +12,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
 
     /// <summary>
-    /// Persist cache to file
+    /// Wrapper over the persistence layer. Also writes data to the file for evening reasons. 
     /// </summary>
-    internal class MsalCacheStorage
+    /// <remarks>Consider using the higher level <see cref="MsalCacheHelper"/></remarks>
+    public class MsalCacheStorage
     {
         private readonly TraceSourceLogger _logger;
 
@@ -187,6 +188,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
         }
 
+        /// <summary>
+        /// Tries to write -> read -> clear a secret from the underlying persistence mechanism
+        /// </summary>
         public void VerifyPersistence()
         {
             // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
