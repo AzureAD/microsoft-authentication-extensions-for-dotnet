@@ -10,7 +10,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
@@ -32,6 +35,64 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 secretLabel: "MSALCache",
                 attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
                 attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+        }
+
+        [TestMethod]
+        public void ImportExport()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var cache = new MockTokenCache();
+            var storage = new MsalCacheStorage(
+                _storageCreationPropertiesBuilder.Build(),
+                cacheAccessor,
+                new TraceSourceLogger(new TraceSource("ts")));
+            var helper = new MsalCacheHelper(cache, storage,_logger);
+            byte[] dataToSave = Encoding.UTF8.GetBytes("Hello World 2");
+
+            cacheAccessor.Read().Returns(Encoding.UTF8.GetBytes("Hello World"));
+
+            // Act
+            byte[] actualData = helper.LoadUnencryptedTokenCache();
+            helper.SaveUnencryptedTokenCache(dataToSave);
+
+            // Assert
+            Assert.AreEqual("Hello World", Encoding.UTF8.GetString(actualData));
+            cacheAccessor.Received().Write(dataToSave);
+        }
+
+        [TestMethod]
+        public void ImportExport_ThrowException()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var cache = new MockTokenCache();
+            var storage = new MsalCacheStorage(
+                _storageCreationPropertiesBuilder.Build(),
+                cacheAccessor,
+                new TraceSourceLogger(new TraceSource("ts")));
+            var helper = new MsalCacheHelper(cache, storage, _logger);
+            byte[] dataToSave = Encoding.UTF8.GetBytes("Hello World 2");
+            var ex = new InvalidCastException();
+
+            cacheAccessor.Read().Throws(ex);
+
+            // Act
+            var actualEx = AssertException.Throws<InvalidCastException>(
+                () => helper.LoadUnencryptedTokenCache());
+
+            // Assert
+            Assert.AreEqual(ex, actualEx);
+
+            // Arrange
+            cacheAccessor.WhenForAnyArgs(c => c.Write(default)).Throw(ex);
+
+            // Act
+            actualEx = AssertException.Throws<InvalidCastException>(
+                () => helper.SaveUnencryptedTokenCache(new byte[0]));
+
+            // Assert
+            Assert.AreEqual(ex, actualEx);
         }
 
         [TestMethod]
