@@ -12,7 +12,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
 
     /// <summary>
-    /// Wrapper over the persistence layer. Also writes data to the file for evening reasons. 
+    /// Low-level wrapper over persistence layer. Does not use locking.
+    /// 
     /// </summary>
     /// <remarks>Consider using the higher level <see cref="MsalCacheHelper"/></remarks>
     public class MsalCacheStorage
