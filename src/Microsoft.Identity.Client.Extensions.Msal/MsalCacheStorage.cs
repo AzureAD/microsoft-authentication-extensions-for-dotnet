@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// 
     /// </summary>
     /// <remarks>Consider using the higher level <see cref="MsalCacheHelper"/></remarks>
-    public class MsalCacheStorage
+    internal class MsalCacheStorage
     {
         private readonly TraceSourceLogger _logger;
 
