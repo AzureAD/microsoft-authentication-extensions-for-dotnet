@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// 
     /// </summary>
     /// <remarks>Consider using the higher level <see cref="MsalCacheHelper"/></remarks>
-    public class MsalCacheStorage
+    internal class MsalCacheStorage
     {
         private readonly TraceSourceLogger _logger;
 
@@ -128,7 +128,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Read and unprotect cache data
         /// </summary>
         /// <returns>Unprotected cache data</returns>
-        public byte[] ReadData()
+        public byte[] ReadData(bool ignoreExceptions = true)
         {
             bool cacheFileExists = File.Exists(CacheFilePath);
             _logger.LogInformation($"ReadData Cache file exists '{cacheFileExists}'");
@@ -146,6 +146,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 // It's unlikely that Clear will work, but try it anyway
                 Clear();
+
+                if (!ignoreExceptions)
+                {
+                    throw;
+                }
             }
 
             return data ?? new byte[0];
@@ -155,7 +160,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Protect and write cache data to file
         /// </summary>
         /// <param name="data">Cache data</param>
-        public void WriteData(byte[] data)
+        /// <param name="ignoreExceptions">If set to false, exposes exceptions. </param>
+        public void WriteData(byte[] data, bool ignoreExceptions = true)
         {
             if (data == null)
             {
@@ -170,13 +176,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             catch (Exception e)
             {
                 _logger.LogError($"An exception was encountered while writing data to {nameof(MsalCacheStorage)} : {e}");
+                if (!ignoreExceptions)
+                {
+                    throw;
+                }
             }
         }
 
         /// <summary>
         /// Delete cache file
         /// </summary>
-        public void Clear()
+        public void Clear(bool ignoreExceptions = true)
         {
             try
             {
@@ -186,6 +196,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             catch (Exception e)
             {
                 _logger.LogError($"An exception was encountered while clearing data from {nameof(MsalCacheStorage)} : {e}");
+                if (!ignoreExceptions)
+                {
+                    throw;
+                }
             }
         }
 

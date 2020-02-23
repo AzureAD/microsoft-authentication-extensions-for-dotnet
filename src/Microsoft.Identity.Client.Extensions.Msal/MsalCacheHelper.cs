@@ -23,7 +23,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         /// <summary>
         /// The name of the Session KeyRing collection. Secrets stored in this collection are not persisted to disk, but
-        /// will be avaiable for the duration of the user session.
+        /// will be available for the duration of the user session.
         /// </summary>
         public const string LinuxKeyRingSessionCollection = "session";
 
@@ -91,28 +91,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// timestamp of the cache file the last time they deserialized.
         /// </summary>
         internal readonly HashSet<ITokenCache> _registeredCaches = new HashSet<ITokenCache>();
-
-        /// <summary>
-        /// Creates a new instance of <see cref="MsalCacheHelper"/>.
-        /// </summary>
-        /// <param name="storageCreationProperties">Properties to use when creating storage on disk.</param>
-        /// <param name="logger">Passing null uses a default logger</param>
-        /// <returns>A new instance of <see cref="MsalCacheHelper"/>.</returns>
-        public static async Task<MsalCacheHelper> CreateAsync(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
-        {
-            // We want CrossPlatLock around this operation so that we don't have a race against first read of the file and creating the watcher
-            using (CreateCrossPlatLock(storageCreationProperties))
-            {
-                // Cache the list of accounts
-                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties).ConfigureAwait(false);
-
-                var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
-                var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
-                cacheWatcher.EnableRaisingEvents = true;
-
-                return helper;
-            }
-        }
 
         /// <summary>
         /// Gets the current set of accounts in the cache by creating a new public client, and
@@ -198,13 +176,38 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="userTokenCache">The token cache to synchronize with the backing store</param>
         /// <param name="store">The backing store to use.</param>
         /// <param name="logger">Passing null uses the default logger</param>
-        internal MsalCacheHelper(ITokenCache userTokenCache, MsalCacheStorage store, TraceSource logger = null)
+        internal MsalCacheHelper(
+            ITokenCache userTokenCache, MsalCacheStorage store, TraceSource logger = null)
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             _store = store;
             _storageCreationProperties = store.CreationProperties;
 
             RegisterCache(userTokenCache);
+        }
+
+        #region Public API
+
+        /// <summary>
+        /// Creates a new instance of <see cref="MsalCacheHelper"/>.
+        /// </summary>
+        /// <param name="storageCreationProperties">Properties to use when creating storage on disk.</param>
+        /// <param name="logger">Passing null uses a default logger</param>
+        /// <returns>A new instance of <see cref="MsalCacheHelper"/>.</returns>
+        public static async Task<MsalCacheHelper> CreateAsync(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
+        {
+            // We want CrossPlatLock around this operation so that we don't have a race against first read of the file and creating the watcher
+            using (CreateCrossPlatLock(storageCreationProperties))
+            {
+                // Cache the list of accounts
+                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties).ConfigureAwait(false);
+
+                var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
+                var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
+                cacheWatcher.EnableRaisingEvents = true;
+
+                return helper;
+            }
         }
 
         /// <summary>
@@ -295,11 +298,41 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
+        /// Extracts the token cache data from the persistent store 
+        /// </summary>
+        /// <returns>an UTF-8 byte array of the unencrypted token cache</returns>
+        /// <remarks>This method should be used with care. The data returned is unencrypted.</remarks>
+        public byte[] LoadUnencryptedTokenCache()
+        {
+            using (CreateCrossPlatLock(_storageCreationProperties))
+            {
+                return _store.ReadData(ignoreExceptions: false);
+            }
+        }
+
+        /// <summary>
+        /// Saves an unencrypted, UTF-8 encoded byte array representing an MSAL token cache.
+        /// The save operation will persist the data in a secure location, as configured in <see cref="StorageCreationProperties"/>
+        /// </summary>
+        public void SaveUnencryptedTokenCache(byte[] tokenCache)
+        {
+            using (CreateCrossPlatLock(_storageCreationProperties))
+            {
+                _store.WriteData(tokenCache, ignoreExceptions: false);
+            }
+        }
+
+        #endregion
+
+        /// <summary>
         /// Gets a new instance of a lock for synchronizing against a cache made with the same creation properties.
         /// </summary>
         private static CrossPlatLock CreateCrossPlatLock(StorageCreationProperties storageCreationProperties)
         {
-            return new CrossPlatLock(storageCreationProperties.CacheFilePath + ".lockfile", storageCreationProperties.LockRetryDelay, storageCreationProperties.LockRetryCount);
+            return new CrossPlatLock(
+                storageCreationProperties.CacheFilePath + ".lockfile",
+                storageCreationProperties.LockRetryDelay,
+                storageCreationProperties.LockRetryCount);
         }
 
         /// <summary>
@@ -377,13 +410,18 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             finally
             {
-                // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
-                // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
-                var localDispose = CacheLock;
-                CacheLock = null;
-                localDispose?.Dispose();
-                _logger.LogInformation($"Released lock");
+                ReleaseFileLock();
             }
+        }
+
+        private void ReleaseFileLock()
+        {
+            // Get a local copy and call null before disposing because when the lock is disposed the next thread will replace CacheLock with its instance,
+            // therefore we do not want to null out CacheLock after dispose since this may orphan a CacheLock.
+            var localDispose = CacheLock;
+            CacheLock = null;
+            localDispose?.Dispose();
+            _logger.LogInformation($"Released lock");
         }
 
         /// <summary>

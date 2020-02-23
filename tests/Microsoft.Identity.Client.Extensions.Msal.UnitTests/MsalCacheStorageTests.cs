@@ -50,6 +50,58 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
+        public void ReadCanThrowExceptions()
+        {
+            // Arrange
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            cacheAccessor.Read().Throws(new InvalidOperationException());
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            byte[] result = storage.ReadData();
+            Assert.AreEqual(0, result.Length);
+
+            // Assert
+            AssertException.Throws<InvalidOperationException>(
+                () => storage.ReadData(ignoreExceptions: false));
+        }
+
+        [TestMethod]
+        public void WriteCanThrowExceptions()
+        {
+            // Arrange
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            cacheAccessor.WhenForAnyArgs(c => c.Write(null)).Throw(new InvalidOperationException());
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            storage.WriteData(new byte[0]);
+
+            // Assert
+            AssertException.Throws<InvalidOperationException>(
+                () => storage.WriteData(new byte[0], ignoreExceptions: false));
+        }
+
+        [TestMethod]
+        public void ClearCanThrowExceptions()
+        {
+            // Arrange
+            var actualLogger = new TraceSourceLogger(_logger);
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            cacheAccessor.WhenForAnyArgs(c => c.Clear()).Throw(new InvalidOperationException());
+            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+
+            // Act
+            storage.Clear();
+
+            // Assert
+            AssertException.Throws<InvalidOperationException>(
+                () => storage.Clear(ignoreExceptions: false));
+        }
+
+        [TestMethod]
         public void CacheStorageReadCanHandleReadingNull()
         {
             // Arrange
@@ -69,7 +121,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheStorageReadCanHandleExceptionsWhenReading()
         {
-            
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             var exception = new InvalidOperationException();
