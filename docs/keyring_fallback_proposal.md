@@ -21,7 +21,7 @@
         .WithMacKeyChain(
             Config.KeyChainServiceName,
             Config.KeyChainAccountName)
-        .Build|();
+        .Build();
 
 MsalCacheHelper cacheHelper = MsalCacheHelper.Create(storageProperties);
 cacheHelper.RegisterCache(app.UserTokenCache);
@@ -65,10 +65,11 @@ TODO: understand perf impact of this call. If expensive, need to inform consumer
 
 ```csharp
  new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId) 
-    .WithLinuxPlaintextFile(ConPlaintextFilePath) //new method                     
+    .WithLinuxPlaintextFile(Config.UnprotectedCacheFilePath) //new method                     
     .WithMacKeyChain(...); // no change
                      
 ```                     
+If `UnprotectedCacheFilePath` and  `CacheFileName` are the same, an exception MUST be thrown.
 
 As an alternative, the `.WithLinuxPlaintextFile()` can take 0 arguments, and simply use `Config.CacheFileName`, however this would invalidate Goal 4.
 
