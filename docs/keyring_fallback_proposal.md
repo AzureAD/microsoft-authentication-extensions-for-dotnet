@@ -65,7 +65,7 @@ TODO: understand perf impact of this call. If expensive, need to inform consumer
 
 ```csharp
  new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId) 
-    .WithLinuxPlaintextFile(Config.UnprotectedCacheFilePath) //new method                     
+    .WithLinuxUnprotectedFile(Config.UnprotectedCacheFilePath) //new method                     
     .WithMacKeyChain(...); // no change
                      
 ```                     
@@ -83,5 +83,3 @@ Libraries consuming the extension will:
 4. Create a cache helper using `.WithLinuxPlaintextFile` using a file path that comes from either: 
 - a well known env variable, e.g. LINUX_DEV_TOOLS_TOKEN_CACHE
 - if LINUX_DEV_TOOLS_TOKEN_CACHE is not set, default to a well known location 
-
-
