@@ -3,7 +3,7 @@
 **Context:** Today, the MSAL extension libraries (.net, java, python, javascript) store secrets in KeyRings via LibSecret. These components not available on all Linux distros and they cannot be started when connected via SSH.
 
 **Proposal:** Extensions are to provide a mechanism for products to detect if this secret storage is usable. If it is not, extensions are to write the token cache to an unecrypted file. It then becomes the reponsability of the Linux users to protect their files, using, for example, encrypted disks.
-
+l
 #### Current API
 
 ```csharp
@@ -58,20 +58,16 @@ If this method fails it throws an exception with more details. Typically the fai
 - D-BUS is not running (typical in SSH scenario)
 - No wallet is listening on the other end
 
-TODO: understand perf impact of this call. If expensive, need to inform consumers to not call this too often.
-
 #### Add a method to persist data in a plaintext file
 
 
 ```csharp
  new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId) 
-    .WithLinuxUnprotectedFile(Config.UnprotectedCacheFilePath) //new method                     
+    .WithLinuxUnprotectedFile() //new method                     
     .WithMacKeyChain(...); // no change
                      
 ```                     
-If `UnprotectedCacheFilePath` and  `CacheFileName` are the same, an exception MUST be thrown.
-
-As an alternative, the `.WithLinuxPlaintextFile()` can take 0 arguments, and simply use `Config.CacheFileName`, however this would invalidate Goal 4.
+`Config.CacheFileName` will contain the unprotected cache. 
 
 #### Suggested pattern for extension consumers
 
@@ -83,3 +79,14 @@ Libraries consuming the extension will:
 4. Create a cache helper using `.WithLinuxPlaintextFile` using a file path that comes from either: 
 - a well known env variable, e.g. LINUX_DEV_TOOLS_TOKEN_CACHE
 - if LINUX_DEV_TOOLS_TOKEN_CACHE is not set, default to a well known location 
+
+
+#### Important note about signaling API
+
+Some consumenrs of the library are using the event `CacheChanged`. While not all extensions expose this event, all extension need to ensure the event is triggered. 
+This is done via a `FileWatcher` mechanism as follows:
+
+- on Windows, encrypted data is persisted to `Config.CacheFileName` 
+- on Mac, data is stored in KeyChain. A dummy 1 byte is written to `Config.CacheFileName`
+- on Linux, data is persisted EITHER in KeyRin or in `Config.CacheFileName`. To maintain the signaling semantics, a dummy 1 byte will be written to a file named
+`Config.CacheFileName` + '.signal'
