@@ -46,10 +46,10 @@ cacheHelper.RegisterCache(app.UserTokenCache);
 #### Add a method to check persistence on Linux
 
 ```csharp
-void cacheHelper.VerifyLinuxPersistence();
+void cacheHelper.VerifyPersistence();
 ```
 
-This method MUST not affect the token cache. It will attempt to write and read a dummy secret. Different KeyRing attributes will be used so as to not interfere with the real token cache. 
+This method MUST not affect the token cache. It will attempt to write and read a dummy secret. Different storage attributes will be used so as to not interfere with the real token cache (e.g. Windows - different file path, Mac - different account, Linux - differnt keyring attribute)
 
 If this method fails it throws an exception with more details. Typically the failure points are:
 
@@ -69,14 +69,16 @@ If this method fails it throws an exception with more details. Typically the fai
 ```                     
 `Config.CacheFileName` will contain the unprotected cache. 
 
-#### Suggested pattern for extension consumers
+Note: `WithLinuxUnprotectedFile` cannot be used in conjuction with `WithLinuxKeyring` - an exception will be thrown
 
+#### Suggested pattern for extension consumers
+ 
 Libraries consuming the extension will: 
 
 1. create a cache helper with a the normal `KeyRing` setup
-2. call `cacheHelper.VerifyLinuxPersistence()`
+2. call `cacheHelper.VerifyPersistence()`
 3. If this throws an exception, show the user a meaningful message / URL to help page to inform them to secure their secrets storage
-4. Create a cache helper using `.WithLinuxPlaintextFile` using a file path that comes from either: 
+4. Create a cache helper using `.WithLinuxUnprotectedFile` using a file path that comes from either: 
 - a well known env variable, e.g. LINUX_DEV_TOOLS_TOKEN_CACHE
 - if LINUX_DEV_TOOLS_TOKEN_CACHE is not set, default to a well known location 
 
