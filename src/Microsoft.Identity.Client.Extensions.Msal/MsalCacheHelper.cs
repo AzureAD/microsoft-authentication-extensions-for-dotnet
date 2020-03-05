@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client.TelemetryCore.Internal.Events;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -128,7 +129,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="logger">Passing null uses a default logger</param>
         /// <param name="knownAccountIds">The set of known accounts</param>
         /// <param name="cacheWatcher">Watcher for the cache file, to enable sending updated events</param>
-        private MsalCacheHelper(StorageCreationProperties storageCreationProperties, TraceSource logger, HashSet<string> knownAccountIds, FileSystemWatcher cacheWatcher)
+        private MsalCacheHelper(
+            StorageCreationProperties storageCreationProperties,
+            TraceSource logger,
+            HashSet<string> knownAccountIds,
+            FileSystemWatcher cacheWatcher)
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             _storageCreationProperties = storageCreationProperties;
@@ -142,6 +147,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
         {
+            // avoid calculating the CacheChanged
+            if (CacheChanged == null)
+            {
+                return;
+            }
+
             try
             {
                 IEnumerable<string> added = Enumerable.Empty<string>();
@@ -160,7 +171,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 if (added.Any() || removed.Any())
                 {
-                    CacheChanged?.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                    CacheChanged.Invoke(sender, new CacheChangedEventArgs(added, removed));
                 }
             }
             catch (Exception e)
