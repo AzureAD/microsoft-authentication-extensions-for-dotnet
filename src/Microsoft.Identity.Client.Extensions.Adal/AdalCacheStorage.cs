@@ -61,24 +61,6 @@ namespace Microsoft.Identity.Client.Extensions.Adal
         public string CacheFilePath => CreationProperties.CacheFilePath;
 
         /// <summary>
-        /// Gets the file path containing the guid representing the last time the cache was changed on disk.
-        /// </summary>
-        private string VersionFilePath => CacheFilePath + ".version";
-
-        /// <summary>
-        /// Gets a value indicating whether the persisted file has changed since we last read it.
-        /// </summary>
-        public bool HasChanged
-        {
-            get
-            {
-                // Attempts to make this more refined have all resulted in some form of cache inconsistency. Just returning
-                // true here so we always load from disk.
-                return true;
-            }
-        }
-
-        /// <summary>
         /// Read and unprotect adal cache data
         /// </summary>
         /// <returns>Unprotected adal cache data</returns>
