@@ -17,19 +17,29 @@ namespace ManualTestApp
 
     class Program
     {
-
 #pragma warning disable UseAsyncSuffix // Use Async suffix
         static async Task Main(string[] args)
 #pragma warning restore UseAsyncSuffix // Use Async suffix
         {
+            // It's recommended to create a separate PublicClient Application for each tenant
+            // but only one CacheHelper object
+            var pca = CreatePublicClient("https://login.microsoftonline.com/organizations");
+            var cacheHelper = await CreateCacheHelperAsync().ConfigureAwait(false);
+            cacheHelper.RegisterCache(pca.UserTokenCache);
 
-            var pca = await CreatePublicClientWithCacheAsync().ConfigureAwait(false);
+            // The token cache helper's main feature is this event
+            cacheHelper.CacheChanged += (s, e) =>
+            {
+                Console.BackgroundColor = ConsoleColor.DarkCyan;
+                Console.WriteLine($"Cache Changed, Added: {e.AccountsAdded.Count()} Removed: {e.AccountsRemoved.Count()}");
+                Console.ResetColor();
+            };
+
             AuthenticationResult result;
 
             while (true)
             {
 
-                //await DisplayAccountsAsync(pca).ConfigureAwait(false);
                 // Display menu
                 Console.WriteLine($@"
                         1. Acquire Token using Username and Password - for TEST only, do not use in production!
@@ -98,29 +108,26 @@ namespace ManualTestApp
                     case '6': // U/P and Silent in a loop
                         Console.WriteLine("CTRL-C to stop...");
 
+                        cacheHelper.Clear();
+
+                        // TODO: try with different authorities
+                        var pca2 = CreatePublicClient("https://login.microsoftonline.com/organizations");
+                        var pca3 = CreatePublicClient("https://login.microsoftonline.com/organizations");
+                        cacheHelper.RegisterCache(pca2.UserTokenCache);
+                        cacheHelper.RegisterCache(pca3.UserTokenCache);
+
                         while (true)
                         {
-                            Console.WriteLine("Acquiring token by ROPC...");
-                            result = await AcquireTokenROPCAsync(pca).ConfigureAwait(false);
-                            Console.WriteLine("OK. Now getting the accounts");
+                            Task.WaitAll(
+                                RunRopcAndSilentAsync("PCA_1", pca),
+                                RunRopcAndSilentAsync("PCA_2", pca2),
+                                RunRopcAndSilentAsync("PCA_3", pca3)
+                            );
 
-                            var accounts3 = await pca.GetAccountsAsync().ConfigureAwait(false);
-
-                            Console.WriteLine("Acquiring token silent");
-
-                            result = await pca.AcquireTokenSilent(Config.Scopes, accounts3.First())
-                                .ExecuteAsync()
-                                .ConfigureAwait(false);
-
-                            Console.WriteLine("Deleting the account");
-                            foreach (var acc in accounts3)
-                            {
-                                await pca.RemoveAsync(acc).ConfigureAwait(false);
-                            }
-
-                            Console.WriteLine("Waiting for 3 seconds");
-                            await Task.Delay(3000).ConfigureAwait(false);
+                            await Task.Delay(2000).ConfigureAwait(false);
                         }
+
+                        //break;
 
                     case 'c':
                         var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
@@ -180,7 +187,33 @@ namespace ManualTestApp
             }
         }
 
-        private static async Task<AuthenticationResult> AcquireTokenROPCAsync(IPublicClientApplication pca)
+        private static async Task<AuthenticationResult> RunRopcAndSilentAsync(
+            string logPrefix,
+            IPublicClientApplication pca)
+        {
+            Console.WriteLine($"{logPrefix} Acquiring token by ROPC...");
+            var result = await AcquireTokenROPCAsync(pca).ConfigureAwait(false);
+
+            Console.WriteLine($"{logPrefix} OK. Now getting the accounts");
+            var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
+
+            Console.WriteLine($"{logPrefix} Acquiring token silent");
+
+            result = await pca.AcquireTokenSilent(Config.Scopes, accounts.First())
+                .ExecuteAsync()
+                .ConfigureAwait(false);
+
+            Console.WriteLine($"{logPrefix} Deleting the account");
+            foreach (var acc in accounts)
+            {
+                await pca.RemoveAsync(acc).ConfigureAwait(false);
+            }
+
+            return result;
+        }
+
+        private static async Task<AuthenticationResult> AcquireTokenROPCAsync(
+            IPublicClientApplication pca)
         {
             if (string.IsNullOrEmpty(Config.Username) ||
                 string.IsNullOrEmpty(Config.Password))
@@ -216,7 +249,8 @@ namespace ManualTestApp
         }
 
 
-        private static async Task<IPublicClientApplication> CreatePublicClientWithCacheAsync()
+
+        private static async Task<MsalCacheHelper> CreateCacheHelperAsync()
         {
             var storageProperties =
                  new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId)
@@ -231,46 +265,20 @@ namespace ManualTestApp
                      Config.KeyChainAccountName)
                  .Build();
 
-            IPublicClientApplication pca = await CreatePublicClientAndBindCacheAsync(
-                Config.Authority,
-                Config.ClientId,
-                storageProperties)
-                .ConfigureAwait(false);
+            var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
+            CheckPersistence(cacheHelper);
 
-            return pca;
+            return cacheHelper;
         }
 
-        private static async Task<IPublicClientApplication> CreatePublicClientAndBindCacheAsync(
-            string authority,
-            string clientId,
-            StorageCreationProperties storageCreationProperties)
+        private static IPublicClientApplication CreatePublicClient(string authority)
         {
-
-            var appBuilder = PublicClientApplicationBuilder.Create(clientId)
+            var appBuilder = PublicClientApplicationBuilder.Create(Config.ClientId)
                 .WithAuthority(authority)
                 .WithRedirectUri("http://localhost"); // make sure to register this redirect URI for the interactive login to work
 
             var app = appBuilder.Build();
             Console.WriteLine($"Built public client");
-
-            // This hooks up the cross-platform cache into  MSAL
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties).ConfigureAwait(false);
-
-            CheckPersistence(cacheHelper);
-
-            cacheHelper.RegisterCache(app.UserTokenCache);
-
-            Console.WriteLine($"Cache registered");
-
-            // The token cache helper's main feature is this event
-            cacheHelper.CacheChanged += (s, e) =>
-            {
-                Console.BackgroundColor = ConsoleColor.DarkCyan;
-                Console.WriteLine($"Cache Changed, Added: {e.AccountsAdded.Count()} Removed: {e.AccountsRemoved.Count()}");
-                Console.ResetColor();
-            };
-
-            Console.WriteLine($"Cache event wired up");
 
             return app;
         }
