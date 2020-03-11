@@ -4,9 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -22,10 +20,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private readonly ICacheAccessor _cacheAccessor;
 
-        internal StorageCreationProperties CreationProperties { get; }
+        public StorageCreationProperties StorageCreationProperties { get; }
 
-        internal const string PersistenceValidationDummyData = "msal_persistence_test";
-
+        public const string PersistenceValidationDummyData = "msal_persistence_test";
 
 
         /// <summary>
@@ -100,7 +97,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             ICacheAccessor cacheAccessor,
             TraceSourceLogger logger)
         {
-            CreationProperties = creationProperties;
+            StorageCreationProperties = creationProperties;
             _logger = logger;
             _cacheAccessor = cacheAccessor;
             _logger.LogInformation($"Initialized '{nameof(MsalCacheStorage)}'");
@@ -109,20 +106,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Gets cache file path
         /// </summary>
-        public string CacheFilePath => CreationProperties.CacheFilePath;
-
-        /// <summary>
-        /// Gets a value indicating whether the persisted file has changed since we last read it.
-        /// </summary>
-        public bool HasChanged
-        {
-            get
-            {
-                // Attempts to make this more refined have all resulted in some form of cache inconsistency. Just returning
-                // true here so we always load from disk.
-                return true;
-            }
-        }
+        public string CacheFilePath => StorageCreationProperties.CacheFilePath;
 
         /// <summary>
         /// Read and unprotect cache data

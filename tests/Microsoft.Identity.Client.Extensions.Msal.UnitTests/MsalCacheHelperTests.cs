@@ -27,7 +27,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestInitialize]
         public void TestInitialize()
         {
-            _storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere");
+            _storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
+                Path.GetFileName(CacheFilePath),
+                Path.GetDirectoryName(CacheFilePath),
+                "1d18b3b0-251b-4714-a02a-9956cec86c2d");
+
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithLinuxKeyring(
                 schemaName: "msal.cache",
@@ -200,9 +204,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             //Thread 1 signalling test
             var resetEvent3 = new ManualResetEventSlim(initialState: false);
 
-            // Thread 2 signalling test
-            var resetEvent4 = new ManualResetEventSlim(initialState: false);
-
             var thread1 = new Thread(() =>
             {
                 var args = new TokenCacheNotificationArgs(cache1, string.Empty, null, false, false);
@@ -251,7 +252,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             Assert.IsTrue(getTime.ElapsedMilliseconds > 2000);
         }
-
 
         [RunOnWindows]
         public async Task TwoRegisteredCachesRemainInSyncTestAsync()
@@ -321,6 +321,41 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             File.Delete(properties.CacheFilePath);
             File.Delete(properties.CacheFilePath + ".version");
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"Resources\token_cache_one_acc_seed.json")]
+
+        public async Task EventFiresAsync()
+        {
+            string cacheWithOneUser = File.ReadAllText("Resources\\token_cache_one_acc_seed.json");
+
+            var properties = _storageCreationPropertiesBuilder.Build();
+            if (File.Exists(properties.CacheFilePath))
+            {
+                File.Delete(properties.CacheFilePath);
+            }
+
+            var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
+            var cache1 = new MockTokenCache();
+            helper.RegisterCache(cache1);
+
+            var semaphore = new SemaphoreSlim(0);
+            int cacheChangedEventFired = 0;
+
+            // event is fired asyncronsouly, test has to wait for it for a while
+            helper.CacheChanged += (sender, e) =>
+            {
+                semaphore.Release();
+                cacheChangedEventFired++;
+            };
+
+            // Act - simulate that an external process writes to the token cache
+            helper.CacheStore.WriteData(Encoding.UTF8.GetBytes(cacheWithOneUser));
+
+            // Assert
+            await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
+            Assert.AreEqual(1, cacheChangedEventFired);
         }
     }
 }
