@@ -21,11 +21,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ManualTestApp", "tests\Manu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6543F66-0A93-4D0B-9A31-11A57C22BC99}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Shared\Shared.projitems*{9a526f06-5464-43ff-9303-d6cafad088f8}*SharedItemsImports = 5
+		src\Shared\Shared.projitems*{a037e740-83f9-49a4-8974-42d589b0503a}*SharedItemsImports = 5
 		src\Shared\Shared.projitems*{f575599f-41ad-4cdd-b0ad-3b659a43ee84}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -195,6 +195,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <returns>A new instance of <see cref="MsalCacheHelper"/>.</returns>
         public static async Task<MsalCacheHelper> CreateAsync(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
         {
+            if (storageCreationProperties is null)
+            {
+                throw new ArgumentNullException(nameof(storageCreationProperties));
+            }
+
             // We want CrossPlatLock around this operation so that we don't have a race against first read of the file and creating the watcher
             using (CreateCrossPlatLock(storageCreationProperties))
             {
