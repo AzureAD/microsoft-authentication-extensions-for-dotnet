@@ -61,11 +61,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             ICacheAccessor cacheAccessor;
             if (SharedUtilities.IsWindowsPlatform())
             {
-                cacheAccessor = new CacheAccessorWindows(creationProperties.CacheFilePath, actualLogger);
+                cacheAccessor = new DpApiEncryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
             }
             else if (SharedUtilities.IsMacPlatform())
             {
-                cacheAccessor = new CacheAccessorMac(
+                cacheAccessor = new MacKeyChainAccessor(
                     creationProperties.CacheFilePath,
                     creationProperties.MacKeyChainServiceName,
                     creationProperties.MacKeyChainAccountName,
@@ -73,7 +73,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             else if (SharedUtilities.IsLinuxPlatform())
             {
-                cacheAccessor = new CacheAccessorLinux(
+                cacheAccessor = new LinuxKeyRingAccessor(
                    creationProperties.CacheFilePath,
                    creationProperties.KeyringCollection,
                    creationProperties.KeyringSchemaName,
