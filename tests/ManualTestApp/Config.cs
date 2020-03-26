@@ -20,7 +20,7 @@ namespace ManualTestApp
 
         // Cache settings
         public const string CacheFileName = "msal_cache.dat";
-        public readonly static string CacheDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        public readonly static string CacheDir = MsalCacheHelper.UserRootDirectory;
 
         public const string KeyChainServiceName = "msal_service";
         public const string KeyChainAccountName = "msal_account";
