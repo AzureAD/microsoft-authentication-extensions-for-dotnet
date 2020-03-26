@@ -15,7 +15,7 @@ using NSubstitute.ExceptionExtensions;
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
     /// <summary>
-    /// These tests mock the cache accessor, i.e. do not write anything to disk / key chain / key ring etc.
+    /// These tests mock the cache accessors, i.e. do not write anything to disk / key chain / key ring etc.
     /// </summary>
     [TestClass]
     public class MsalCacheStorageTests
@@ -39,8 +39,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
             s_storageCreationProperties = builder.Build();
         }
-
-       
 
         [TestMethod]
         public void ReadCanThrowExceptions()

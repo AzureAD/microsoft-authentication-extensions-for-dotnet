@@ -27,6 +27,7 @@ public class StorageCreationProperties
             string cacheDirectory,
             string macKeyChainServiceName,
             string macKeyChainAccountName,
+            bool useLinuxPlaintextFallback,
             string keyringSchemaName,
             string keyringCollection,
             string keyringSecretLabel,
@@ -43,11 +44,14 @@ public class StorageCreationProperties
             MacKeyChainServiceName = macKeyChainServiceName;
             MacKeyChainAccountName = macKeyChainAccountName;
 
+            UseLinuxUnencryptedFallback = useLinuxPlaintextFallback;
+
             KeyringSchemaName = keyringSchemaName;
             KeyringCollection = keyringCollection;
             KeyringSecretLabel = keyringSecretLabel;
             KeyringAttribute1 = keyringAttribute1;
             KeyringAttribute2 = keyringAttribute2;
+
             ClientId = clientId;
             LockRetryDelay = lockRetryDelay;
             LockRetryCount = lockRetryCount;
@@ -107,6 +111,11 @@ public class StorageCreationProperties
         /// The delay between retries if a lock is contended and a retry is requested. (in ms)
         /// </summary>
         public readonly int LockRetryDelay;
+
+        /// <summary>
+        /// Flag which indicates that a plaintext file will be used on Linux for secret storage
+        /// </summary>
+        public readonly bool UseLinuxUnencryptedFallback;
 
         /// <summary>
         /// The number of time to retry the lock if it is contended and retrying is possible

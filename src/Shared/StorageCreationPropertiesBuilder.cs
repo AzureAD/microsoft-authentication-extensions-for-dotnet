@@ -29,6 +29,7 @@ public class StorageCreationPropertiesBuilder
         private KeyValuePair<string, string> _keyringAttribute2;
         private int _lockRetryDelay = CrossPlatLock.LockfileRetryDelayDefault;
         private int _lockRetryCount = CrossPlatLock.LockfileRetryCountDefault;
+        private bool _useLinuxPlaintextFallback = false;
 
         /// <summary>
         /// Constructs a new instance of this builder associated with the given cache file.
@@ -54,6 +55,7 @@ public class StorageCreationPropertiesBuilder
                 _cacheDirectory,
                 _macKeyChainServiceName,
                 _macKeyChainAccountName,
+                _useLinuxPlaintextFallback,
                 _keyringSchemaName,
                 _keyringCollection,
                 _keyringSecretLabel,
@@ -126,11 +128,39 @@ public class StorageCreationPropertiesBuilder
                 throw new ArgumentNullException(nameof(schemaName));
             }
 
+            if (_useLinuxPlaintextFallback)
+            {
+                throw new ArgumentException(
+                    "WithLinuxUnprotectedFile and WithLinuxKeyring are mutually exclusive. " +
+                    "Only one storage mechanism per OS is supported. ");
+            }
+
             _keyringSchemaName = schemaName;
             _keyringCollection = collection;
             _keyringSecretLabel = secretLabel;
             _keyringAttribute1 = attribute1;
             _keyringAttribute2 = attribute2;
+            return this;
+        }
+
+        /// <summary>
+        /// Use to allow storage of secrets in the cacheFile which was configured in the constructor of this class.
+        /// Secrets are stored in PLAINTEXT!
+        /// Should be used as a fallback for cases where Linux LibSecret is not available, for example
+        /// over SSH connections. Users are responsible for security.
+        /// </summary>
+        /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence() /></remarks>
+        /// <returns></returns>
+        public StorageCreationPropertiesBuilder WithLinuxUnprotectedFile()
+        {
+            if (!string.IsNullOrEmpty(_keyringSchemaName))
+            {
+                throw new ArgumentException(
+                    "WithLinuxUnprotectedFile and WithLinuxKeyring are mutually exclusive. " +
+                    "Only one storage mechanism per OS is supported. ");
+            }
+
+            _useLinuxPlaintextFallback = true;
             return this;
         }
     }

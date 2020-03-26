@@ -18,7 +18,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
     /// <summary>
     /// A set of utilities shared between service and client
     /// </summary>
-    internal static class SharedUtilities
+    public static class SharedUtilities
     {
         /// <summary>
         /// default base cache path
@@ -34,7 +34,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// </summary>
         /// <param name="loggingAction">Logging action</param>
         /// <returns>false always in order to skip the exception filter</returns>
-        public static bool LogExceptionAndDoNotHandle(Action loggingAction)
+        internal static bool LogExceptionAndDoNotHandle(Action loggingAction)
         {
             loggingAction();
             return false;
@@ -45,7 +45,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// </summary>
         /// <param name="guid">Guid to format</param>
         /// <returns>Formatted guid in string format</returns>
-        public static string FormatGuidAsString(this Guid guid)
+        internal static string FormatGuidAsString(this Guid guid)
         {
             return guid.ToString("D", CultureInfo.InvariantCulture);
         }
@@ -91,7 +91,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// Generate the default file location
         /// </summary>
         /// <returns>Root directory</returns>
-        internal static string GetUserRootDirectory()
+        public static string GetUserRootDirectory()
         {
             return !IsWindowsPlatform()
                 ? SharedUtilities.GetUserHomeDirOnUnix()

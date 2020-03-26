@@ -18,7 +18,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     {
         private readonly TraceSourceLogger _logger;
 
-        private readonly ICacheAccessor _cacheAccessor;
+        internal /* internal for test only */ ICacheAccessor CacheAccessor { get; }
 
         public StorageCreationProperties StorageCreationProperties { get; }
 
@@ -73,16 +73,23 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             else if (SharedUtilities.IsLinuxPlatform())
             {
-                cacheAccessor = new LinuxKeyRingAccessor(
-                   creationProperties.CacheFilePath,
-                   creationProperties.KeyringCollection,
-                   creationProperties.KeyringSchemaName,
-                   creationProperties.KeyringSecretLabel,
-                   creationProperties.KeyringAttribute1.Key,
-                   creationProperties.KeyringAttribute1.Value,
-                   creationProperties.KeyringAttribute2.Key,
-                   creationProperties.KeyringAttribute2.Value,
-                   actualLogger);
+                if (creationProperties.UseLinuxUnencryptedFallback)
+                {
+                    cacheAccessor = new UnencryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
+                }
+                else
+                {
+                    cacheAccessor = new LinuxKeyRingAccessor(
+                       creationProperties.CacheFilePath,
+                       creationProperties.KeyringCollection,
+                       creationProperties.KeyringSchemaName,
+                       creationProperties.KeyringSecretLabel,
+                       creationProperties.KeyringAttribute1.Key,
+                       creationProperties.KeyringAttribute1.Value,
+                       creationProperties.KeyringAttribute2.Key,
+                       creationProperties.KeyringAttribute2.Value,
+                       actualLogger);
+                }
             }
             else
             {
@@ -99,7 +106,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             StorageCreationProperties = creationProperties;
             _logger = logger;
-            _cacheAccessor = cacheAccessor;
+            CacheAccessor = cacheAccessor;
             _logger.LogInformation($"Initialized '{nameof(MsalCacheStorage)}'");
         }
 
@@ -121,7 +128,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.LogInformation($"Reading Data");
-                data = _cacheAccessor.Read();
+                data = CacheAccessor.Read();
                 _logger.LogInformation($"Got '{data?.Length}' bytes from file storage");
             }
             catch (Exception e)
@@ -155,7 +162,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.LogInformation($"Got '{data?.Length}' bytes to write to storage");
-                _cacheAccessor.Write(data);
+                CacheAccessor.Write(data);
             }
             catch (Exception e)
             {
@@ -175,7 +182,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.LogInformation("Clearing the cache file");
-                _cacheAccessor.Clear();
+                CacheAccessor.Clear();
             }
             catch (Exception e)
             {
@@ -193,7 +200,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public void VerifyPersistence()
         {
             // do not use the _cacheAccessor for writing dummy data, as it might overwrite an actual token cache
-            var persitenceValidatationAccessor = _cacheAccessor.CreateForPersistenceValidation();
+            var persitenceValidatationAccessor = CacheAccessor.CreateForPersistenceValidation();
 
             try
             {

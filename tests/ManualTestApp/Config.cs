@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.Identity.Client.Extensions.Msal;
 
@@ -19,7 +20,7 @@ namespace ManualTestApp
 
         // Cache settings
         public const string CacheFileName = "msal_cache.dat";
-        public readonly static string CacheDir = MsalCacheHelper.UserRootDirectory;
+        public readonly static string CacheDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
         public const string KeyChainServiceName = "msal_service";
         public const string KeyChainAccountName = "msal_account";
