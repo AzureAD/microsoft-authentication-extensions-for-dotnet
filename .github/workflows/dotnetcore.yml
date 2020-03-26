@@ -8,9 +8,10 @@ on:
 
 jobs:
   build:
-
-    runs-on: [windows-latest, macos-latest]
-
+    runs-on: ${{ matrix.os }}    
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, linux-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
