@@ -19,6 +19,14 @@
     <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
+    <Reference Include="System.Security" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetCore)' or '$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="Resources\token_cache_one_acc_seed.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

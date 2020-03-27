@@ -269,7 +269,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Intentionally write the file after creating the MsalCacheHelper to avoid the initial inner PCA being created only to read garbage
             string startString = "Something to start with";
             var startBytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(startString), optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
-            await File.WriteAllBytesAsync(properties.CacheFilePath, startBytes).ConfigureAwait(true);
+            File.WriteAllBytes(properties.CacheFilePath, startBytes);
 
             var cache1 = new MockTokenCache();
             var cache2 = new MockTokenCache();

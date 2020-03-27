@@ -17,5 +17,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Adal\Microsoft.Identity.Client.Extensions.Adal.csproj" />
   </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
+    <Reference Include="System.Security" />
+  </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetCore)' or '$(TargetFramework)' == '$(TargetFrameworkNetStandard)'">
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
+  </ItemGroup>
 </Project>
