@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit;
 
-namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
+namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
 {
     public class RunOnOSXAttribute : RunOnPlatformAttribute
     {
@@ -64,7 +64,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             return base.Execute(testMethod);
         }
     }
-
 
     public class DoNotRunOnPlatformAttribute : TestMethodAttribute
     {
