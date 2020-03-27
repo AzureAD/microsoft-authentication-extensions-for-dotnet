@@ -22,7 +22,6 @@ steps:
 - task: DotNetCoreCLI@2
   displayName: 'Build solution'
 
-steps:
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests'
   inputs:
