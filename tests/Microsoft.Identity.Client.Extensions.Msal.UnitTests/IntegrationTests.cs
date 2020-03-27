@@ -38,13 +38,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             storageBuilder = storageBuilder.WithMacKeyChain(
                 serviceName: "Microsoft.Developer.IdentityService.Test",
                 accountName: "MSALCacheTest");
-            storageBuilder = storageBuilder.WithLinuxKeyring(
-                schemaName: "msal.cache.test",
-                collection: "default",
-                secretLabel: "MSALCacheTest",
-                attribute1: new KeyValuePair<string, string>("MsalClientID_test", "Microsoft.Developer.IdentityService"),
-                attribute2: new KeyValuePair<string, string>("MsalClientVersion_test", "1.0.0.0"));
 
+           // unit tests run on Linux boxes without LibSecret 
+            storageBuilder.WithLinuxUnprotectedFile();
 
             // 1. Use MSAL to create an instance of the Public Client Application
             var app = PublicClientApplicationBuilder.Create(ClientId)
@@ -63,6 +59,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void ImportExport()
         {
+            var storageBuilder = new StorageCreationPropertiesBuilder(
+          Path.GetFileName(CacheFilePath),
+          Path.GetDirectoryName(CacheFilePath),
+          ClientId);
+            storageBuilder = storageBuilder.WithMacKeyChain(
+                serviceName: "Microsoft.Developer.IdentityService.Test",
+                accountName: "MSALCacheTest");
+
+            // unit tests run on Linux boxes without LibSecret 
+            storageBuilder.WithLinuxUnprotectedFile();
+
+            // 1. Use MSAL to create an instance of the Public Client Application
+            var app = PublicClientApplicationBuilder.Create(ClientId)
+                .Build();
+
+            // 3. Create the high level MsalCacheHelper based on properties and a logger
+            _cacheHelper = MsalCacheHelper.CreateAsync(
+                    storageBuilder.Build(),
+                    new TraceSource("MSAL.CacheExtension.Test"))
+                .GetAwaiter().GetResult();
+
+            // 4. Let the cache helper handle MSAL's cache
+            _cacheHelper.RegisterCache(app.UserTokenCache);
+
+            // Act
             string dataString = "Hello World";
             byte[] dataBytes = Encoding.UTF8.GetBytes(dataString);
             var result = _cacheHelper.LoadUnencryptedTokenCache();

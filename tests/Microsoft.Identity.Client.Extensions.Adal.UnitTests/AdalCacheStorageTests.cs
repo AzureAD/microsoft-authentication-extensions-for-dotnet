@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
@@ -70,7 +71,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
             Assert.IsFalse(store.ReadData().Any());
         }
 
-        [TestMethod]
+        [DoNotRunOnLinux]
         public void AdalWriteGoodData()
         {
             var store = new AdalCacheStorage(s_storageCreationProperties, logger: _logger);
@@ -88,7 +89,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
             Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data2));
         }
 
-        [TestMethod]
+        [DoNotRunOnLinux]
         public void AdalTestClear()
         {
             var store = new AdalCacheStorage(s_storageCreationProperties, logger: _logger);

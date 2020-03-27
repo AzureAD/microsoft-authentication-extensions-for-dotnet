@@ -33,12 +33,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 "1d18b3b0-251b-4714-a02a-9956cec86c2d");
 
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
-            _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithLinuxKeyring(
-                schemaName: "msal.cache",
-                collection: "default",
-                secretLabel: "MSALCache",
-                attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
-                attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+            _storageCreationPropertiesBuilder.WithLinuxUnprotectedFile();
         }
 
         [TestMethod]
