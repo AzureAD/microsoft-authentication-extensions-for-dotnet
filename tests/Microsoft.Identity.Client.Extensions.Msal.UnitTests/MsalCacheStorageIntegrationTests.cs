@@ -114,7 +114,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsFalse(store.ReadData().Any());
         }
 
-        [DoNotRunOnWindows]
+        [TestMethod]
         public void MsalWriteGoodData()
         {
             var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
