@@ -22,11 +22,11 @@ steps:
 - task: DotNetCoreCLI@2
   displayName: 'Build solution'
 
-- task: VSTest@2
+steps:
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests'
   inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\*UnitTests.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
+    command: test
+    projects: 'tests/**/*UnitTests*.csproj'
+    arguments: '--no-build --no-restore --collect "Code coverage"'
+
