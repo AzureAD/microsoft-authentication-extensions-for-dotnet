@@ -75,7 +75,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 if (creationProperties.UseLinuxUnencryptedFallback)
                 {
-                    cacheAccessor = new UnencryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
+                    cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
                 }
                 else
                 {

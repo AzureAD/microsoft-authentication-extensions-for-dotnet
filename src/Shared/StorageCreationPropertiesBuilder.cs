@@ -149,7 +149,9 @@ public class StorageCreationPropertiesBuilder
         /// Should be used as a fallback for cases where Linux LibSecret is not available, for example
         /// over SSH connections. Users are responsible for security.
         /// </summary>
-        /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence() /></remarks>
+        /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence()
+        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+        /// </remarks>
         /// <returns></returns>
         public StorageCreationPropertiesBuilder WithLinuxUnprotectedFile()
         {

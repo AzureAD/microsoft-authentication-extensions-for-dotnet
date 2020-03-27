@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    internal class UnencryptedFileAccessor : ICacheAccessor
+    internal class FileAccessor : ICacheAccessor
     {
         private readonly string _cacheFilePath;
         private readonly TraceSourceLogger _logger;
 
-        public UnencryptedFileAccessor(string cacheFilePath, TraceSourceLogger logger)
+        public FileAccessor(string cacheFilePath, TraceSourceLogger logger)
         {
             _cacheFilePath = cacheFilePath;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -26,7 +26,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new UnencryptedFileAccessor(_cacheFilePath + ".test", _logger);
+            return new FileAccessor(_cacheFilePath + ".test", _logger);
         }
 
         public byte[] Read()

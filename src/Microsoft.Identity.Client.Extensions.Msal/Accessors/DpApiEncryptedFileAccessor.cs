@@ -21,7 +21,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             _cacheFilePath = cacheFilePath;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _unencryptedFileAccessor = new UnencryptedFileAccessor(_cacheFilePath, _logger);
+            _unencryptedFileAccessor = new FileAccessor(_cacheFilePath, _logger);
         }
 
         public void Clear()

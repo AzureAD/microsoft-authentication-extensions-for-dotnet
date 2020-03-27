@@ -105,7 +105,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 () => store.VerifyPersistence() );
 
             store = MsalCacheStorage.Create(s_storageCreationPropertiesWithLinuxFallback, _logger);
-            Assert.IsTrue(store.CacheAccessor is UnencryptedFileAccessor);
+            Assert.IsTrue(store.CacheAccessor is FileAccessor);
 
             store.VerifyPersistence();
         }
