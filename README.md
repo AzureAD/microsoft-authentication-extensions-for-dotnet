@@ -2,16 +2,15 @@
 
 This repository contains the source for 2 extension libraries that are built against Identity SDKs [ADAL](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet) and [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet): 
 
-### MSAL extension for public client applications
+[![Build Status](https://identitydivision.visualstudio.com/IDDP/_apis/build/status/CI/DotNet/MSAL%20YAML/Cache%20Ext/Extension%20CI-PR?branchName=master)](https://identitydivision.visualstudio.com/IDDP/_build/latest?definitionId=1071&branchName=master)
+
+### MSAL token cache extension for public client applications
 
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Msal?logo=nuget&logoColor=blue)
 
-This is the main extension containing: 
-
 - A cross platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache)
 
-
-### ADAL extensions for public client applications
+### ADAL token cache extensions for public client applications
 
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Adal?logo=nuget&logoColor=blue)
 
