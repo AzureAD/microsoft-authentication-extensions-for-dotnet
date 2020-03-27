@@ -40,7 +40,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            if (!RuntimeInformation.IsOSPlatform(_platform))
+            if ((SharedUtilities.IsLinuxPlatform() && _platform != OSPlatform.Linux) ||
+                (SharedUtilities.IsMacPlatform() && _platform != OSPlatform.OSX) ||
+                (SharedUtilities.IsWindowsPlatform() && _platform != OSPlatform.Windows))
             {
                 return new[]
                 {

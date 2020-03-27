@@ -69,7 +69,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                     : Environment.GetEnvironmentVariable("HOME"));
         }
 
-        [TestMethod]
         [RunOnOSX]
         public void CacheStorageFactoryMac()
         {
@@ -81,7 +80,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(store.CacheAccessor is MacKeyChainAccessor);
         }
 
-        [TestMethod]
         [RunOnWindows]
         public void CacheStorageFactoryWindows()
         {
@@ -93,7 +91,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
         }
 
-        [TestMethod]
         [RunOnLinux]
         public void CacheStorageFactory_WithFallback_Linux()
         {
