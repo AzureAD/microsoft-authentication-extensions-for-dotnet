@@ -16,7 +16,8 @@ strategy:
     windows:
       imageName: 'windows-latest'
 
-
+pool:
+  vmImage: $(imageName)
 
 steps:
 - task: DotNetCoreCLI@2
