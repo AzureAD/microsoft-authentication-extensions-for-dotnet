@@ -23,7 +23,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
         private readonly TraceSource _logger = new TraceSource("TestSource", SourceLevels.All);
         private static StorageCreationProperties s_storageCreationProperties;
-        private static StorageCreationProperties s_storageCreationPropertiesWithLinuxFallback;
 
         public TestContext TestContext { get; set; }
 
@@ -32,20 +31,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere");
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
-            builder = builder.WithLinuxKeyring(
-                schemaName: "msal.cache",
-                collection: "default",
-                secretLabel: "MSALCache",
-                attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
-                attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+
+            // Tests run on machines without Libsecret
+            builder = builder.WithLinuxUnprotectedFile();
             s_storageCreationProperties = builder.Build();
-
-            s_storageCreationPropertiesWithLinuxFallback =
-                new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere")
-                            .WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache")
-                            .WithLinuxUnprotectedFile()
-                            .Build();
-
         }
 
         [TestInitialize]
@@ -76,7 +65,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(store.CacheAccessor is MacKeyChainAccessor);
             store.VerifyPersistence();
 
-            store = MsalCacheStorage.Create(s_storageCreationPropertiesWithLinuxFallback, logger: _logger);
+            store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is MacKeyChainAccessor);
         }
 
@@ -87,7 +76,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
             store.VerifyPersistence();
 
-            store = MsalCacheStorage.Create(s_storageCreationPropertiesWithLinuxFallback, logger: _logger);
+            store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
         }
 
@@ -101,7 +90,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             AssertException.Throws<MsalCachePersistenceException>(
                 () => store.VerifyPersistence() );
 
-            store = MsalCacheStorage.Create(s_storageCreationPropertiesWithLinuxFallback, _logger);
+            store = MsalCacheStorage.Create(s_storageCreationProperties, _logger);
             Assert.IsTrue(store.CacheAccessor is FileAccessor);
 
             store.VerifyPersistence();
@@ -125,7 +114,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsFalse(store.ReadData().Any());
         }
 
-        [TestMethod]
+        [DoNotRunOnWindows]
         public void MsalWriteGoodData()
         {
             var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);

@@ -29,7 +29,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         }
     }
 
-    public class DoNotRunOnLinuxAttribute : RunOnPlatformAttribute
+    public class DoNotRunOnLinuxAttribute : DoNotRunOnPlatformAttribute
     {
         public DoNotRunOnLinuxAttribute() : base(OSPlatform.Linux)
         {
@@ -64,7 +64,6 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
             return base.Execute(testMethod);
         }
     }
-
 
     public class DoNotRunOnPlatformAttribute : TestMethodAttribute
     {
