@@ -83,10 +83,26 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [RunOnLinux]
         public void CacheStorageFactory_WithFallback_Linux()
         {
-            MsalCacheStorage store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var storageWithKeyRing = new StorageCreationPropertiesBuilder(
+                    Path.GetFileName(CacheFilePath),
+                    Path.GetDirectoryName(CacheFilePath),
+                    "ClientIDGoesHere")
+                .WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache")
+                .WithLinuxKeyring(
+                    schemaName: "msal.cache",
+                    collection: "default",
+                    secretLabel: "MSALCache",
+                    attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
+                    attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"))
+                .Build();
+
+            // Tests run on machines without Libsecret
+            MsalCacheStorage store = MsalCacheStorage.Create(storageWithKeyRing, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is LinuxKeyRingAccessor);
 
             // ADO Linux test agents do not have libsecret installed by default
+            // If you run this test on a Linux box with UI / LibSecret, then this test will fail
+            // because the statement below will not throw.
             AssertException.Throws<MsalCachePersistenceException>(
                 () => store.VerifyPersistence() );
 
