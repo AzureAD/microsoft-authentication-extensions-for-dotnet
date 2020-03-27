@@ -2,5 +2,16 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..\'))" />
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- The platforms where we run tests are different than the platforms where -->
+    <TargetFrameworkNetDesktop>net472</TargetFrameworkNetDesktop>
+    <TargetFrameworkNetCore>netcoreapp3.1</TargetFrameworkNetCore>
+
+    <TestTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(TargetFrameworkNetCore);$(TargetFrameworkNetDesktop);</TestTargetFrameworks>
+    <TestTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(TargetFrameworkNetCore)</TestTargetFrameworks>
+    <TestTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Linux'))">$(TargetFrameworkNetCore)</TestTargetFrameworks>
+
   </PropertyGroup>
+
+  
 </Project>

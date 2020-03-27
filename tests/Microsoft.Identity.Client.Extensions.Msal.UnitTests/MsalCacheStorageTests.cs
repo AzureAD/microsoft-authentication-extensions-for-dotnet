@@ -14,6 +14,9 @@ using NSubstitute.ExceptionExtensions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
+    /// <summary>
+    /// These tests mock the cache accessor, i.e. do not write anything to disk / key chain / key ring etc.
+    /// </summary>
     [TestClass]
     public class MsalCacheStorageTests
     {
@@ -37,17 +40,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             s_storageCreationProperties = builder.Build();
         }
 
-        [TestInitialize]
-        public void TestiInitialize()
-        {
-            CleanTestData();
-        }
-
-        [TestCleanup]
-        public void TestCleanup()
-        {
-            CleanTestData();
-        }
+       
 
         [TestMethod]
         public void ReadCanThrowExceptions()
@@ -243,102 +236,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 cacheAccessor.Read();
                 cacheAccessor.Clear();
             });
-        }
-
-        [TestMethod]
-        public void MsalTestUserDirectory()
-        {
-            Assert.AreEqual(MsalCacheHelper.UserRootDirectory,
-                Environment.OSVersion.Platform == PlatformID.Win32NT
-                    ? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
-                    : Environment.GetEnvironmentVariable("HOME"));
-        }
-
-        [TestMethod]
-        public void MsalNewStoreNoFile()
-        {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.IsFalse(store.ReadData().Any());
-        }
-
-        [TestMethod]
-        public void MsalWriteEmptyData()
-        {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
-
-            store.WriteData(new byte[0]);
-
-            Assert.IsFalse(store.ReadData().Any());
-        }
-
-        [TestMethod]
-        public void MsalWriteGoodData()
-        {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
-
-            byte[] data = { 2, 2, 3 };
-            byte[] data2 = { 2, 2, 3, 4, 4 };
-            store.WriteData(data);
-            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data));
-
-            store.WriteData(data);
-            store.WriteData(data2);
-            store.WriteData(data);
-            store.WriteData(data2);
-            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data2));
-        }
-
-        [TestMethod]
-        public void MsalTestClear()
-        {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            var tempData = store.ReadData();
-
-            var store2 = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.IsNotNull(Exception<ArgumentNullException>(() => store.WriteData(null)));
-
-            byte[] data = { 2, 2, 3 };
-            store.WriteData(data);
-            store2.ReadData();
-
-            Assert.IsTrue(Enumerable.SequenceEqual(store.ReadData(), data));
-            Assert.IsTrue(File.Exists(CacheFilePath));
-
-            store.Clear();
-
-            Assert.IsFalse(store.ReadData().Any());
-            Assert.IsFalse(store2.ReadData().Any());
-            Assert.IsFalse(File.Exists(CacheFilePath));
-        }
-
-        /// <summary>
-        /// Records an exception thrown when executing the provided action
-        /// </summary>
-        /// <typeparam name="TException">The type of exception to record</typeparam>
-        /// <param name="action">The action to execute</param>
-        /// <returns>The exception if thrown; otherwise, null</returns>
-        private static TException Exception<TException>(Action action)
-            where TException : Exception
-        {
-            try
-            {
-                action();
-                return null;
-            }
-            catch (TException ex)
-            {
-                return ex;
-            }
-        }
-
-        private void CleanTestData()
-        {
-            if (File.Exists(CacheFilePath))
-            {
-                File.Delete(CacheFilePath);
-            }
         }
     }
 }

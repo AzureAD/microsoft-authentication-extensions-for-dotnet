@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>$(TestTargetFrameworks)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);MSAL</DefineConstants>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <None Update="Resources\token_cache_one_acc_seed.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

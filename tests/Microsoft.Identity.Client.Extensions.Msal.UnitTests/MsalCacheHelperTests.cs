@@ -324,11 +324,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        [DeploymentItem(@"Resources\token_cache_one_acc_seed.json")]
+        [DeploymentItem(@"Resources/token_cache_one_acc_seed.json")]
 
         public async Task EventFiresAsync()
         {
-            string cacheWithOneUser = File.ReadAllText("Resources\\token_cache_one_acc_seed.json");
+            string cacheWithOneUser = File.ReadAllText(
+                ResourceHelper.GetTestResourceRelativePath("token_cache_one_acc_seed.json"));
 
             var properties = _storageCreationPropertiesBuilder.Build();
             if (File.Exists(properties.CacheFilePath))
@@ -343,7 +344,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var semaphore = new SemaphoreSlim(0);
             int cacheChangedEventFired = 0;
 
-            // event is fired asyncronsouly, test has to wait for it for a while
+            // event is fired asynchronously, test has to wait for it for a while
             helper.CacheChanged += (sender, e) =>
             {
                 semaphore.Release();
