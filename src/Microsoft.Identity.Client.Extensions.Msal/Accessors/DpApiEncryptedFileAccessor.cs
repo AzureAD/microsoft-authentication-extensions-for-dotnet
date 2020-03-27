@@ -2,49 +2,43 @@
 // Licensed under the MIT License.
 
 using System;
-using System.IO;
 using System.Security.Cryptography;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    internal class CacheAccessorWindows : ICacheAccessor
+    internal class DpApiEncryptedFileAccessor : ICacheAccessor
     {
         private readonly string _cacheFilePath;
         private readonly TraceSourceLogger _logger;
+        private readonly ICacheAccessor _unencryptedFileAccessor;
 
-        public CacheAccessorWindows(string cacheFilePath, TraceSourceLogger logger)
+        public DpApiEncryptedFileAccessor(string cacheFilePath, TraceSourceLogger logger)
         {
+            if (string.IsNullOrEmpty(cacheFilePath))
+            {
+                throw new ArgumentNullException(nameof(cacheFilePath));
+            }
+
             _cacheFilePath = cacheFilePath;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _unencryptedFileAccessor = new UnencryptedFileAccessor(_cacheFilePath, _logger);
         }
 
         public void Clear()
         {
             _logger.LogInformation("Clearing cache");
-            FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
+            _unencryptedFileAccessor.Clear();
         }
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new CacheAccessorWindows(_cacheFilePath + ".test", _logger);
+            return new DpApiEncryptedFileAccessor(_cacheFilePath + ".test", _logger);
         }
 
         public byte[] Read()
         {
-            _logger.LogInformation("ReadDataCore");
 
-            byte[] fileData = null;
-            bool cacheFileExists = File.Exists(_cacheFilePath);
-            _logger.LogInformation($"ReadDataCore Cache file exists '{cacheFileExists}'");
-
-            if (cacheFileExists)
-            {
-                FileIOWithRetries.TryProcessFile(() =>
-                {
-                    fileData = File.ReadAllBytes(_cacheFilePath);
-                    _logger.LogInformation($"ReadDataCore, read '{fileData.Length}' bytes from the file");
-                }, _logger);
-            }
+            byte[] fileData = _unencryptedFileAccessor.Read();
 
             if (fileData != null && fileData.Length > 0)
             {
@@ -63,7 +57,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 data = ProtectedData.Protect(data, optionalEntropy: null, scope: DataProtectionScope.CurrentUser);
             }
 
-            FileIOWithRetries.WriteDataToFile(_cacheFilePath, data, _logger);
+            _unencryptedFileAccessor.Write(data);
         }
     }
 }

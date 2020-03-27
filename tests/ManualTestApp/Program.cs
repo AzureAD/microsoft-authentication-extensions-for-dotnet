@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
@@ -127,7 +128,7 @@ namespace ManualTestApp
                             await Task.Delay(2000).ConfigureAwait(false);
                         }
 
-                        //break;
+                    //break;
 
                     case 'c':
                         var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
@@ -252,23 +253,55 @@ namespace ManualTestApp
 
         private static async Task<MsalCacheHelper> CreateCacheHelperAsync()
         {
-            var storageProperties =
-                 new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheDir, Config.ClientId)
-                 .WithLinuxKeyring(
-                     Config.LinuxKeyRingSchema,
-                     Config.LinuxKeyRingCollection,
-                     Config.LinuxKeyRingLabel,
-                     Config.LinuxKeyRingAttr1,
-                     Config.LinuxKeyRingAttr2)
-                 .WithMacKeyChain(
-                     Config.KeyChainServiceName,
-                     Config.KeyChainAccountName)
-                 .Build();
 
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
-            CheckPersistence(cacheHelper);
+            StorageCreationProperties storageProperties;
 
-            return cacheHelper;
+            try
+            {
+                storageProperties = new StorageCreationPropertiesBuilder(
+                    Config.CacheFileName,
+                    Config.CacheDir,
+                    Config.ClientId)
+                .WithLinuxKeyring(
+                    Config.LinuxKeyRingSchema,
+                    Config.LinuxKeyRingCollection,
+                    Config.LinuxKeyRingLabel,
+                    Config.LinuxKeyRingAttr1,
+                    Config.LinuxKeyRingAttr2)
+                .WithMacKeyChain(
+                    Config.KeyChainServiceName,
+                    Config.KeyChainAccountName)
+                .Build();
+
+                var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
+
+                cacheHelper.VerifyPersistence();
+                return cacheHelper;
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"WARNING! Libsecret is not usable. " +
+                    $"Secrets will be stored in plaintext at {Path.Combine(Config.CacheDir, Config.CacheFileName)} !");
+                Console.WriteLine($"Libsecret exception: " + e);
+
+                storageProperties =
+                    new StorageCreationPropertiesBuilder(
+                        Config.CacheFileName,
+                        Config.CacheDir,
+                        Config.ClientId)
+                    .WithLinuxUnprotectedFile()
+                    .WithMacKeyChain(
+                        Config.KeyChainServiceName,
+                        Config.KeyChainAccountName)
+                     .Build();
+
+                var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
+                cacheHelper.VerifyPersistence();
+
+                return cacheHelper;
+            }
+
         }
 
         private static IPublicClientApplication CreatePublicClient(string authority)
@@ -283,21 +316,5 @@ namespace ManualTestApp
             return app;
         }
 
-        private static void CheckPersistence(MsalCacheHelper cacheHelper)
-        {
-            try
-            {
-                cacheHelper.VerifyPersistence();
-            }
-            catch (MsalCachePersistenceException ex)
-            {
-                Console.BackgroundColor = ConsoleColor.Red;
-
-                Console.WriteLine("WARNING: Cannot persist the token cache. Tokens will be held in memory only.");
-                Console.WriteLine($"Detailed error:  {ex}");
-
-                Console.ResetColor();
-            }
-        }
     }
 }

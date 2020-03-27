@@ -73,8 +73,5 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             Assert.AreEqual(dataString, Encoding.UTF8.GetString(actualData));
         }
-
-       
-
     }
 }

@@ -9,14 +9,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// <summary>
     /// 
     /// </summary>
-    internal class CacheAccessorMac : ICacheAccessor
+    internal class MacKeyChainAccessor : ICacheAccessor
     {
         private readonly string _cacheFilePath;
         private readonly string _keyChainServiceName;
         private readonly string _keyChainAccountName;
         private readonly TraceSourceLogger _logger;
 
-        public CacheAccessorMac(string cacheFilePath, string keyChainServiceName, string keyChainAccountName, TraceSourceLogger logger) 
+        public MacKeyChainAccessor(string cacheFilePath, string keyChainServiceName, string keyChainAccountName, TraceSourceLogger logger) 
         {
             if (string.IsNullOrWhiteSpace(cacheFilePath))
             {
@@ -73,7 +73,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new CacheAccessorMac(
+            return new MacKeyChainAccessor(
                 _cacheFilePath + ".test",
                 _keyChainServiceName + "test",
                 _keyChainAccountName + "test",
