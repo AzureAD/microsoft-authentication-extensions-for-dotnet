@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    internal class LinuxKeyRingAccessor : ICacheAccessor
+    internal class LinuxKeyringAccessor : ICacheAccessor
     {
         private readonly TraceSourceLogger _logger;
         private IntPtr _libsecretSchema = IntPtr.Zero;
@@ -21,7 +21,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private readonly string _attributeKey2;
         private readonly string _attributeValue2;
 
-        public LinuxKeyRingAccessor(
+        public LinuxKeyringAccessor(
             string cacheFilePath,
             string keyringCollection,
             string keyringSchemaName,
@@ -70,7 +70,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new LinuxKeyRingAccessor(
+            return new LinuxKeyringAccessor(
                 _cacheFilePath,
                 _keyringCollection,
                 _keyringSchemaName,

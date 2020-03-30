@@ -65,7 +65,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             else if (SharedUtilities.IsMacPlatform())
             {
-                cacheAccessor = new MacKeyChainAccessor(
+                cacheAccessor = new MacKeychainAccessor(
                     creationProperties.CacheFilePath,
                     creationProperties.MacKeyChainServiceName,
                     creationProperties.MacKeyChainAccountName,
@@ -79,7 +79,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 }
                 else
                 {
-                    cacheAccessor = new LinuxKeyRingAccessor(
+                    cacheAccessor = new LinuxKeyringAccessor(
                        creationProperties.CacheFilePath,
                        creationProperties.KeyringCollection,
                        creationProperties.KeyringSchemaName,

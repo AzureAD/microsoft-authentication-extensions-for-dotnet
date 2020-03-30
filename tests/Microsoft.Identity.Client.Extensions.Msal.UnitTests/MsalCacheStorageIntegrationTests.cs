@@ -62,11 +62,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void CacheStorageFactoryMac()
         {
             MsalCacheStorage store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.IsTrue(store.CacheAccessor is MacKeyChainAccessor);
+            Assert.IsTrue(store.CacheAccessor is MacKeychainAccessor);
             store.VerifyPersistence();
 
             store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            Assert.IsTrue(store.CacheAccessor is MacKeyChainAccessor);
+            Assert.IsTrue(store.CacheAccessor is MacKeychainAccessor);
         }
 
         [RunOnWindows]
@@ -98,7 +98,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Tests run on machines without Libsecret
             MsalCacheStorage store = MsalCacheStorage.Create(storageWithKeyRing, logger: _logger);
-            Assert.IsTrue(store.CacheAccessor is LinuxKeyRingAccessor);
+            Assert.IsTrue(store.CacheAccessor is LinuxKeyringAccessor);
 
             // ADO Linux test agents do not have libsecret installed by default
             // If you run this test on a Linux box with UI / LibSecret, then this test will fail
