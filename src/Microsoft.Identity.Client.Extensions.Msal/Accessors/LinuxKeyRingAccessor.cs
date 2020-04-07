@@ -197,8 +197,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             _logger.LogInformation("After saving to linux keyring");
 
-            // Change data to 1 byte so we can write it to the cache file to update the last write time using the same write code used for windows.
-            FileIOWithRetries.WriteDataToFile(_cacheFilePath, new byte[] { 1 }, _logger);
+            // Write some dummy data to the file to change its "last modified" attribute and to trigger file changed events
+            FileIOWithRetries.WriteDataToFile(_cacheFilePath, FileAccessor.DummyData, _logger);
         }
 
 

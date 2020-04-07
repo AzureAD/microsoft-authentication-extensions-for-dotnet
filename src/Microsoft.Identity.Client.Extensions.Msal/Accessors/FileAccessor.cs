@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
     internal class FileAccessor : ICacheAccessor
     {
+        public static readonly byte[] DummyData = Encoding.UTF8.GetBytes("{}");
+
         private readonly string _cacheFilePath;
         private readonly TraceSourceLogger _logger;
 
