@@ -1,6 +1,6 @@
 # Proposal for storing custom secrets
 
-**Context:** Consumers of MSAL / MSAL extension need to securily store additional data for their apps, which also benefit from cross-process syncronization
+**Context:** Consumers of MSAL / MSAL extension need to securely store additional data for their apps, which also benefit from cross-process synchronization
 
 **Proposal:** MSAL extentsion already handles secure storage and cross process locking, so an API can be exposed
 
