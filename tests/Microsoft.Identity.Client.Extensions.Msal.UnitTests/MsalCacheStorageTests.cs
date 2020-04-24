@@ -4,9 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
@@ -155,7 +153,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void VerifyPersistenceThrowsInnerExceptions()
         {
             // Arrange
-            var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
@@ -177,7 +174,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void VerifyPersistenceThrowsIfDataReadIsEmpty()
         {
             // Arrange
-            var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
@@ -196,7 +192,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void VerifyPersistenceThrowsIfDataReadIsDiffrentFromDataWritten()
         {
             // Arrange
-            var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
@@ -217,7 +212,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             // Arrange
             byte[] dummyData = Encoding.UTF8.GetBytes(MsalCacheStorage.PersistenceValidationDummyData);
-            var stringListener = new TraceStringListener();
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);

@@ -2,18 +2,16 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+#pragma warning disable CA2000 // Dispose objects before losing scope
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
@@ -71,7 +69,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
             var helper = new MsalCacheHelper(cache, storage, _logger);
-            byte[] dataToSave = Encoding.UTF8.GetBytes("Hello World 2");
+            
             var ex = new InvalidCastException();
 
             cacheAccessor.Read().Throws(ex);
@@ -355,3 +353,4 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
     }
 }
+#pragma warning restore CA2000 // Dispose objects before losing scope
