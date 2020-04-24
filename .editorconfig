@@ -223,3 +223,9 @@ csharp_preserve_single_line_blocks = true
 
 # CA1303: Do not pass literals as localized parameters
 dotnet_diagnostic.CA1303.severity = none
+
+# CA1031: Do not catch all exceptions
+dotnet_diagnostic.CA1031.severity = none
+
+# verify null refs
+dotnet_diagnostic.CA1062.severity = none

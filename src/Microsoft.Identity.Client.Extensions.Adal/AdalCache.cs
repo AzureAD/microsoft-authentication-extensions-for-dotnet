@@ -4,7 +4,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Microsoft.Identity.Client.Extensions.Adal

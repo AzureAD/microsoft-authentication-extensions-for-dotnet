@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -222,20 +221,20 @@ namespace ManualTestApp
                 throw new InvalidOperationException("Please configure a username and password!");
             }
 
-            SecureString securePassword = new SecureString();
-            foreach (char c in Config.Password)
+            using (SecureString securePassword = new SecureString())
             {
-                securePassword.AppendChar(c);
+                foreach (char c in Config.Password)
+                {
+                    securePassword.AppendChar(c);
+                }
+
+                return await pca.AcquireTokenByUsernamePassword(
+                    Config.Scopes,
+                    Config.Username,
+                    securePassword)
+                    .ExecuteAsync()
+                    .ConfigureAwait(false);
             }
-
-            var result = await pca.AcquireTokenByUsernamePassword(
-                Config.Scopes,
-                Config.Username,
-                securePassword)
-                .ExecuteAsync()
-                .ConfigureAwait(false);
-
-            return result;
         }
 
         private static void DisplayResult(AuthenticationResult result)
