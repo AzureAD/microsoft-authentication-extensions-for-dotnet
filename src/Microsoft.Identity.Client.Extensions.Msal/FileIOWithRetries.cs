@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    internal class FileIOWithRetries
+    internal static class FileIOWithRetries
     {
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
@@ -35,6 +35,18 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         internal static void WriteDataToFile(string filePath, byte[] data, TraceSourceLogger logger)
         {
+            string directoryForCacheFile = GetOrCreateParentDirectory(filePath, logger);
+
+            logger.LogInformation($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file");
+
+            TryProcessFile(() =>
+            {
+                File.WriteAllBytes(filePath, data);
+            }, logger);
+        }
+
+        private static string GetOrCreateParentDirectory(string filePath, TraceSourceLogger logger)
+        {
             string directoryForCacheFile = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directoryForCacheFile))
             {
@@ -43,11 +55,32 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 Directory.CreateDirectory(directory);
             }
 
-            logger.LogInformation($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file");
+            return directoryForCacheFile;
+        }
+
+
+        /// <summary>
+        /// Changes the LastWriteTime of the file, without actually writing anything to it.
+        /// </summary>
+        /// <remarks>
+        /// Creates the file if it does not exist.
+        /// This operation will enable a <see cref="FileSystemWatcher"/> to fire.
+        /// </remarks>
+        internal static void TouchFile(string filePath, TraceSourceLogger logger)
+        {
+            string directoryForCacheFile = GetOrCreateParentDirectory(filePath, logger);
+            logger.LogInformation($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now touching cache file");
 
             TryProcessFile(() =>
             {
-                File.WriteAllBytes(filePath, data);
+                if (!File.Exists(filePath))
+                {
+                    var fs = File.Create(filePath);
+                    fs.Dispose();
+                }
+
+                File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
+
             }, logger);
         }
 

@@ -196,8 +196,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             _logger.LogInformation("After saving to linux keyring");
 
-            // Write some dummy data to the file to change its "last modified" attribute and to trigger file changed events
-            FileIOWithRetries.WriteDataToFile(_cacheFilePath, FileAccessor.DummyData, _logger);
+            // Change the "last modified" attribute and trigger file changed events
+            FileIOWithRetries.TouchFile(_cacheFilePath, _logger);
         }
 
 
