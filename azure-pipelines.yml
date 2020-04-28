@@ -20,8 +20,16 @@ pool:
   vmImage: $(imageName)
 
 steps:
+-task: DotNetCoreCLI@2
+  displayName: 'Restore'
+  inputs:
+    command: restore
+    arguments: '-s https://api.nuget.org/v3/index.json'
+
 - task: DotNetCoreCLI@2
   displayName: 'Build solution'
+  inputs:
+    command: build
 
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests'
