@@ -58,6 +58,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 DateTime initialLastWriteTime = File.GetLastWriteTimeUtc(path);
                 Assert.IsTrue(File.Exists(path));
 
+                // LastWriteTime is not granular enough 
+                await Task.Delay(50).ConfigureAwait(false);
 
                 _logger.TraceInformation($"Touch twice");
                 FileIOWithRetries.TouchFile(path, new TraceSourceLogger(_logger));
