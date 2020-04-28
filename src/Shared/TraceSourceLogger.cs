@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics;
+using System.Globalization;
 
 #if ADAL
 namespace Microsoft.Identity.Client.Extensions.Adal
@@ -36,7 +38,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <param name="message"></param>
         public void LogInformation(string message)
         {
-            Source.TraceEvent(TraceEventType.Information, /*id*/ 0, message);
+            Source.TraceEvent(TraceEventType.Information, /*id*/ 0, FormatLogMessage(message));
         }
 
         /// <summary>
@@ -44,7 +46,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// </summary>
         public void LogError(string message)
         {
-            Source.TraceEvent(TraceEventType.Error, /*id*/ 0, message);
+            Source.TraceEvent(TraceEventType.Error, /*id*/ 0, FormatLogMessage(message));
         }
 
         /// <summary>
@@ -53,7 +55,12 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <param name="message"></param>
         public void LogWarning(string message)
         {
-            Source.TraceEvent(TraceEventType.Warning, /*id*/ 0, message);
+            Source.TraceEvent(TraceEventType.Warning, /*id*/ 0, FormatLogMessage(message));
+        }
+
+        private static string FormatLogMessage(string message)
+        {
+            return $"[MSAL.Extension][{DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}] {message}";
         }
     }
 }

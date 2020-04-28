@@ -207,6 +207,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties).ConfigureAwait(false);
 
                 var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
+                
                 var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
                 cacheWatcher.EnableRaisingEvents = true;
 

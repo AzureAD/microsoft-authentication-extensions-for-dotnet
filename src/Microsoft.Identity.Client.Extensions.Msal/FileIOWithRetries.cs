@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
-    internal class FileIOWithRetries
+    internal static class FileIOWithRetries
     {
         private const int FileLockRetryCount = 20;
         private const int FileLockRetryWaitInMs = 200;
@@ -35,6 +35,18 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         internal static void WriteDataToFile(string filePath, byte[] data, TraceSourceLogger logger)
         {
+            EnsureParentDirectoryExists(filePath, logger);
+
+            logger.LogInformation($"Writing cache file");
+
+            TryProcessFile(() =>
+            {
+                File.WriteAllBytes(filePath, data);
+            }, logger);
+        }
+
+        private static void EnsureParentDirectoryExists(string filePath, TraceSourceLogger logger)
+        {
             string directoryForCacheFile = Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directoryForCacheFile))
             {
@@ -42,12 +54,33 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 logger.LogInformation($"Creating directory '{directory}'");
                 Directory.CreateDirectory(directory);
             }
+        }
 
-            logger.LogInformation($"Cache file directory exists. '{Directory.Exists(directoryForCacheFile)}' now writing cache file");
+
+        /// <summary>
+        /// Changes the LastWriteTime of the file, without actually writing anything to it.
+        /// </summary>
+        /// <remarks>
+        /// Creates the file if it does not exist.
+        /// This operation will enable a <see cref="FileSystemWatcher"/> to fire.
+        /// </remarks>
+        internal static void TouchFile(string filePath, TraceSourceLogger logger)
+        {
+            EnsureParentDirectoryExists(filePath, logger);
+            logger.LogInformation($"Touching file...");
 
             TryProcessFile(() =>
             {
-                File.WriteAllBytes(filePath, data);
+                if (!File.Exists(filePath))
+                {
+                    logger.LogInformation($"File {filePath} does not exist. Creating it..");
+
+                    var fs = File.Create(filePath);
+                    fs.Dispose();
+                }
+
+                File.SetLastWriteTimeUtc(filePath, DateTime.UtcNow);
+
             }, logger);
         }
 
@@ -64,9 +97,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(FileLockRetryWaitInMs));
 
+                    
+
                     if (tryCount == FileLockRetryCount)
                     {
-                        logger.LogError($"An exception was encountered while processing the cache file from the {nameof(MsalCacheStorage)} ex:'{e}'");
+                        logger.LogError($"An exception was encountered while processing the cache file ex:'{e}'");
+                    }
+                    else
+                    {
+                        logger.LogWarning($"An exception was encountered while processing the cache file. Operation will be retried. Ex:'{e}'");
                     }
                 }
             }
