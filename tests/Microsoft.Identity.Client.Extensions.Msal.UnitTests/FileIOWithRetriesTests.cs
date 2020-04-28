@@ -39,7 +39,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var semaphore = new SemaphoreSlim(0);
             int cacheChangedEventFired = 0;
 
-
             // expect this event to be fired twice
             watcher.Changed += (sender, args) =>
             {
@@ -61,9 +60,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 DateTime subsequentLastWriteTime = File.GetLastWriteTimeUtc(path);
                 Assert.IsTrue(subsequentLastWriteTime > initialLastWriteTime);
 
-                Trace.WriteLine($"Semaphore at {semaphore.CurrentCount}");
-                await semaphore.WaitAsync(5000).ConfigureAwait(false); 
-                Trace.WriteLine($"Semaphore at {semaphore.CurrentCount}");
+                _logger.TraceInformation($"Semaphore at {semaphore.CurrentCount}");
+                await semaphore.WaitAsync(5000).ConfigureAwait(false);
+                _logger.TraceInformation($"Semaphore at {semaphore.CurrentCount}");
                 await semaphore.WaitAsync(5000).ConfigureAwait(false); 
                 Assert.AreEqual(2, cacheChangedEventFired);
             }
