@@ -44,7 +44,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         private static string FormatLogMessage(string message)
         {
-            return $"[MSAL.Extension][{DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}] {message}";
+            return $"[TEST][{DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}] {message}";
         }
 
         public void AssertContainsError(string needle)

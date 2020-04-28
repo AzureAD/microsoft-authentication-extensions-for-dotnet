@@ -61,8 +61,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 DateTime subsequentLastWriteTime = File.GetLastWriteTimeUtc(path);
                 Assert.IsTrue(subsequentLastWriteTime > initialLastWriteTime);
 
-                await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
-                await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
+                Trace.WriteLine($"Semaphore at {semaphore.CurrentCount}");
+                await semaphore.WaitAsync(5000).ConfigureAwait(false); 
+                Trace.WriteLine($"Semaphore at {semaphore.CurrentCount}");
+                await semaphore.WaitAsync(5000).ConfigureAwait(false); 
                 Assert.AreEqual(2, cacheChangedEventFired);
             }
             finally
