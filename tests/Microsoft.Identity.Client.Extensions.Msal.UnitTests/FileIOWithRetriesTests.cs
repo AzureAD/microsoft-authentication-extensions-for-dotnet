@@ -50,10 +50,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsFalse(File.Exists(path));
             try
             {
+                _logger.TraceInformation($"Touch once");
+
                 FileIOWithRetries.TouchFile(path, new TraceSourceLogger(_logger));
                 DateTime initialLastWriteTime = File.GetLastWriteTimeUtc(path);
                 Assert.IsTrue(File.Exists(path));
 
+
+                _logger.TraceInformation($"Touch twice");
                 FileIOWithRetries.TouchFile(path, new TraceSourceLogger(_logger));
                 Assert.IsTrue(File.Exists(path));
 
