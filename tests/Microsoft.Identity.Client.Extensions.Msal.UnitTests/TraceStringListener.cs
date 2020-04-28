@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,17 +29,22 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public override void Write(string message)
         {
-            _log.Append(message);
+            _log.Append(FormatLogMessage(message));
         }
 
         public override void WriteLine(string message)
         {
-            _log.AppendLine(message);
+            _log.AppendLine(FormatLogMessage(message));
         }
 
         public void AssertContains(string needle)
         {
             Assert.IsTrue(CurrentLog.Contains(needle));
+        }
+
+        private static string FormatLogMessage(string message)
+        {
+            return $"[MSAL.Extension][{DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}] {message}";
         }
 
         public void AssertContainsError(string needle)
