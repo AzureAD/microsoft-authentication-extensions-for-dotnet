@@ -45,6 +45,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // expect this event to be fired twice
             watcher.Changed += (sender, args) =>
             {
+                _logger.TraceInformation("Event fired!");
                 cacheChangedEventFired++;
                 semaphore.Release();
             };
@@ -69,9 +70,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             }
             finally
             {
+                Trace.WriteLine(_testListener.CurrentLog);
                 File.Delete(path);
             }
         }
-
     }
 }

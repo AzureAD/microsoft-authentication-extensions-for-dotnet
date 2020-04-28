@@ -171,26 +171,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsFalse(File.Exists(CacheFilePath));
         }
 
-        /// <summary>
-        /// Records an exception thrown when executing the provided action
-        /// </summary>
-        /// <typeparam name="TException">The type of exception to record</typeparam>
-        /// <param name="action">The action to execute</param>
-        /// <returns>The exception if thrown; otherwise, null</returns>
-        private static TException Exception<TException>(Action action)
-            where TException : Exception
-        {
-            try
-            {
-                action();
-                return null;
-            }
-            catch (TException ex)
-            {
-                return ex;
-            }
-        }
-
         private void CleanTestData()
         {
             var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
