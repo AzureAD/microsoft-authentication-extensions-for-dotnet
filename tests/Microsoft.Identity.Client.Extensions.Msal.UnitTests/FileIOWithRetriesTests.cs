@@ -28,7 +28,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public async Task Touch_FiresEvents_Async()
         {
-            _logger.TraceInformation($"Starting test on ");
+            _logger.TraceInformation($"Starting test on " + TestHelper.GetOs());
 
             // a directory and a path that do not exist
             string dir = Path.Combine(Directory.GetCurrentDirectory(), Guid.NewGuid().ToString());
