@@ -28,6 +28,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public async Task Touch_FiresEvents_Async()
         {
+            _logger.TraceInformation($"Starting test on ");
+
             // a directory and a path that do not exist
             string dir = Path.Combine(Directory.GetCurrentDirectory(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(dir);
@@ -67,7 +69,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 _logger.TraceInformation($"Semaphore at {semaphore.CurrentCount}");
                 await semaphore.WaitAsync(5000).ConfigureAwait(false);
                 _logger.TraceInformation($"Semaphore at {semaphore.CurrentCount}");
-                await semaphore.WaitAsync(5000).ConfigureAwait(false); 
+                await semaphore.WaitAsync(10000).ConfigureAwait(false); 
                 Assert.AreEqual(2, cacheChangedEventFired);
             }
             finally
