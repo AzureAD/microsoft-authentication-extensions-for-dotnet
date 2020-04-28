@@ -20,7 +20,7 @@ pool:
   vmImage: $(imageName)
 
 steps:
--task: DotNetCoreCLI@2
+- task: DotNetCoreCLI@2
   displayName: 'Restore'
   inputs:
     command: restore
