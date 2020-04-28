@@ -66,10 +66,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
                 await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
                 Assert.AreEqual(2, cacheChangedEventFired);
-
             }
             finally
             {
+                _logger.TraceInformation("Cleaning up");
                 Trace.WriteLine(_testListener.CurrentLog);
                 File.Delete(path);
             }
