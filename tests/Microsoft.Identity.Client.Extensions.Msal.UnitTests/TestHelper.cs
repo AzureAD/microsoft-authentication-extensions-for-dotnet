@@ -5,7 +5,7 @@ using System;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
-    public statuc class TestHelper
+    public static class TestHelper
     {
 
         public static string GetOs()
