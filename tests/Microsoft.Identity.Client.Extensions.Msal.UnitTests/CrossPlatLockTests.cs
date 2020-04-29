@@ -27,6 +27,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 Directory.GetCurrentDirectory(),
                 "AutomationApp",
                 "Automation.TestApp.exe");
+
+            foreach (var path in Directory.GetFiles(
+                Directory.GetCurrentDirectory(),
+                "*",
+                SearchOption.AllDirectories))
+            {
+                Trace.WriteLine("---" + path); // full path
+            }
+
+
             ProcessStartInfo psi = new ProcessStartInfo(processExe, $"-p {protectedFile} ");
             psi.CreateNoWindow = true;
 
