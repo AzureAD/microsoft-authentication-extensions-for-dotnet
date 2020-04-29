@@ -10,7 +10,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class CrossPlatLockTests
     {
-        const int NumTasks = 50;
+        const int NumTasks = 2;
         private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(50);
 
         [TestMethod]
@@ -18,27 +18,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             string dir = Directory.GetCurrentDirectory();
             string protectedFile = Path.Combine(dir, "protected_file");
-            string lockFile = Path.Combine(dir, "protected_file.lock");
 
             File.Delete(protectedFile);
-            File.Delete(lockFile);
 
-            string processExe = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "AutomationApp",
-                "Automation.TestApp.exe");
+            string consoleProj = null;
+            string workingDir = Path.Combine(Directory.GetCurrentDirectory(), "AutomationApp");
+            if (SharedUtilities.IsWindowsPlatform())
+            {
+                consoleProj = "Automation.TestApp.exe";
+            }
+            else
+            {
+                consoleProj = "Automation.TestApp";
+            }
 
-            foreach (var path in Directory.GetFiles(
-                Directory.GetCurrentDirectory(),
-                "*",
-                SearchOption.AllDirectories))
+            foreach (var path in workingDir)
             {
                 Trace.WriteLine("---" + path); // full path
             }
 
 
-            ProcessStartInfo psi = new ProcessStartInfo(processExe, $"-p {protectedFile} ");
+            ProcessStartInfo psi = new ProcessStartInfo(consoleProj, $" -p {protectedFile} ");
+            psi.WorkingDirectory = workingDir;
             psi.CreateNoWindow = true;
+            psi.UseShellExecute = true;
 
             var tasks = Enumerable.Range(1, NumTasks)
                 .Select((n) =>
