@@ -11,11 +11,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class CrossPlatLockTests
     {
+        const int NumTasks = 100;
+        private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(1000);
+
         [TestMethod]
         public async Task MultipleThreadsUseAccessorAsync()
         {
-            const int NumTasks = 30;
-
             string dir = Directory.GetCurrentDirectory();
             string protectedFile = Path.Combine(dir, "protected_file");
             string lockFile = Path.Combine(dir, "protected_file.lock");
