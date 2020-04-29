@@ -16,6 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public async Task MultipleProcessesUseAccessorAsync()
         {
+            Trace.WriteLine("Starting test on " + TestHelper.GetOs());
             string dir = Directory.GetCurrentDirectory();
             string protectedFile = Path.Combine(dir, "protected_file");
 
