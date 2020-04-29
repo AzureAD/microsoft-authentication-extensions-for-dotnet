@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,11 +10,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class CrossPlatLockTests
     {
-        const int NumTasks = 100;
-        private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(1000);
+        const int NumTasks = 50;
+        private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(50);
 
         [TestMethod]
-        public async Task MultipleThreadsUseAccessorAsync()
+        public async Task MultipleProcessesUseAccessorAsync()
         {
             string dir = Directory.GetCurrentDirectory();
             string protectedFile = Path.Combine(dir, "protected_file");
@@ -24,50 +23,25 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             File.Delete(protectedFile);
             File.Delete(lockFile);
 
+            string processExe = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "AutomationApp",
+                "Automation.TestApp.exe");
+            ProcessStartInfo psi = new ProcessStartInfo(processExe, $"-p {protectedFile} ");
+            psi.CreateNoWindow = true;
+
             var tasks = Enumerable.Range(1, NumTasks)
-                .Select(id => WritePayloadToSyncFileAsync(
-                    lockFile,
-                    protectedFile,
-                        id.ToString(CultureInfo.InvariantCulture) +
-                        " " +
-                        DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)))
-                .ToArray();
+                .Select((n) =>
+                {
+                    Process p = Process.Start(psi);
+                    Trace.WriteLine($"Started process {p.Id}");
+                    return p;
+                })
+                .Select(pr => pr.WaitForExitAsync());
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
 
             ValidateResult(protectedFile, NumTasks);
-        }
-
-        private async static Task WritePayloadToSyncFileAsync(string lockFile, string protectedFile, string payload)
-        {
-            CrossPlatLock crossPlatLock = null;
-            try
-            {
-                crossPlatLock = new CrossPlatLock(lockFile);
-                using (StreamWriter sw = new StreamWriter(protectedFile, true))
-                {
-                    sw.WriteLine($"< {payload}");
-
-                    // increase contantion by simulating a slow writer
-                    await Task.Delay(1000).ConfigureAwait(false);
-                    sw.WriteLine($"> {payload}");
-                }
-            }
-            catch (IOException ex)
-            {
-                Console.Error.WriteLine("File write failure! " + ex);
-            }
-            finally
-            {
-                try
-                {
-                    crossPlatLock.Dispose();
-                }
-                catch (IOException ex2)
-                {
-                    Console.Error.WriteLine("Lock release failure! " + ex2);
-                }
-            }
         }
 
         private void ValidateResult(string protectedFile, int expectedNumberOfOperations)
@@ -78,7 +52,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var lines = File.ReadAllLines(protectedFile);
             Assert.AreEqual(expectedNumberOfOperations * 2, lines.Count());
 
-            string previousPayload = null;
+            string previousThread = null;
 
             foreach (var line in lines)
             {
@@ -87,16 +61,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 string payload = tokens[1];
 
                 Assert.IsTrue(!string.IsNullOrWhiteSpace(payload));
-                if (previousPayload != null)
+                if (previousThread != null)
                 {
-                    Assert.AreEqual(payload, previousPayload);
+                    Assert.AreEqual(payload, previousThread);
                     Assert.AreEqual(">", inOutToken);
-                    previousPayload = null;
+                    previousThread = null;
                 }
                 else
                 {
                     Assert.AreEqual("<", inOutToken);
-                    previousPayload = payload;
+                    previousThread = payload;
                 }
             }
         }
