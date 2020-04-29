@@ -32,7 +32,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 consoleProj = "Automation.TestApp";
             }
 
-            foreach (var path in workingDir)
+            foreach (var path in Directory.GetFiles(workingDir))
             {
                 Trace.WriteLine("---" + path); // full path
             }
