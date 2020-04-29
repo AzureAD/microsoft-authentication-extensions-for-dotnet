@@ -135,9 +135,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 _logger.LogError($"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
 
-                // It's unlikely that Clear will work, but try it anyway
-                Clear();
-
                 if (!ignoreExceptions)
                 {
                     throw;

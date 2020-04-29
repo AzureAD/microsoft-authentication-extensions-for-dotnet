@@ -4,13 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
@@ -104,7 +102,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // If you run this test on a Linux box with UI / LibSecret, then this test will fail
             // because the statement below will not throw.
             AssertException.Throws<MsalCachePersistenceException>(
-                () => store.VerifyPersistence() );
+                () => store.VerifyPersistence());
 
             store = MsalCacheStorage.Create(s_storageCreationProperties, _logger);
             Assert.IsTrue(store.CacheAccessor is FileAccessor);
@@ -152,7 +150,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void MsalTestClear()
         {
             var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
-            var tempData = store.ReadData();
+            store.ReadData();
 
             var store2 = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
             AssertException.Throws<ArgumentNullException>(() => store.WriteData(null));
