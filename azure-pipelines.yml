@@ -27,10 +27,8 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '**\Automation.TestApp.csproj'
+    projects: '**\*.csproj'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build solution'
 
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests'
