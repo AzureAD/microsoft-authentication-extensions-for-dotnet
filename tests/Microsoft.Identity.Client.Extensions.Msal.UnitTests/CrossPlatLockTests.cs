@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public TestContext TestContext { get; set; }
 
-#if NETCORE
+#if NETCOREAPP
         [TestMethod]
         public async Task MultipleProcessesUseAccessorAsync()
         {
