@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public TestContext TestContext { get; set; }
 
-
+#if NETCORE
         [TestMethod]
         public async Task MultipleProcessesUseAccessorAsync()
         {
@@ -27,7 +27,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             {
                 Assert.Fail("Directory does not exist!" + dir);
             }
-            
+
             string protectedFile = Path.Combine(dir, "protected_file");
 
             File.Delete(protectedFile);
@@ -89,6 +89,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 }
             }
         }
-
+#endif
     }
 }
