@@ -16,13 +16,13 @@ namespace Automation.TestApp
     /// </summary>
     public static class Program
     {
-        private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(500);
 
 #pragma warning disable UseAsyncSuffix // Use Async suffix
         internal static async Task<int> Main(string[] args)
 #pragma warning restore UseAsyncSuffix // Use Async suffix
         {
-            Console.Out.WriteLine("Helloo!");
+
             string protectedFile;
             if (args == null || args.Length == 0 || string.IsNullOrEmpty(args[0]))
             {
@@ -34,6 +34,7 @@ namespace Automation.TestApp
             }
 
             string lockFile = protectedFile + ".lock";
+
             await WritePayloadToSyncFileAsync(lockFile, protectedFile)
                 .ConfigureAwait(false);
 
@@ -44,6 +45,9 @@ namespace Automation.TestApp
         private async static Task WritePayloadToSyncFileAsync(string lockFile, string protectedFile)
         {
             string pid = Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
+            string errorFile = protectedFile + $"{pid}.e.txt";
+            string pidFIle = Path.Combine(Path.GetDirectoryName(protectedFile), "finished", pid + ".txt");
+
             Console.WriteLine("Starting process: " + pid);
             CrossPlatLock crossPlatLock = null;
             try
@@ -63,11 +67,12 @@ namespace Automation.TestApp
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(e);
+                File.WriteAllText(errorFile, e.ToString());
                 throw;
             }
             finally
             {
+                File.WriteAllText(pidFIle, "done");
                 crossPlatLock.Dispose();
             }
         }

@@ -16,7 +16,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         public TestContext TestContext { get; set; }
 
-#if NETCORE
+#if NETCOREAPP
         [TestMethod]
         public async Task MultipleProcessesUseAccessorAsync()
         {
@@ -28,7 +28,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 Assert.Fail("Directory does not exist!" + dir);
             }
 
-            string protectedFile = Path.Combine(dir, "protected_file");
+            string protectedFile = Path.Combine(dir, "protected_file.txt");
 
             File.Delete(protectedFile);
 
@@ -43,29 +43,33 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             psi.Arguments = dll + " " + protectedFile;
 
             psi.WorkingDirectory = dir;
-            psi.UseShellExecute = true;
+            psi.UseShellExecute = false;
 
-
-            var tasks = Enumerable.Range(1, NumTasks)
+            
+            var procs = Enumerable.Range(1, NumTasks)
                 .Select((n) =>
                 {
                     Process proc = Process.Start(psi);
+                    Trace.WriteLine($"Process start {proc.Id}");
                     return proc;
                 })
-                .Select(pr => pr.WaitForExitAsync());
+                .ToList();
 
+             var tasks = procs   .Select(pr => pr.WaitForExitAsync());
+
+            //await Task.Delay(30 * 1000).ConfigureAwait(false);
             await Task.WhenAll(tasks).ConfigureAwait(false);
+            
 
             ValidateResult(protectedFile, NumTasks);
         }
-
+    
         private void ValidateResult(string protectedFile, int expectedNumberOfOperations)
         {
             Trace.WriteLine("Protected File Content:");
             Trace.WriteLine(File.ReadAllText(protectedFile));
 
             var lines = File.ReadAllLines(protectedFile);
-            Assert.AreEqual(expectedNumberOfOperations * 2, lines.Count());
 
             string previousThread = null;
 
@@ -88,6 +92,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                     previousThread = payload;
                 }
             }
+
+            Assert.AreEqual(expectedNumberOfOperations * 2, lines.Count());
+
         }
 #endif
     }
