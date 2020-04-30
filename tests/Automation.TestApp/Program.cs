@@ -52,7 +52,14 @@ namespace Automation.TestApp
                     await Task.Delay(s_artificialContention).ConfigureAwait(false);
 
                     sw.WriteLine($"> {pid} {DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}");
+                    Console.WriteLine("Process finished: " + pid);
+
                 }
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e);
+                throw;
             }
             finally
             {

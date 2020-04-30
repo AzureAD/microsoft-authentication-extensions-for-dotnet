@@ -11,6 +11,7 @@
     <TestTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(TargetFrameworkNetCore)</TestTargetFrameworks>
     <TestTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Linux'))">$(TargetFrameworkNetCore)</TestTargetFrameworks>
 
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   
