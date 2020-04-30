@@ -44,7 +44,7 @@
 
     <Message Text="Files to copy: @(AutomationTestAppFiles)" Importance="high" />
 
-    <Message Text="COPYING CACHECOMPAT DEPENDENCY FILES $(OutputPath)" Importance="high" />
+    <Message Text="COPYING AUTOMATION DEPENDENCY FILES $(OutputPath)" Importance="high" />
     <Copy SourceFiles="@(AutomationTestAppFiles)" DestinationFolder="$(OutputPath)\AutomationApp" />
   </Target>
 

@@ -9,12 +9,7 @@ using Microsoft.Identity.Client.Extensions.Msal;
 namespace Automation.TestApp
 {
 
-    internal class Options
-    {
-        [Option('p', "protectedFile", Required = true, HelpText = "Protected file")]
-        public string ProtectedFile { get; set; }
 
-    }
 
     /// <summary>
     /// 
@@ -24,15 +19,25 @@ namespace Automation.TestApp
         private static readonly TimeSpan s_artificialContention = TimeSpan.FromMilliseconds(1000);
 
 #pragma warning disable UseAsyncSuffix // Use Async suffix
-        internal static async Task Main(string[] args)
+        internal static async Task<int> Main(string[] args)
 #pragma warning restore UseAsyncSuffix // Use Async suffix
         {
-            Options options = null;
-            Parser.Default.ParseArguments<Options>(args).WithParsed(o => options = o);
-            string protectedFile = options.ProtectedFile;
+            Console.Out.WriteLine("Helloo!");
+            string protectedFile;
+            if (args == null || args.Length == 0 || string.IsNullOrEmpty(args[0]))
+            {
+                protectedFile = Path.Combine(Directory.GetCurrentDirectory(), "fileX.txt");
+            }
+            else
+            {
+                protectedFile = args[0];
+            }
+
             string lockFile = protectedFile + ".lock";
             await WritePayloadToSyncFileAsync(lockFile, protectedFile)
                 .ConfigureAwait(false);
+
+            return 0;
         }
 
 
