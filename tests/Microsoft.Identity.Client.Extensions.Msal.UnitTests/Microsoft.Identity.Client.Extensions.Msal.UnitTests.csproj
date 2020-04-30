@@ -37,7 +37,7 @@
     </None>
   </ItemGroup>
 
-  <Target Name="CopyFiles" AfterTargets="$(BuildDependsOn)">
+  <Target Name="CopyFiles" AfterTargets="AfterBuild">
     <ItemGroup>
       <AutomationTestAppFiles Include="$(SolutionDir)\tests\Automation.TestApp\bin\$(Configuration)\**\*.*">
         <InProject>false</InProject>
