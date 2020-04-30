@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(TestTargetFrameworks)</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworkNetCore)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>

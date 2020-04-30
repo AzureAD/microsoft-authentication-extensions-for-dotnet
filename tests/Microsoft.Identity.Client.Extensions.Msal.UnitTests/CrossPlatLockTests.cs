@@ -12,7 +12,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class CrossPlatLockTests
     {
-        const int NumTasks = 30;
+        const int NumTasks = 2;
 
         public TestContext TestContext { get; set; }
 
