@@ -22,6 +22,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             Trace.WriteLine("Starting test on " + TestHelper.GetOs());
             string dir = Path.Combine(Directory.GetCurrentDirectory(), "AutomationApp");
+
+            if (!Directory.Exists(dir))
+            {
+                Assert.Fail("Directory does not exist!" + dir);
+            }
+            
             string protectedFile = Path.Combine(dir, "protected_file");
 
             File.Delete(protectedFile);
