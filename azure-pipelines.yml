@@ -23,9 +23,9 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'restore'  
-
 - task: DotNetCoreCLI@2
-  displayName: 'Build solution'
+  inputs:
+    command: 'build'
 
 - task: DotNetCoreCLI@2
   displayName: 'Run unit tests'

@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 #if ADAL
 namespace Microsoft.Identity.Client.Extensions.Adal
@@ -17,6 +15,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 namespace Microsoft.Identity.Client.Extensions.Web
 #endif
 {
+    /// <summary>
+    /// A cross-process lock that works on all platforms.
+    /// It is important to note that this lock is not thread safe !
+    /// </summary>
     internal class CrossPlatLock : IDisposable
     {
         internal const int LockfileRetryDelayDefault = 100;
