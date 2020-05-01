@@ -73,6 +73,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Allows clients to listen for cache updates originating from disk.
         /// </summary>
+        /// <remarks>
+        /// This event does not fire when the application is built against Xamarin.Mac, but it does fire on .Net Core on all 3 operating systems.
+        /// </remarks>
         public event EventHandler<CacheChangedEventArgs> CacheChanged;
 
         /// <summary>
@@ -209,7 +212,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
                 
                 var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
-                cacheWatcher.EnableRaisingEvents = true;
+
+                try
+                {
+                    cacheWatcher.EnableRaisingEvents = true;
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    (new TraceSourceLogger(logger))
+                        .LogError("Cannot fire the CacheChanged event because the target framework does not support FileSystemWatcher. This is a known issue in Xamarin / Mono.");
+                }
 
                 return helper;
             }
