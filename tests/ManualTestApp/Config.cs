@@ -32,8 +32,8 @@ namespace ManualTestApp
         public static readonly KeyValuePair<string, string> LinuxKeyRingAttr2 = new KeyValuePair<string, string>("ProductGroup", "MyApps");
 
         // For Username / Password flow - to be used only for testing!
-        public const string Username = "";
-        public const string Password = "";
+        public const string Username = "liu.kang@bogavrilltd.onmicrosoft.com";
+        public const string Password = "Foya2128";
 
     }
 }
