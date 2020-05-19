@@ -88,7 +88,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Gets the current set of accounts in the cache by creating a new public client, and
         /// deserializing the cache into a temporary object.
         /// </summary>
-        private static async Task<HashSet<string>> GetAccountIdentifiersAsync(StorageCreationProperties storageCreationProperties)
+        private static async Task<HashSet<string>> GetAccountIdentifiersAsync(
+            StorageCreationProperties storageCreationProperties,
+            TraceSourceLogger logger)
         {
             var accountIdentifiers = new HashSet<string>();
             if (File.Exists(storageCreationProperties.CacheFilePath))
@@ -97,10 +99,20 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 pca.UserTokenCache.SetBeforeAccess((args) =>
                 {
-                    var tempCache = MsalCacheStorage.Create(storageCreationProperties, s_staticLogger.Value.Source);
-                    // We're using ReadData here so that decryption is gets handled within the store.
-                    var data = tempCache.ReadData();
-                    args.TokenCache.DeserializeMsalV3(data);
+                    MsalCacheStorage tempCache = null;
+                    try
+                    {
+                        tempCache = MsalCacheStorage.Create(storageCreationProperties, s_staticLogger.Value.Source);
+                        // We're using ReadData here so that decryption is gets handled within the store.
+                        var data = tempCache.ReadData();
+                        args.TokenCache.DeserializeMsalV3(data);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogError("An error occured while reading the token cache: " + e);
+                        logger.LogError("Deleting the token cache as it might be corrupt.");
+                        tempCache.Clear();
+                    }
                 });
 
                 var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
@@ -152,7 +164,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 using (CreateCrossPlatLock(_storageCreationProperties))
                 {
-                    var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties).ConfigureAwait(false);
+                    var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties, _logger).ConfigureAwait(false);
 
                     var intersect = currentAccountIds.Intersect(_knownAccountIds);
                     removed = _knownAccountIds.Except(intersect);
@@ -207,7 +219,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             using (CreateCrossPlatLock(storageCreationProperties))
             {
                 // Cache the list of accounts
-                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties).ConfigureAwait(false);
+                var ts = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
+                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties, ts).ConfigureAwait(false);
 
                 var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
                 
