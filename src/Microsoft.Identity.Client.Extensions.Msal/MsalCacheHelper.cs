@@ -219,21 +219,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             using (CreateCrossPlatLock(storageCreationProperties))
             {
                 // Cache the list of accounts
+
                 var ts = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
                 var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties, ts).ConfigureAwait(false);
-
                 var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
-                
                 var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
 
                 try
                 {
-                    cacheWatcher.EnableRaisingEvents = true;
+                    cacheWatcher.EnableRaisingEvents = true;                    
                 }
                 catch (PlatformNotSupportedException)
                 {
-                    (new TraceSourceLogger(logger))
-                        .LogError("Cannot fire the CacheChanged event because the target framework does not support FileSystemWatcher. This is a known issue in Xamarin / Mono.");
+                    helper._logger.LogError(
+                        "Cannot fire the CacheChanged event because the target framework does not support FileSystemWatcher. " +
+                        "This is a known issue in Xamarin / Mono.");
                 }
 
                 return helper;
