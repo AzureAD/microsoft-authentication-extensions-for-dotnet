@@ -103,7 +103,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     try
                     {
                         tempCache = MsalCacheStorage.Create(storageCreationProperties, s_staticLogger.Value.Source);
-                        // We're using ReadData here so that decryption is gets handled within the store.
+                        // We're using ReadData here so that decryption is handled within the store.
                         var data = tempCache.ReadData();
                         args.TokenCache.DeserializeMsalV3(data);
                     }
