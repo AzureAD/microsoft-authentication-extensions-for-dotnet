@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -314,6 +315,24 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             File.Delete(properties.CacheFilePath);
             File.Delete(properties.CacheFilePath + ".version");
+        }
+
+        [TestMethod]
+        [TestCategory(TestCategories.Regression)]
+        [WorkItem(81)] // https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/issues/81
+        public async Task RegressionTest_CorruptedCacheIsDeleted_Async()
+        {
+            // Arrange
+            StorageCreationProperties storageProperties = _storageCreationPropertiesBuilder.Build();
+            MsalCacheStorage storage = MsalCacheStorage.Create(storageProperties, _logger);
+            storage.WriteData(Encoding.UTF8.GetBytes("corrupted token cache"));
+
+            // Act
+            await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(true);
+
+            // Assert
+            byte[] data = storage.ReadData();
+            Assert.IsFalse(data.Any(), "Cache is corrupt, so it should have been deleted");
         }
 
         [TestMethod]
