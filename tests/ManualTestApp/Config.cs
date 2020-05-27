@@ -19,11 +19,11 @@ namespace ManualTestApp
         public const string ClientId = "1d18b3b0-251b-4714-a02a-9956cec86c2d";
 
         // Cache settings
-        public const string CacheFileName = "msal_cache.dat";
+        public const string CacheFileName = "myapp_msal_cache.dat";
         public readonly static string CacheDir = MsalCacheHelper.UserRootDirectory;
 
-        public const string KeyChainServiceName = "msal_service";
-        public const string KeyChainAccountName = "msal_account";
+        public const string KeyChainServiceName = "myapp_msal_service";
+        public const string KeyChainAccountName = "myapp_msal_account";
 
         public const string LinuxKeyRingSchema = "com.contoso.devtools.tokencache";
         public const string LinuxKeyRingCollection = MsalCacheHelper.LinuxKeyRingDefaultCollection;
