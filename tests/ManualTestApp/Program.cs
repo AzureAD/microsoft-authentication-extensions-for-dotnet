@@ -10,6 +10,10 @@ using System.Reflection;
 using System.Security;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensibility;
+#if NETCOREAPP
+using Microsoft.Identity.Client.Extensions.Browsers;
+#endif
 using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
@@ -48,6 +52,7 @@ namespace ManualTestApp
                         4. Acquire Token Silent
                         5. Display Accounts (reads the cache)
                         6. Acquire Token U/P and Silent in a loop
+                        7. Acquire Token Interactive with Embedded Browser
                         c. Clear cache
                         e. Expire Access Tokens (TEST only!)
                         x. Exit app
@@ -127,8 +132,18 @@ namespace ManualTestApp
                             await Task.Delay(2000).ConfigureAwait(false);
                         }
 
-                    //break;
-
+                    case '7':
+#if NETCOREAPP
+                        result = await pca
+                            .AcquireTokenInteractive(Config.Scopes)
+                            .WithCustomWebUi(new WebBrowserControlWebUi())
+                            .ExecuteAsync()
+                            .ConfigureAwait(false);
+                        DisplayResult(result);
+#else
+                        Console.WriteLine("This implementation is not available on .net classic. But you can use WithEmbeddedWebUi instead.");
+#endif
+                        break;
                     case 'c':
                         var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
                         foreach (var acc in accounts4)

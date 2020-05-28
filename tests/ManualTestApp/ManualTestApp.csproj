@@ -4,8 +4,8 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
 
-    <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.0;net472</TargetFrameworks>
-    <TargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.1;net472</TargetFrameworks>
+    <TargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.1</TargetFrameworks>
 
   </PropertyGroup>
 
@@ -18,4 +18,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <ProjectReference Include="..\..\Microsoft.Identity.Client.Extensions.Browsers\Microsoft.Identity.Client.Extensions.Browsers.csproj" />
+  </ItemGroup>
+
 </Project>
+
+
