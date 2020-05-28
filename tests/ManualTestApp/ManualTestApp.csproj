@@ -7,6 +7,10 @@
     <TargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.1;net472</TargetFrameworks>
     <TargetFrameworks Condition="!$([MSBuild]::IsOsPlatform('Windows'))">netcoreapp3.1</TargetFrameworks>
 
+
+    <!-- temporary until we figure out what to about WebAssembly dll which is not signed-->
+    <SignAssembly>false</SignAssembly>
+
   </PropertyGroup>
 
   <ItemGroup>

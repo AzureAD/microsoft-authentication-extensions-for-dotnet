@@ -12,7 +12,8 @@ using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensibility;
 #if NETCOREAPP
-using Microsoft.Identity.Client.Extensions.Browsers;
+using Microsoft.Identity.Client.Extensions.Browsers.WebBrowserControl;
+
 #endif
 using Microsoft.Identity.Client.Extensions.Msal;
 
