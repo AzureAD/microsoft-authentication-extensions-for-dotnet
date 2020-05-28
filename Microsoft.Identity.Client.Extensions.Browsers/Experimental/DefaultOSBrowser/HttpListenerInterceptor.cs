@@ -37,6 +37,8 @@ namespace Microsoft.Identity.Client.Extensions.Browsers.Experimental.DefaultOSBr
                 TestBeforeStart?.Invoke();
 
                 httpListener.Start();
+                
+                
                 Debug.WriteLine("Listening for authorization code on " + urlToListenTo);
 
                 using (cancellationToken.Register(() =>

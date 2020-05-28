@@ -7,12 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bildstein.SpiderEye.Core" Version="1.0.0-beta.1" />
     <PackageReference Include="Bildstein.SpiderEye.Linux" Version="1.0.0-beta.1" />
     <PackageReference Include="Bildstein.SpiderEye.Mac" Version="1.0.0-beta.1" />
-    <PackageReference Include="Bildstein.SpiderEye.Windows" Version="1.0.0-beta.1" />
     
     <PackageReference Include="Microsoft.Identity.Client" Version="4.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\others\SpiderEye\Source\SpiderEye.Core\SpiderEye.Core.csproj" />
+    <ProjectReference Include="..\..\others\SpiderEye\Source\SpiderEye.Windows\SpiderEye.Windows.csproj" />
   </ItemGroup>
 
 </Project>
