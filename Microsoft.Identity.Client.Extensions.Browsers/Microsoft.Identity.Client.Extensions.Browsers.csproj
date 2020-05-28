@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
+    <SignAssembly>false</SignAssembly> <!-- TODO: figure out a way to deal with this (StrongSigner?) -->
   </PropertyGroup>
 
   <ItemGroup>
