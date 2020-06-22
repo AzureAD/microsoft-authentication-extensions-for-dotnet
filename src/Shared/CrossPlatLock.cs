@@ -19,7 +19,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
     /// A cross-process lock that works on all platforms.
     /// It is important to note that this lock is not thread safe !
     /// </summary>
-    internal class CrossPlatLock : IDisposable
+    internal sealed class CrossPlatLock : IDisposable
     {
         internal const int LockfileRetryDelayDefault = 100;
         internal const int LockfileRetryCountDefault = 60000 / LockfileRetryDelayDefault;
