@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,13 +15,16 @@ using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
 {
-
+    /// <summary>
+    /// This console app uses MSAL with the token cache Config file to show how various 
+    /// </summary>
     class Program
     {
 #pragma warning disable UseAsyncSuffix // Use Async suffix
         static async Task Main(string[] args)
 #pragma warning restore UseAsyncSuffix // Use Async suffix
         {
+            
             // It's recommended to create a separate PublicClient Application for each tenant
             // but only one CacheHelper object
             var pca = CreatePublicClient("https://login.microsoftonline.com/organizations");
@@ -48,6 +52,7 @@ namespace ManualTestApp
                         4. Acquire Token Silent
                         5. Display Accounts (reads the cache)
                         6. Acquire Token U/P and Silent in a loop
+                        7. Write to file with delay
                         c. Clear cache
                         e. Expire Access Tokens (TEST only!)
                         x. Exit app
@@ -58,12 +63,17 @@ namespace ManualTestApp
                     switch (selection)
                     {
                     case '1': //  Acquire Token using Username and Password (requires config)
+
+                        // IMPORTANT: you should ALWAYS try to get a token silently first
+
                         result = await AcquireTokenROPCAsync(pca).ConfigureAwait(false);
                         DisplayResult(result);
 
                         break;
 
                     case '2': // Device Code Flow
+                        // IMPORTANT: you should ALWAYS try to get a token silently first
+
                         result = await pca.AcquireTokenWithDeviceCode(Config.Scopes, (dcr) =>
                         {
                             Console.BackgroundColor = ConsoleColor.Cyan;
@@ -76,12 +86,16 @@ namespace ManualTestApp
 
                         break;
                     case '3': // Interactive
+                        // IMPORTANT: you should ALWAYS try to get a token silently first
+
                         result = await pca.AcquireTokenInteractive(Config.Scopes)
                             .ExecuteAsync()
                             .ConfigureAwait(false);
                         DisplayResult(result);
                         break;
                     case '4': // Silent
+
+                        
                         Console.WriteLine("Getting all the accounts. This reads the cache");
                         var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
                         var firstAccount = accounts.FirstOrDefault();
@@ -108,9 +122,11 @@ namespace ManualTestApp
                     case '6': // U/P and Silent in a loop
                         Console.WriteLine("CTRL-C to stop...");
 
+#pragma warning disable CS0618 // Type or member is obsolete
                         cacheHelper.Clear();
+#pragma warning restore CS0618 // Type or member is obsolete
 
-                        // TODO: try with different authorities
+                        
                         var pca2 = CreatePublicClient("https://login.microsoftonline.com/organizations");
                         var pca3 = CreatePublicClient("https://login.microsoftonline.com/organizations");
                         cacheHelper.RegisterCache(pca2.UserTokenCache);
@@ -122,12 +138,12 @@ namespace ManualTestApp
                                 RunRopcAndSilentAsync("PCA_1", pca),
                                 RunRopcAndSilentAsync("PCA_2", pca2),
                                 RunRopcAndSilentAsync("PCA_3", pca3)
+
                             );
 
+                            Trace.Flush();
                             await Task.Delay(2000).ConfigureAwait(false);
                         }
-
-                    //break;
 
                     case 'c':
                         var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
@@ -140,7 +156,7 @@ namespace ManualTestApp
 
                         break;
 
-                    case 'e':
+                    case 'e': // This is only meant for testing purposes
 
                         // do smth that loads the cache first
                         await pca.GetAccountsAsync().ConfigureAwait(false);
@@ -272,7 +288,8 @@ namespace ManualTestApp
                     Config.KeyChainAccountName)
                 .Build();
 
-                var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
+                var cacheHelper = await MsalCacheHelper.CreateAsync(
+                    storageProperties).ConfigureAwait(false);
 
                 cacheHelper.VerifyPersistence();
                 return cacheHelper;
@@ -305,7 +322,7 @@ namespace ManualTestApp
 
         private static IPublicClientApplication CreatePublicClient(string authority)
         {
-            var appBuilder = PublicClientApplicationBuilder.Create(Config.ClientId)
+            var appBuilder = PublicClientApplicationBuilder.Create(Config.ClientId) // DO NOT USE THIS CLIENT ID IN YOUR APP!!!! WE WILL DELETE IT!
                 .WithAuthority(authority)
                 .WithRedirectUri("http://localhost"); // make sure to register this redirect URI for the interactive login to work
 
@@ -316,4 +333,5 @@ namespace ManualTestApp
         }
 
     }
+
 }

@@ -16,10 +16,12 @@ namespace ManualTestApp
         // Use an actual tenant ID to allow only your enterprise to log in.
         // Use "organizatins" to allow only enterprise log-in, this is required for the Username / Password flow
         public const string Authority = "https://login.microsoftonline.com/organizations";
-        public const string ClientId = "1d18b3b0-251b-4714-a02a-9956cec86c2d";
+
+        // DO NOT USE THIS CLIENT ID IN YOUR APP. WE REGULARLY DELETE THEM. CREATE YOUR OWN!
+        public const string ClientId = "1d18b3b0-251b-4714-a02a-9956cec86c2d"; 
 
         // Cache settings
-        public const string CacheFileName = "myapp_msal_cache.dat";
+        public const string CacheFileName = "myapp_msal_cache.txt";
         public readonly static string CacheDir = MsalCacheHelper.UserRootDirectory;
 
         public const string KeyChainServiceName = "myapp_msal_service";
