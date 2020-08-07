@@ -88,7 +88,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Gets the current set of accounts in the cache by creating a new public client, and
         /// deserializing the cache into a temporary object.
         /// </summary>
-        private static async Task<HashSet<string>> GetAccountIdentifiersAsync(
+        private static async Task<HashSet<string>> GetAccountIdentifiersNoLockAsync(  // executed in a cross plat lock context
             StorageCreationProperties storageCreationProperties,
             TraceSourceLogger logger)
         {
@@ -164,7 +164,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 using (CreateCrossPlatLock(_storageCreationProperties))
                 {
-                    var currentAccountIds = await GetAccountIdentifiersAsync(_storageCreationProperties, _logger).ConfigureAwait(false);
+                    var currentAccountIds = await GetAccountIdentifiersNoLockAsync(_storageCreationProperties, _logger).ConfigureAwait(false);
 
                     var intersect = currentAccountIds.Intersect(_knownAccountIds);
                     removed = _knownAccountIds.Except(intersect);
@@ -221,7 +221,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 // Cache the list of accounts
 
                 var ts = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
-                var accountIdentifiers = await GetAccountIdentifiersAsync(storageCreationProperties, ts).ConfigureAwait(false);
+                var accountIdentifiers = await GetAccountIdentifiersNoLockAsync(storageCreationProperties, ts).ConfigureAwait(false);
                 var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
                 var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
 
@@ -306,11 +306,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         /// <summary>
-        /// Clears the token store
+        /// Clears the token store. Equivalent to a delete operation on the persistence layer (file delete). 
         /// </summary>
+        /// <remarks>
+        /// Apps should use MSAL's RemoveAccount to delete accounts, which is guaranteed to remove confidential information about that account. The token
+        /// cache also contains metadata required for MSAL to operate, degrading the experience and perf when deleted.
+        /// </remarks>
+        [Obsolete(
+            "Applications should not delete the entire cache to log out all users. Instead, call app.RemoveAsync(IAccount) for each account in the cache. ",
+            false)]
         public void Clear()
         {
-            CacheStore.Clear();
+            using (CreateCrossPlatLock(_storageCreationProperties))
+            {
+                CacheStore.Clear();
+            }
         }
 
         /// <summary>
@@ -382,8 +392,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     _logger.LogError($"An exception was encountered while deserializing the {nameof(MsalCacheHelper)} : {e}");
                     _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
-                    // Clear the memory cache
-                    Clear();
+                    // Clear the memory cache without taking the lock over again
+                    CacheStore.Clear();
                     throw;
                 }
             }
@@ -419,7 +429,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
-                        Clear();
+                        CacheStore.Clear();
                         throw;
                     }
                 }

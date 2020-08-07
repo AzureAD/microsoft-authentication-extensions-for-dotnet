@@ -336,6 +336,54 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
+        public void ClearCacheUsesTheLockAsync()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var cache = new MockTokenCache();
+            var storage = new MsalCacheStorage(
+                _storageCreationPropertiesBuilder.Build(),
+                cacheAccessor,
+                new TraceSourceLogger(new TraceSource("ts")));
+            var helper = new MsalCacheHelper(cache, storage, _logger);
+
+            FileSystemWatcher fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(CacheFilePath));
+            fileSystemWatcher.EnableRaisingEvents = true;
+
+            // the events can be fired at a later time, so we need to wait for them
+            // otherwise the test might finish first
+            SemaphoreSlim semaphore1 = new SemaphoreSlim(0);
+            SemaphoreSlim semaphore2 = new SemaphoreSlim(0);
+            bool lockCreated = false, lockDeleted = false;
+
+            
+            fileSystemWatcher.Created += (s, e) =>
+            {
+                semaphore1.Release();
+                lockCreated = true;
+            };
+
+            fileSystemWatcher.Deleted += (s, e) =>
+            {
+                semaphore2.Release();
+                lockDeleted = true;
+            };
+
+            // Act
+#pragma warning disable CS0618 // Type or member is obsolete
+            helper.Clear();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+
+            semaphore1.WaitAsync(5000);
+            semaphore2.WaitAsync(5000);
+
+            // Assert
+            Assert.IsTrue(lockCreated);
+            Assert.IsTrue(lockDeleted);
+        }
+
+        [TestMethod]
         [DeploymentItem(@"Resources/token_cache_one_acc_seed.json")]
 
         public async Task EventFiresAsync()
