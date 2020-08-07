@@ -16,6 +16,10 @@ namespace ManualTestApp
     {
         private const string TraceSourceName = "MSAL.Contoso.CacheExtension";
 
+        /// <summary>
+        /// Start reading here...
+        /// </summary>
+        /// <returns></returns>
         public static async Task Example_Async()
         {
             // 1. Use MSAL to create an instance of the Public Client Application

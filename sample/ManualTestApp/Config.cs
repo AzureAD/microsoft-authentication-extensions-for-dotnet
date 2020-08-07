@@ -7,7 +7,7 @@ using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace ManualTestApp
 {
-    public static class Config
+    internal static class Config
     {
         // App settings
         public static readonly string[] Scopes = new[] { "user.read" };
