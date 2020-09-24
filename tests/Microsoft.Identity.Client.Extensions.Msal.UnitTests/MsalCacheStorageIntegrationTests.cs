@@ -104,10 +104,23 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             AssertException.Throws<MsalCachePersistenceException>(
                 () => store.VerifyPersistence());
 
-            store = MsalCacheStorage.Create(s_storageCreationProperties, _logger);
-            Assert.IsTrue(store.CacheAccessor is FileAccessor);
+            MsalCacheStorage unprotectedStore = MsalCacheStorage.Create(s_storageCreationProperties, _logger);
+            Assert.IsTrue(unprotectedStore.CacheAccessor is FileAccessor);
 
-            store.VerifyPersistence();
+            unprotectedStore.VerifyPersistence();
+
+            unprotectedStore.WriteData(new byte[] { 2, 3 });
+
+            // Unproteced cache file should exist
+            Assert.IsTrue(File.Exists(unprotectedStore.CacheFilePath));
+
+            // Mimic another sdk client to check libsecret availability by calling
+            // MsalCacheStorage.VerifyPeristence() -> LinuxKeyringAccessor.CreateForPersistenceValidation()
+            AssertException.Throws<MsalCachePersistenceException>(
+                () => store.VerifyPersistence());
+
+            // Verify above call doesn't delete existing cache file
+            Assert.IsTrue(File.Exists(unprotectedStore.CacheFilePath));
         }
 
         [TestMethod]
