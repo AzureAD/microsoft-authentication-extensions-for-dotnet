@@ -70,7 +70,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public ICacheAccessor CreateForPersistenceValidation()
         {
             return new LinuxKeyringAccessor(
-                _cacheFilePath,
+                _cacheFilePath + ".test",
                 _keyringCollection,
                 _keyringSchemaName,
                 "MSAL Persistence Test",
