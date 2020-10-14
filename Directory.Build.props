@@ -17,7 +17,6 @@
     <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
     <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Linux'))">$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
 
-    <WebTargetFramework>netcoreapp2.2</WebTargetFramework>
 
   </PropertyGroup>
   <ItemGroup>
