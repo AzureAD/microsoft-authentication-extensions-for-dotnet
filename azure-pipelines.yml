@@ -2,35 +2,62 @@ trigger:
 - master
 
 pr:
- autoCancel: true
- branches:
-   include:
-     - master
+  autoCancel: true
+  branches:
+    include:
+      - master
 
-strategy:
-  matrix:
-    linux:
-      imageName: 'ubuntu-latest'
-    mac:
-      imageName: 'macOS-latest'
-    windows:
-      imageName: 'windows-latest'
+jobs:
+- job: "Sonar"
+  pool:
+    vmImage: 'windows-latest'
+    demands:
+    - msbuild
+  steps:
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: 'SonarCloud'
+        organization: 'azuread'
+        scannerMode: 'MSBuild'
+        projectKey: 'AzureAD_microsoft-authentication-extensions-for-dotnet'
+        projectName: 'microsoft-authentication-extensions-for-dotnet'
+        extraProperties: |
+          sonar.exclusions=src\Microsoft.Identity.Client.Extensions.Adal\**\*
+    - task: MSBuild@1
+      inputs:
+        solution: 'MsalNetExt.sln'
+    - task: DotNetCoreCLI@2
+      displayName: 'Run unit tests'
+      inputs:
+        command: test
+        projects: 'tests/**/*UnitTests*.csproj'
+        arguments: '--no-build --no-restore --collect "Code coverage"'
+    - task: SonarCloudAnalyze@1
+    - task: SonarCloudPublish@1
+      inputs:
+        pollingTimeoutSec: '300'
 
-pool:
-  vmImage: $(imageName)
-
-steps:
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'restore'  
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'build'
-
-- task: DotNetCoreCLI@2
-  displayName: 'Run unit tests'
-  inputs:
-    command: test
-    projects: 'tests/**/*UnitTests*.csproj'
-    arguments: '--no-build --no-restore --collect "Code coverage"'
-
+- job: "Build_and_test"
+  strategy:
+    matrix:
+      linux:
+        imageName: 'ubuntu-latest'
+      mac:
+        imageName: 'macOS-latest'
+      windows:
+        imageName: 'windows-latest'
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'restore'
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+  - task: DotNetCoreCLI@2
+    displayName: 'Run unit tests'
+    inputs:
+      command: test
+      projects: 'tests/**/*UnitTests*.csproj'
+      arguments: '--no-build --no-restore --collect "Code coverage"'
