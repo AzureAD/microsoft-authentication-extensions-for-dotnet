@@ -23,10 +23,12 @@ jobs:
         projectName: 'microsoft-authentication-extensions-for-dotnet'
         extraProperties: |
           sonar.exclusions=src\Microsoft.Identity.Client.Extensions.Adal\**\*
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'restore'
     - task: MSBuild@1
       inputs:
         solution: 'MsalNetExt.sln'
-        restoreNugetPackages: true
     - task: DotNetCoreCLI@2
       displayName: 'Run unit tests'
       inputs:
