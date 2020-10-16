@@ -10,7 +10,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     /// Exception that results when trying to persist data to the underlying OS mechanism (KeyRing, KeyChain, DPAPI)
     /// Inspect inner exception for details.
     /// </summary>
-    public class MsalCachePersistenceException : Exception
+    public class MsalCachePersistenceException : Exception, ISerializable
     {
         /// <summary>
         /// 

@@ -2,19 +2,16 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 #if ADAL
 namespace Microsoft.Identity.Client.Extensions.Adal
-#elif MSAL
+#else //MSAL
 namespace Microsoft.Identity.Client.Extensions.Msal
-#else // WEB
-namespace Microsoft.Identity.Client.Extensions.Web
 #endif
+
 {
-internal static class EnvUtils
+    internal static class EnvUtils
     {
         internal const string TraceLevelEnvVarName = "IDENTITYEXTENSIONTRACELEVEL";
 
@@ -26,12 +23,10 @@ internal static class EnvUtils
             var level = SourceLevels.Warning;
 #endif
             string traceSourceLevelEnvVar = Environment.GetEnvironmentVariable(EnvUtils.TraceLevelEnvVarName);
-            if (!string.IsNullOrEmpty(traceSourceLevelEnvVar))
+            if (!string.IsNullOrEmpty(traceSourceLevelEnvVar) &&
+                Enum.TryParse(traceSourceLevelEnvVar, ignoreCase: true, result: out SourceLevels result))
             {
-                if (Enum.TryParse<SourceLevels>(traceSourceLevelEnvVar, ignoreCase: true, result: out SourceLevels result))
-                {
-                    level = result;
-                }
+                level = result;
             }
 
             return new TraceSource("Microsoft.Identity.Client.Extensions.TraceSource", level);
