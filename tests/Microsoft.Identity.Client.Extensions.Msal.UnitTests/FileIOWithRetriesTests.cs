@@ -36,14 +36,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             string fileName = "testFile";
             string path = Path.Combine(dir, fileName);
 
-            // When the file does not exist, creating it and chaning it's LastWritetime
-            // **sometimes** results in the event being fired twice on Linux.
-            // This is not an issue for the product, but makes the test flaky.
-            if (!File.Exists(path))
-            {
-                File.Create(path);
-            }
-
             FileSystemWatcher watcher = new FileSystemWatcher(dir, fileName);
             watcher.EnableRaisingEvents = true;
             var semaphore = new SemaphoreSlim(0);
@@ -80,7 +72,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 await semaphore.WaitAsync(5000).ConfigureAwait(false);
                 _logger.TraceInformation($"Semaphore at {semaphore.CurrentCount}");
                 await semaphore.WaitAsync(10000).ConfigureAwait(false); 
-                Assert.AreEqual(2, cacheChangedEventFired);
+                Assert.IsTrue(
+                    cacheChangedEventFired==2 ||
+                    cacheChangedEventFired == 3,
+                    "Expecting the event to be fired 2 times as the file is touched 2 times. On Linux, " +
+                    "the file watcher sometimes fires an additional time for the file creation");
             }
             finally
             {
