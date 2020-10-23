@@ -36,6 +36,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             string fileName = "testFile";
             string path = Path.Combine(dir, fileName);
 
+            // When the file does not exist, creating it and chaning it's LastWritetime
+            // **sometimes** results in the event being fired twice on Linux.
+            // This is not an issue for the product, but makes the test flaky.
+            if (!File.Exists(path))
+            {
+                File.Create(path);
+            }
+
             FileSystemWatcher watcher = new FileSystemWatcher(dir, fileName);
             watcher.EnableRaisingEvents = true;
             var semaphore = new SemaphoreSlim(0);
