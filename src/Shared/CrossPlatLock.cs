@@ -51,8 +51,24 @@ namespace Microsoft.Identity.Client.Extensions.Web
                         fileShare = FileShare.Read;
                     }
 
-                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, fileShare, defaultBufferSize, FileOptions.DeleteOnClose);
-                    
+                    var fileOptions = FileOptions.DeleteOnClose;
+                    if (SharedUtilities.IsMonoPlatform())
+                    {
+                        // Deleting on close/dispose would cause a file locked by another process to be deleted when
+                        // running on Mono since locking is a two step process - it requires creating a FileStream and then
+                        // calling FileStream.Lock, which then may fail.
+                        fileOptions = FileOptions.None;
+                    }
+
+                    fileStream = new FileStream(lockfilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, fileShare, defaultBufferSize, fileOptions);
+
+                    if (SharedUtilities.IsMonoPlatform())
+                    {
+                        // Mono requires FileStream.Lock to be called to lock the file. Using FileShare.None when creating the
+                        // FileStream is not enough to lock the file on Mono.
+                        fileStream.Lock(0, 0);
+                    }
+
                     using (var writer = new StreamWriter(fileStream, Encoding.UTF8, defaultBufferSize, leaveOpen: true))
                     {
                         writer.WriteLine($"{Process.GetCurrentProcess().Id} {Process.GetCurrentProcess().ProcessName}");
@@ -61,11 +77,15 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 }
                 catch (IOException ex)
                 {
+                    fileStream?.Dispose();
+                    fileStream = null;
                     exception = ex;
                     Thread.Sleep(lockFileRetryDelay);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
+                    fileStream?.Dispose();
+                    fileStream = null;
                     exception = ex;
                     Thread.Sleep(lockFileRetryCount);
                 }

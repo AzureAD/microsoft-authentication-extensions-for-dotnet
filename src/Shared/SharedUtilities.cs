@@ -29,6 +29,8 @@ namespace Microsoft.Identity.Client.Extensions.Web
         private static readonly string s_lNameEnvVar = Environment.GetEnvironmentVariable("LNAME");
         private static readonly string s_usernameEnvVar = Environment.GetEnvironmentVariable("USERNAME");
 
+        private static readonly Lazy<bool> s_isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+
         /// <summary>
         ///  Is this a windows platform
         /// </summary>
@@ -64,6 +66,15 @@ namespace Microsoft.Identity.Client.Extensions.Web
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
 #endif
+        }
+
+        /// <summary>
+        ///  Is this running on mono
+        /// </summary>
+        /// <returns>A  value indicating if we are running on mono or not</returns>
+        internal static bool IsMonoPlatform()
+        {
+            return s_isMono.Value;
         }
 
         /// <summary>
