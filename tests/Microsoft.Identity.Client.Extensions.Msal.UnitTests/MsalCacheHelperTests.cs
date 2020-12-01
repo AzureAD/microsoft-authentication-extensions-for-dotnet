@@ -19,16 +19,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class MsalCacheHelperTests
     {
-        public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+        private string _cacheFilePath;
         private readonly TraceSource _logger = new TraceSource("TestSource");
         private StorageCreationPropertiesBuilder _storageCreationPropertiesBuilder;
 
         [TestInitialize]
         public void TestInitialize()
         {
+            _cacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             _storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
-                Path.GetFileName(CacheFilePath),
-                Path.GetDirectoryName(CacheFilePath),
+                Path.GetFileName(_cacheFilePath),
+                Path.GetDirectoryName(_cacheFilePath),
                 "1d18b3b0-251b-4714-a02a-9956cec86c2d");
 
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
@@ -333,6 +334,55 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Assert
             byte[] data = storage.ReadData();
             Assert.IsFalse(data.Any(), "Cache is corrupt, so it should have been deleted");
+        }
+
+        [TestMethod]
+        public async Task ClearCacheUsesTheLockAsync()
+        {
+            // Arrange
+            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
+            var cache = new MockTokenCache();
+            var storage = new MsalCacheStorage(
+                _storageCreationPropertiesBuilder.Build(),
+                cacheAccessor,
+                new TraceSourceLogger(new TraceSource("ts")));
+            var helper = new MsalCacheHelper(cache, storage, _logger);
+
+            FileSystemWatcher fileSystemWatcher = new FileSystemWatcher(
+                Path.GetDirectoryName(_cacheFilePath),
+                $"{Path.GetFileName(_cacheFilePath)}.lockfile");
+            fileSystemWatcher.EnableRaisingEvents = true;
+
+            // the events can be fired at a later time, so we need to wait for them
+            // otherwise the test might finish first
+            SemaphoreSlim semaphore1 = new SemaphoreSlim(0);
+            SemaphoreSlim semaphore2 = new SemaphoreSlim(0);
+            bool lockCreated = false, lockDeleted = false;
+
+            
+            fileSystemWatcher.Created += (s, e) =>
+            {
+                semaphore1.Release();
+                lockCreated = true;
+            };
+
+            fileSystemWatcher.Deleted += (s, e) =>
+            {
+                semaphore2.Release();
+                lockDeleted = true;
+            };
+
+            // Act
+#pragma warning disable CS0618 // Type or member is obsolete
+            helper.Clear();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            await semaphore1.WaitAsync(5000).ConfigureAwait(false);
+            await semaphore2.WaitAsync(5000).ConfigureAwait(false);
+
+            // Assert
+            Assert.IsTrue(lockCreated);
+            Assert.IsTrue(lockDeleted);
         }
 
         [TestMethod]
