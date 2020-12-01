@@ -19,16 +19,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
     [TestClass]
     public class MsalCacheHelperTests
     {
-        public static readonly string CacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
+        private string _cacheFilePath;
         private readonly TraceSource _logger = new TraceSource("TestSource");
         private StorageCreationPropertiesBuilder _storageCreationPropertiesBuilder;
 
         [TestInitialize]
         public void TestInitialize()
         {
+            _cacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             _storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
-                Path.GetFileName(CacheFilePath),
-                Path.GetDirectoryName(CacheFilePath),
+                Path.GetFileName(_cacheFilePath),
+                Path.GetDirectoryName(_cacheFilePath),
                 "1d18b3b0-251b-4714-a02a-9956cec86c2d");
 
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
@@ -336,7 +337,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        public void ClearCacheUsesTheLockAsync()
+        public async Task ClearCacheUsesTheLockAsync()
         {
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
@@ -347,7 +348,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 new TraceSourceLogger(new TraceSource("ts")));
             var helper = new MsalCacheHelper(cache, storage, _logger);
 
-            FileSystemWatcher fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(CacheFilePath));
+            FileSystemWatcher fileSystemWatcher = new FileSystemWatcher(
+                Path.GetDirectoryName(_cacheFilePath),
+                $"{Path.GetFileName(_cacheFilePath)}.lockfile");
             fileSystemWatcher.EnableRaisingEvents = true;
 
             // the events can be fired at a later time, so we need to wait for them
@@ -374,9 +377,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             helper.Clear();
 #pragma warning restore CS0618 // Type or member is obsolete
 
-
-            semaphore1.WaitAsync(5000);
-            semaphore2.WaitAsync(5000);
+            await semaphore1.WaitAsync(5000).ConfigureAwait(false);
+            await semaphore2.WaitAsync(5000).ConfigureAwait(false);
 
             // Assert
             Assert.IsTrue(lockCreated);
