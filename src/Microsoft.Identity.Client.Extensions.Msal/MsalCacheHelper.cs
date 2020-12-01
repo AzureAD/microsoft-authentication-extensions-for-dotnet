@@ -74,7 +74,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Allows clients to listen for cache updates originating from disk.
         /// </summary>
         /// <remarks>
-        /// This event does not fire when the application is built against Xamarin.Mac, but it does fire on .Net Core on all 3 operating systems.
+        /// This event does not fire when the application is built against Mone framework (e.g. Xamarin.Mac), but it does fire on .Net Core on all 3 operating systems.
         /// </remarks>
         public event EventHandler<CacheChangedEventArgs> CacheChanged;
 
@@ -227,7 +227,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 try
                 {
-                    cacheWatcher.EnableRaisingEvents = true;                    
+                    if (!SharedUtilities.IsMonoPlatform())
+                    {
+                        cacheWatcher.EnableRaisingEvents = true;                                            
+                    }
                 }
                 catch (PlatformNotSupportedException)
                 {
