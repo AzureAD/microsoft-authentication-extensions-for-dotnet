@@ -77,7 +77,7 @@ namespace ManualTestApp
 
                         result = await pca.AcquireTokenWithDeviceCode(Config.Scopes, (dcr) =>
                         {
-                            Console.BackgroundColor = ConsoleColor.Cyan;
+                            Console.BackgroundColor = ConsoleColor.DarkCyan;
                             Console.WriteLine(dcr.Message);
                             Console.ResetColor();
 
@@ -180,10 +180,10 @@ namespace ManualTestApp
 
                         var ctor = typeof(TokenCacheNotificationArgs).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
 
-                        var argz = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false });
+                        var notificationArgs = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false, true, null });
                         var task = pca.UserTokenCache.GetType().GetRuntimeMethods()
                             .Single(m => m.Name == "Microsoft.Identity.Client.ITokenCacheInternal.OnAfterAccessAsync")
-                            .Invoke(pca.UserTokenCache, new[] { argz });
+                            .Invoke(pca.UserTokenCache, new[] { notificationArgs });
 
                         await (task as Task).ConfigureAwait(false);
                         break;
