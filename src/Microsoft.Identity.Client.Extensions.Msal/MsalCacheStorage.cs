@@ -129,7 +129,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 _logger.LogInformation($"Reading Data");
                 data = CacheAccessor.Read();
-                _logger.LogInformation($"Got '{data?.Length}' bytes from file storage");
+                _logger.LogInformation($"Got '{data?.Length ?? 0}' bytes from file storage");
             }
             catch (Exception e)
             {
