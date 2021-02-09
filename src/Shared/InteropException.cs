@@ -19,21 +19,15 @@ namespace Microsoft.Identity.Extensions
             : base() { }
 
         public InteropException(string message, int errorCode)
-            : base(message)
+            : base(message + " .Error code: " + errorCode)
         {
             ErrorCode = errorCode;
         }
 
         public InteropException(string message, int errorCode, Exception innerException)
-            : base(message, innerException)
+            : base(message + ". Error code: " + errorCode, innerException)
         {
             ErrorCode = errorCode;
-        }
-
-        public InteropException(string message, Win32Exception w32Exception)
-            : base(message, w32Exception)
-        {
-            ErrorCode = w32Exception.NativeErrorCode;
         }
 
         /// <summary>

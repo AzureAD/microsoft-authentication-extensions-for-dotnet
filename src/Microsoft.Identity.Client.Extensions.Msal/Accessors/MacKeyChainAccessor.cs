@@ -79,8 +79,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             return new MacKeychainAccessor(
                 _cacheFilePath + ".test",
-                _service + "test",
-                _account + "test",
+                _service + Guid.NewGuid().ToString(),
+                _account,
                 _logger);
         }
     }

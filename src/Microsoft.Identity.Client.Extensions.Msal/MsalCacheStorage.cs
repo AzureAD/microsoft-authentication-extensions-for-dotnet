@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.Identity.Extensions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -220,6 +221,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     throw new MsalCachePersistenceException(
                         $"Persistence check failed. Data written {PersistenceValidationDummyData} is different from data read {dataRead}");
                 }
+            }
+            catch (InteropException e)
+            {
+                throw new MsalCachePersistenceException(
+                    $"Persistence check failed. Reason: {e.Message}. OS error code {e.ErrorCode}.", e);
             }
             catch (Exception ex) when (!(ex is MsalCachePersistenceException))
             {

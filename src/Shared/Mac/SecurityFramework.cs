@@ -135,6 +135,9 @@ namespace Microsoft.Identity.Extensions.Mac
         public const int ErrorSecInteractionRequired = -25315;
         public const int ErrorSecNoSuchAttr = -25303;
 
+        public const int ErrSecUserCanceled = -128;
+
+
         public static void ThrowIfError(int error, string defaultErrorMessage = "Unknown error.")
         {
             switch (error)
@@ -146,17 +149,19 @@ namespace Microsoft.Identity.Extensions.Mac
             case ErrorSecInvalidKeychain:
                 throw new InteropException("The keychain is not valid.", error);
             case ErrorSecAuthFailed:
-                throw new InteropException("Authorization/Authentication failed.", error);
+                throw new InteropException("KeyChain authorization/authentication failed.", error);
             case ErrorSecDuplicateItem:
-                throw new InteropException("The item already exists.", error);
+                throw new InteropException("KeyChain - the item already exists.", error);
             case ErrorSecItemNotFound:
-                throw new InteropException("The item cannot be found.", error);
+                throw new InteropException("KeyChain - the item cannot be found.", error);
             case ErrorSecInteractionNotAllowed:
-                throw new InteropException("Interaction with the Security Server is not allowed.", error);
+                throw new InteropException("KeyChain - interaction with the Security Server is not allowed.", error);
             case ErrorSecInteractionRequired:
-                throw new InteropException("User interaction is required.", error);
+                throw new InteropException("KeyChain - user interaction is required.", error);
             case ErrorSecNoSuchAttr:
-                throw new InteropException("The attribute does not exist.", error);
+                throw new InteropException("KeyChain - the attribute does not exist.", error);
+            case ErrSecUserCanceled:
+                throw new InteropException("KeyChain - user cancelled the operation.", error);
             default:
                 throw new InteropException(defaultErrorMessage, error);
             }
