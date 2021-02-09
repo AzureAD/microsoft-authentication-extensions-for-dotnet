@@ -240,9 +240,32 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string service = GetStringAttribute(attributes, kSecAttrService);
             string account = GetStringAttribute(attributes, kSecAttrAccount);
-            string password = GetStringAttribute(attributes, kSecValueData);
+            byte[] password = GetByteArrayAtrribute(attributes, kSecValueData);
             string label = GetStringAttribute(attributes, kSecAttrLabel);
             return new MacOSKeychainCredential(service, account, password, label);
+        }
+
+        private static byte[] GetByteArrayAtrribute(IntPtr dict, IntPtr key)
+        {
+            if (dict == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            if (CFDictionaryGetValueIfPresent(dict, key, out IntPtr value) && value != IntPtr.Zero)
+            {
+                if (CFGetTypeID(value) == CFDataGetTypeID())
+                {
+                    int length = CFDataGetLength(value);
+                    IntPtr ptr = CFDataGetBytePtr(value);
+                    byte[] managedArray = new byte[length];
+                    Marshal.Copy(ptr, managedArray, 0, length);
+
+                    return managedArray;
+                }
+            }
+
+            return null;
         }
 
         private static string GetStringAttribute(IntPtr dict, IntPtr key)

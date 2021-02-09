@@ -82,14 +82,14 @@ namespace Microsoft.Identity.Extensions.Mac
             out IntPtr passwordData,
             out IntPtr itemRef);
 
-        [DllImport(SecurityFrameworkLib, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern unsafe int SecKeychainItemCopyAttributesAndData(
-            IntPtr itemRef,
-            IntPtr info,
-            IntPtr itemClass,
-            SecKeychainAttributeList** attrList,
-            uint* dataLength,
-            void** data);
+        //[DllImport(SecurityFrameworkLib, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        //public static extern unsafe int SecKeychainItemCopyAttributesAndData(
+        //    IntPtr itemRef,
+        //    IntPtr info,
+        //    IntPtr itemClass,
+        //    SecKeychainAttributeList** attrList,
+        //    uint* dataLength,
+        //    void** data);
 
         [DllImport(SecurityFrameworkLib, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern int SecKeychainItemModifyAttributesAndData(

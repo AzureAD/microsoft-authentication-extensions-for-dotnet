@@ -26,7 +26,4 @@
     <Compile Include="$(MSBuildThisFileDirectory)StorageCreationPropertiesBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TraceSourceLogger.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Linux\" />
-  </ItemGroup>
 </Project>

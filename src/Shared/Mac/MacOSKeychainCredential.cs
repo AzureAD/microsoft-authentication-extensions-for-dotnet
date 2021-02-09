@@ -7,7 +7,7 @@ namespace Microsoft.Identity.Extensions.Mac
     [DebuggerDisplay("{DebuggerDisplay}")]
     internal class MacOSKeychainCredential 
     {
-        internal MacOSKeychainCredential(string service, string account, string password, string label)
+        internal MacOSKeychainCredential(string service, string account, byte[] password, string label)
         {
             Service = service;
             Account = account;
@@ -21,7 +21,7 @@ namespace Microsoft.Identity.Extensions.Mac
 
         public string Label { get; }
 
-        public string Password { get; }
+        public byte[] Password { get; }
 
         private string DebuggerDisplay => $"{Label} [Service: {Service}, Account: {Account}]";
     }

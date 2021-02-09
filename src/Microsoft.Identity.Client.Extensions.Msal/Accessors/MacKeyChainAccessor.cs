@@ -59,12 +59,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             _logger.LogInformation($"ReadDataCore, Before reading from mac keychain");
             var entry = _keyChain.Get(_service, _account);
-            _logger.LogInformation($"ReadDataCore, After reading mac keychain {entry?.Password?.Length ?? 0} chars");
+            _logger.LogInformation($"ReadDataCore, After reading mac keychain {entry?.Password?.Length ?? 0} chars");        
 
-            if (!string.IsNullOrEmpty(entry?.Password))
-                return Encoding.UTF8.GetBytes(entry.Password);
-
-            return null;
+            return entry?.Password;
         }
 
         public void Write(byte[] data)

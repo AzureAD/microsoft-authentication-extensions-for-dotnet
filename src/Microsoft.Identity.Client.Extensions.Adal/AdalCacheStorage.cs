@@ -176,8 +176,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     CreationProperties.MacKeyChainServiceName,
                     CreationProperties.MacKeyChainAccountName);
 
-                if (entry?.Password != null)
-                    fileData = Encoding.UTF8.GetBytes(entry.Password);
+
+                fileData = entry?.Password;
 
                 _logger.LogInformation($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
             }
