@@ -161,7 +161,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         private void VerifyKey(string serviceName, string accountName, string expectedData)
         {
             var entry  = _macOSKeychain.Get(serviceName, accountName);
-            Assert.AreEqual(expectedData, entry.Password);
+            Assert.AreEqual(expectedData, Encoding.UTF8.GetString(entry.Password));
         }
 
         private void VerifyKeyIsNull(string serviceName, string accountName)
