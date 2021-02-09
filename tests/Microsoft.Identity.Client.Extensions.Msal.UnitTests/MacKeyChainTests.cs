@@ -10,7 +10,7 @@ using Microsoft.Identity.Client.Extensions.Msal.UnitTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit.Sdk;
 
-namespace Microsoft.Identity.Client.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
     [TestClass]
     public class MacKeyChainTests
@@ -43,7 +43,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -52,10 +52,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -63,11 +63,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public void TestWriteSameKeyTwiceWithDifferentData()
         {
             string data = "applesauce";
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
             data = "tomatosauce";
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -76,7 +76,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -91,7 +91,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, data);
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
             _macOSKeychain.Remove(ServiceName, AccountName);
@@ -129,14 +129,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 // Write
-                keychain.AddOrUpdate(service, account, password);
+                keychain.AddOrUpdate(service, account, Encoding.UTF8.GetBytes(password));
 
                 // Read
                 var outCredential = keychain.Get(service, account);
+                var stringPassword = Encoding.UTF8.GetString(outCredential.Password);
 
                 Assert.IsNotNull(outCredential);
                 Assert.AreEqual(account, outCredential.Account);
-                Assert.AreEqual(password, outCredential.Password);
+                Assert.AreEqual(password, stringPassword);
             }
             finally
             {

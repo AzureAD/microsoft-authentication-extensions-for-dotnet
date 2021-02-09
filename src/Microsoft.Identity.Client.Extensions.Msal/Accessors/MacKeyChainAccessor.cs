@@ -67,8 +67,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public void Write(byte[] data)
         {
             _logger.LogInformation("Before write to mac keychain");
-            string secret = Encoding.UTF8.GetString(data);
-            _keyChain.AddOrUpdate(_service, _account, secret);
+
+            _keyChain.AddOrUpdate(_service, _account, data);
             _logger.LogInformation("After write to mac keychain");
 
             // Change the "last modified" attribute and trigger file changed events

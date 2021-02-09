@@ -176,7 +176,6 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     CreationProperties.MacKeyChainServiceName,
                     CreationProperties.MacKeyChainAccountName);
 
-
                 fileData = entry?.Password;
 
                 _logger.LogInformation($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
@@ -247,7 +246,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                     keychain.AddOrUpdate(
                                          CreationProperties.MacKeyChainServiceName,
                                          CreationProperties.MacKeyChainAccountName,
-                                         Encoding.UTF8.GetString(data));
+                                         data);
 
                     _logger.LogInformation("After write to mac keychain");
                 }

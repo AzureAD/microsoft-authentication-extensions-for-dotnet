@@ -17,7 +17,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal
 #elif MSAL
 namespace Microsoft.Identity.Client.Extensions.Msal
 #endif
-{    
+{
     internal class MacOSKeychain
     {
         private readonly string _namespace;
@@ -30,7 +30,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="namespace">Optional namespace to scope credential operations.</param>
         /// <returns>Default keychain.</returns>
         public MacOSKeychain(string @namespace = null)
-        {            
+        {
             _namespace = @namespace;
         }
 
@@ -105,11 +105,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
         }
 
-        public void AddOrUpdate(string service, string account, string secret)
-        {            
-
-            byte[] secretBytes = Encoding.UTF8.GetBytes(secret);
-
+        public void AddOrUpdate(string service, string account, byte[] secretBytes)
+        {
             IntPtr passwordData = IntPtr.Zero;
             IntPtr itemRef = IntPtr.Zero;
 
@@ -257,11 +254,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (CFGetTypeID(value) == CFDataGetTypeID())
                 {
                     int length = CFDataGetLength(value);
-                    IntPtr ptr = CFDataGetBytePtr(value);
-                    byte[] managedArray = new byte[length];
-                    Marshal.Copy(ptr, managedArray, 0, length);
+                    if (length > 0)
+                    {
+                        IntPtr ptr = CFDataGetBytePtr(value);
+                        byte[] managedArray = new byte[length]; // last byte is the string terminator!
+                        Marshal.Copy(ptr, managedArray, 0, length);
 
-                    return managedArray;
+                        return managedArray;
+                    }
                 }
             }
 
@@ -294,8 +294,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     if (CFGetTypeID(value) == CFDataGetTypeID())
                     {
                         int length = CFDataGetLength(value);
-                        IntPtr ptr = CFDataGetBytePtr(value);
-                        return Marshal.PtrToStringAuto(ptr, length);
+                        if (length > 0)
+                        {
+                            IntPtr ptr = CFDataGetBytePtr(value);
+                            return Marshal.PtrToStringAuto(ptr, length);
+                        }
                     }
                 }
             }
