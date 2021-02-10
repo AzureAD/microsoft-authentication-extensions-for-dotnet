@@ -10,14 +10,6 @@ This repository contains the source for 2 extension libraries that are built aga
 
 - A cross platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache)
 
-### ADAL token cache extensions for public client applications
-
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Adal?logo=nuget&logoColor=blue)
-
-This extension was built with the purpose of supporting dual stack implementations (ADAL + MSAL). This is relevant if you want to support older versions of ADFS. It contains the same token cache serialization strategy as the MSAL extensions.
-
-No new functionality will be added to this extension since ADAL library is deprecated.
-
 ## Samples
 
 We aim to have all [MSAL public client samples](https://docs.microsoft.com/en-gb/azure/active-directory/develop/sample-v2-code#desktop-and-mobile-public-client-apps) use the extensions. 
