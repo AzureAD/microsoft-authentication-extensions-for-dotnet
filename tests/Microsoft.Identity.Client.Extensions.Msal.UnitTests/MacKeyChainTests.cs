@@ -10,20 +10,22 @@ using Microsoft.Identity.Client.Extensions.Msal.UnitTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xunit.Sdk;
 
-namespace Microsoft.Identity.Client.Extensions.Msal
+namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
     [TestClass]
     public class MacKeyChainTests
     {
         private const string ServiceName = "foo";
         private const string AccountName = "bar";
+        private const string TestNamespace = "msal-test";
 
+        MacOSKeychain _macOSKeychain;
         [TestInitialize]
         public void TestInitialize()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                MacKeyChain.DeleteKey(ServiceName, AccountName);
+                _macOSKeychain = new MacOSKeychain();
             }
         }
 
@@ -32,7 +34,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                MacKeyChain.DeleteKey(ServiceName, AccountName);
+                _macOSKeychain.Remove(ServiceName, AccountName);
             }
         }
 
@@ -41,7 +43,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -50,10 +52,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -61,11 +63,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public void TestWriteSameKeyTwiceWithDifferentData()
         {
             string data = "applesauce";
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
             data = "tomatosauce";
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -74,7 +76,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
         }
 
@@ -89,38 +91,86 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             string data = "applesauce";
 
-            MacKeyChain.WriteKey(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
+            _macOSKeychain.AddOrUpdate(ServiceName, AccountName, Encoding.UTF8.GetBytes(data));
             VerifyKey(ServiceName, AccountName, expectedData: data);
 
-            MacKeyChain.DeleteKey(ServiceName, AccountName);
+            _macOSKeychain.Remove(ServiceName, AccountName);
             VerifyKeyIsNull(ServiceName, AccountName);
         }
 
         [RunOnOSX]
         public void TestDeleteNonExistingKey()
         {
-            MacKeyChain.DeleteKey(ServiceName, AccountName);
+            _macOSKeychain.Remove(ServiceName, AccountName);
         }
 
-        private static void VerifyKey(string serviceName, string accountName, string expectedData)
+        [RunOnOSX]
+        public void MacOSKeychain_Get_NotFound_ReturnsNull()
         {
-            string keychainData = Encoding.UTF8.GetString(MacKeyChain.RetrieveKey(serviceName, accountName));
+            var keychain = new MacOSKeychain(TestNamespace);
 
-            if (!keychainData.Equals(expectedData))
+            // Unique service; guaranteed not to exist!
+            string service = $"https://example.com/{Guid.NewGuid():N}";
+
+            var credential = keychain.Get(service, account: null);
+            Assert.IsNull(credential);
+        }
+
+        [RunOnOSX]
+        public void MacOSKeychain_ReadWriteDelete()
+        {
+            var keychain = new MacOSKeychain(TestNamespace);
+
+            // Create a service that is guaranteed to be unique
+            string service = $"https://example.com/{Guid.NewGuid():N}";
+            const string account = "john.doe";
+            const string password = "letmein123"; // [SuppressMessage("Microsoft.Security", "CS001:SecretInline", Justification="Fake credential")]
+
+            try
             {
-#pragma warning disable CA2201 // Do not raise reserved exception types
-                throw new Exception(string.Format(CultureInfo.CurrentCulture, "keychainData=\"{0}\" doesn't match expected data=\"{1}\"", keychainData, expectedData));
-#pragma warning restore CA2201 // Do not raise reserved exception types
+                // Write
+                keychain.AddOrUpdate(service, account, Encoding.UTF8.GetBytes(password));
+
+                // Read
+                var outCredential = keychain.Get(service, account);
+                var stringPassword = Encoding.UTF8.GetString(outCredential.Password);
+
+                Assert.IsNotNull(outCredential);
+                Assert.AreEqual(account, outCredential.Account);
+                Assert.AreEqual(password, stringPassword);
+            }
+            finally
+            {
+                // Ensure we clean up after ourselves even in case of 'get' failures
+                keychain.Remove(service, account);
             }
         }
 
-        private static void VerifyKeyIsNull(string serviceName, string accountName)
+        [RunOnOSX]
+        public void MacOSKeychain_Remove_NotFound_ReturnsFalse()
         {
-            if (MacKeyChain.RetrieveKey(serviceName, accountName) != null)
+            var keychain = new MacOSKeychain(TestNamespace);
+
+            // Unique service; guaranteed not to exist!
+            string service = $"https://example.com/{Guid.NewGuid():N}";
+
+            bool result = keychain.Remove(service, account: null);
+            Assert.IsFalse(result);
+        }
+
+        private void VerifyKey(string serviceName, string accountName, string expectedData)
+        {
+            var entry  = _macOSKeychain.Get(serviceName, accountName);
+            Assert.AreEqual(expectedData, Encoding.UTF8.GetString(entry.Password));
+        }
+
+        private void VerifyKeyIsNull(string serviceName, string accountName)
+        {
+            if (_macOSKeychain.Get(serviceName, accountName) != null)
             {
-#pragma warning disable CA2201 // Do not raise reserved exception types
-                throw new Exception(string.Format(CultureInfo.CurrentCulture, "key exists when it shouldn't be. keychainData=\"{0}\"", Encoding.UTF8.GetString(MacKeyChain.RetrieveKey(serviceName, accountName))));
-#pragma warning restore CA2201 // Do not raise reserved exception types
+                Assert.Fail(
+                    "key exists when it shouldn't be. keychainData=\"{0}\"",
+                    _macOSKeychain.Get(serviceName, accountName).Password);
             }
         }
     }

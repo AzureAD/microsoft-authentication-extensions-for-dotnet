@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -12,9 +13,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     internal class MacKeychainAccessor : ICacheAccessor
     {
         private readonly string _cacheFilePath;
-        private readonly string _keyChainServiceName;
-        private readonly string _keyChainAccountName;
+        private readonly string _service;
+        private readonly string _account;
         private readonly TraceSourceLogger _logger;
+
+        private readonly MacOSKeychain _keyChain;
 
         public MacKeychainAccessor(string cacheFilePath, string keyChainServiceName, string keyChainAccountName, TraceSourceLogger logger) 
         {
@@ -34,9 +37,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
 
             _cacheFilePath = cacheFilePath;
-            _keyChainServiceName = keyChainServiceName;
-            _keyChainAccountName = keyChainAccountName;
+            _service = keyChainServiceName;
+            _account = keyChainAccountName;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            _keyChain = new MacOSKeychain();
         }
 
         public void Clear()
@@ -45,26 +50,25 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
 
             _logger.LogInformation("Before delete mac keychain");
-            MacKeyChain.DeleteKey(_keyChainServiceName, _keyChainAccountName);
+            _keyChain.Remove(_service, _account);
             _logger.LogInformation("After delete mac keychain");
         }
 
        
         public byte[] Read()
         {
-            _logger.LogInformation("ReadDataCore");
-
             _logger.LogInformation($"ReadDataCore, Before reading from mac keychain");
-            byte[] fileData = MacKeyChain.RetrieveKey(_keyChainServiceName, _keyChainAccountName, _logger);
-            _logger.LogInformation($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
+            var entry = _keyChain.Get(_service, _account);
+            _logger.LogInformation($"ReadDataCore, After reading mac keychain {entry?.Password?.Length ?? 0} chars");        
 
-            return fileData;
+            return entry?.Password;
         }
 
         public void Write(byte[] data)
         {
             _logger.LogInformation("Before write to mac keychain");
-            MacKeyChain.WriteKey(_keyChainServiceName, _keyChainAccountName, data);
+
+            _keyChain.AddOrUpdate(_service, _account, data);
             _logger.LogInformation("After write to mac keychain");
 
             // Change the "last modified" attribute and trigger file changed events
@@ -75,10 +79,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             return new MacKeychainAccessor(
                 _cacheFilePath + ".test",
-                _keyChainServiceName + "test",
-                _keyChainAccountName + "test",
+                _service + Guid.NewGuid().ToString(),
+                _account,
                 _logger);
         }
-
     }
 }

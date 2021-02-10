@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 
 namespace Microsoft.Identity.Client.Extensions.Adal
@@ -170,7 +171,13 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             else if (SharedUtilities.IsMacPlatform())
             {
                 _logger.LogInformation($"ReadDataCore, Before reading from mac keychain");
-                fileData = MacKeyChain.RetrieveKey(CreationProperties.MacKeyChainServiceName, CreationProperties.MacKeyChainAccountName, _logger);
+                MacOSKeychain keychain = new MacOSKeychain();
+                var entry = keychain.Get(
+                    CreationProperties.MacKeyChainServiceName,
+                    CreationProperties.MacKeyChainAccountName);
+
+                fileData = entry?.Password;
+
                 _logger.LogInformation($"ReadDataCore, read '{fileData?.Length}' bytes from the keychain");
             }
             else if (SharedUtilities.IsLinuxPlatform())
@@ -235,7 +242,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
                 if (SharedUtilities.IsMacPlatform())
                 {
                     _logger.LogInformation("Before write to mac keychain");
-                    MacKeyChain.WriteKey(
+                    MacOSKeychain keychain = new MacOSKeychain();
+                    keychain.AddOrUpdate(
                                          CreationProperties.MacKeyChainServiceName,
                                          CreationProperties.MacKeyChainAccountName,
                                          data);
@@ -321,7 +329,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal
             if (SharedUtilities.IsMacPlatform())
             {
                 _logger.LogInformation("Before delete mac keychain");
-                MacKeyChain.DeleteKey(
+                MacOSKeychain keychain = new MacOSKeychain();
+                keychain.Remove(
                                       CreationProperties.MacKeyChainServiceName,
                                       CreationProperties.MacKeyChainAccountName);
                 _logger.LogInformation("After delete mac keychain");

@@ -67,7 +67,8 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
 
             store.WriteData(new byte[0]);
 
-            Assert.IsFalse(store.ReadData().Any());
+            var pass = store.ReadData();
+            Assert.IsFalse(pass.Any());
         }
 
         [DoNotRunOnLinux]
