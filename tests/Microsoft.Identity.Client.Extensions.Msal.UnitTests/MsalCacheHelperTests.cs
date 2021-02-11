@@ -381,8 +381,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             await semaphore2.WaitAsync(5000).ConfigureAwait(false);
 
             // Assert
-            Assert.IsTrue(lockCreated);
-            Assert.IsTrue(lockDeleted);
+            if (SharedUtilities.IsLinuxPlatform())
+            {
+                Assert.IsTrue(lockCreated, $"lockCreated {lockCreated} lockDeleted {lockDeleted}");
+                Assert.IsTrue(lockDeleted, $"lockCreated {lockDeleted} lockDeleted {lockDeleted}");
+            }
+            else
+            {
+                Assert.IsTrue(lockCreated, $"lockCreated {lockCreated} lockDeleted {lockDeleted}");
+                Assert.IsTrue(lockDeleted, $"lockCreated {lockDeleted} lockDeleted {lockDeleted}");
+            }
         }
 
         [TestMethod]
