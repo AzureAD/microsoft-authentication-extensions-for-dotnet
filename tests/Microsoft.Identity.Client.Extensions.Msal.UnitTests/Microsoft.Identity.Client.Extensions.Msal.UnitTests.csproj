@@ -32,6 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\token_cache_adfs.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\token_cache_one_acc_seed.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

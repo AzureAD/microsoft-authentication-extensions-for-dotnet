@@ -68,7 +68,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Watches a filesystem location in order to fire events when the cache on disk is changed. Internal for testing.
         /// </summary>
-        internal readonly FileSystemWatcher _cacheWatcher;
+        private readonly FileSystemWatcher _cacheWatcher;
 
         private EventHandler<CacheChangedEventArgs> _cacheChangedEventHandler;
         /// <summary>
