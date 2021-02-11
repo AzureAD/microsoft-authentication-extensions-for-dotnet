@@ -70,13 +70,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </summary>
         internal readonly FileSystemWatcher _cacheWatcher;
 
+        private EventHandler<CacheChangedEventArgs> _cacheChangedEventHandler;
         /// <summary>
         /// Allows clients to listen for cache updates originating from disk.
         /// </summary>
         /// <remarks>
         /// This event does not fire when the application is built against Mone framework (e.g. Xamarin.Mac), but it does fire on .Net Core on all 3 operating systems.
         /// </remarks>
-        public event EventHandler<CacheChangedEventArgs> CacheChanged;
+        public event EventHandler<CacheChangedEventArgs> CacheChanged
+        {
+            add
+            {
+                if (!_storageCreationProperties.IsCacheEventConfigured)
+                {
+                    throw new InvalidOperationException(
+                        "To use this event, please configure the clientId and the authority " +
+                        "using  StorageCreationPropertiesBuilder.WithCacheChangedEvent");
+                }
+                _cacheChangedEventHandler += value;
+            }
+            remove
+            {
+                _cacheChangedEventHandler -= value;
+            }
+        }
 
         /// <summary>
         /// Contains a reference to all caches currently registered to synchronize with this MsalCacheHelper, along with
@@ -93,9 +110,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             TraceSourceLogger logger)
         {
             var accountIdentifiers = new HashSet<string>();
-            if (File.Exists(storageCreationProperties.CacheFilePath))
+
+            if (storageCreationProperties.IsCacheEventConfigured &&
+                File.Exists(storageCreationProperties.CacheFilePath))
             {
-                var pca = PublicClientApplicationBuilder.Create(storageCreationProperties.ClientId).Build();
+                var pca = PublicClientApplicationBuilder
+                    .Create(storageCreationProperties.ClientId)
+                    .WithAuthority(storageCreationProperties.Authority)
+                    .Build();
 
                 pca.UserTokenCache.SetBeforeAccess((args) =>
                 {
@@ -136,7 +158,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         private MsalCacheHelper(
             StorageCreationProperties storageCreationProperties,
             TraceSource logger,
-            HashSet<string> knownAccountIds,
+            HashSet<string> knownAccountIds, // only used for CacheChangedEvent
             FileSystemWatcher cacheWatcher)
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
@@ -145,43 +167,45 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _knownAccountIds = knownAccountIds;
 
             _cacheWatcher = cacheWatcher;
-            _cacheWatcher.Changed += OnCacheFileChangedAsync;
-            _cacheWatcher.Deleted += OnCacheFileChangedAsync;
+            if (_cacheWatcher != null)
+            {
+                _cacheWatcher.Changed += OnCacheFileChangedAsync;
+                _cacheWatcher.Deleted += OnCacheFileChangedAsync;
+            }
         }
 
         private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
         {
             // avoid the high cost of computing the added / removed accounts if nobody listens to this
-            if (CacheChanged == null)
+            if (_cacheChangedEventHandler?.GetInvocationList() != null &&
+                _cacheChangedEventHandler?.GetInvocationList().Length > 0)
             {
-                return;
-            }
-
-            try
-            {
-                IEnumerable<string> added;
-                IEnumerable<string> removed;
-
-                using (CreateCrossPlatLock(_storageCreationProperties))
+                try
                 {
-                    var currentAccountIds = await GetAccountIdentifiersNoLockAsync(_storageCreationProperties, _logger).ConfigureAwait(false);
+                    IEnumerable<string> added;
+                    IEnumerable<string> removed;
 
-                    var intersect = currentAccountIds.Intersect(_knownAccountIds);
-                    removed = _knownAccountIds.Except(intersect);
-                    added = currentAccountIds.Except(intersect);
+                    using (CreateCrossPlatLock(_storageCreationProperties))
+                    {
+                        var currentAccountIds = await GetAccountIdentifiersNoLockAsync(_storageCreationProperties, _logger).ConfigureAwait(false);
 
-                    _knownAccountIds = currentAccountIds;
+                        var intersect = currentAccountIds.Intersect(_knownAccountIds);
+                        removed = _knownAccountIds.Except(intersect);
+                        added = currentAccountIds.Except(intersect);
+
+                        _knownAccountIds = currentAccountIds;
+                    }
+
+                    if (added.Any() || removed.Any())
+                    {
+                        _cacheChangedEventHandler.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                    }
                 }
-
-                if (added.Any() || removed.Any())
+                catch (Exception e)
                 {
-                    CacheChanged.Invoke(sender, new CacheChangedEventArgs(added, removed));
+                    // Never let this throw, just log errors
+                    _logger.LogWarning($"Exception within File Watcher : {e}");
                 }
-            }
-            catch (Exception e)
-            {
-                // Never let this throw, just log errors
-                _logger.LogWarning($"Exception within File Watcher : {e}");
             }
         }
 
@@ -206,7 +230,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Creates a new instance of <see cref="MsalCacheHelper"/>. To configure MSAL to use this cache persistence, call <see cref="RegisterCache(ITokenCache)"/>
         /// </summary>
         /// <param name="storageCreationProperties">Properties to use when creating storage on disk.</param>
-        /// <param name="logger">Passing null uses a default logger</param>
+        /// <param name="logger">Passing null uses the default TraceSource logger. See https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Logging for details.</param>
         /// <returns>A new instance of <see cref="MsalCacheHelper"/>.</returns>
         public static async Task<MsalCacheHelper> CreateAsync(StorageCreationProperties storageCreationProperties, TraceSource logger = null)
         {
@@ -219,17 +243,27 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             using (CreateCrossPlatLock(storageCreationProperties))
             {
                 // Cache the list of accounts
-
                 var ts = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
-                var accountIdentifiers = await GetAccountIdentifiersNoLockAsync(storageCreationProperties, ts).ConfigureAwait(false);
-                var cacheWatcher = new FileSystemWatcher(storageCreationProperties.CacheDirectory, storageCreationProperties.CacheFileName);
+
+                HashSet<string> accountIdentifiers = null;
+                FileSystemWatcher cacheWatcher = null;
+
+                if (storageCreationProperties.IsCacheEventConfigured)
+                {
+                    accountIdentifiers = await GetAccountIdentifiersNoLockAsync(storageCreationProperties, ts)
+                        .ConfigureAwait(false);
+                    cacheWatcher = new FileSystemWatcher(
+                        storageCreationProperties.CacheDirectory,
+                        storageCreationProperties.CacheFileName);
+                }
+
                 var helper = new MsalCacheHelper(storageCreationProperties, logger, accountIdentifiers, cacheWatcher);
 
                 try
                 {
-                    if (!SharedUtilities.IsMonoPlatform())
+                    if (!SharedUtilities.IsMonoPlatform() && storageCreationProperties.IsCacheEventConfigured)
                     {
-                        cacheWatcher.EnableRaisingEvents = true;                                            
+                        cacheWatcher.EnableRaisingEvents = true;
                     }
                 }
                 catch (PlatformNotSupportedException)

@@ -29,8 +29,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             _cacheFilePath = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
             _storageCreationPropertiesBuilder = new StorageCreationPropertiesBuilder(
                 Path.GetFileName(_cacheFilePath),
-                Path.GetDirectoryName(_cacheFilePath),
-                "1d18b3b0-251b-4714-a02a-9956cec86c2d");
+                Path.GetDirectoryName(_cacheFilePath));
 
             _storageCreationPropertiesBuilder = _storageCreationPropertiesBuilder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
             _storageCreationPropertiesBuilder.WithLinuxUnprotectedFile();
@@ -393,7 +392,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             string cacheWithOneUser = File.ReadAllText(
                 ResourceHelper.GetTestResourceRelativePath("token_cache_one_acc_seed.json"));
 
-            var properties = _storageCreationPropertiesBuilder.Build();
+            var properties = _storageCreationPropertiesBuilder
+                .WithCacheChangedEvent("1d18b3b0-251b-4714-a02a-9956cec86c2d", "https://login.microsoftonline.com/common")
+                .Build();
+
             if (File.Exists(properties.CacheFilePath))
             {
                 File.Delete(properties.CacheFilePath);
@@ -419,6 +421,65 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Assert
             await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
             Assert.AreEqual(1, cacheChangedEventFired);
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"Resources/token_cache_one_acc_seed.json")]
+
+        public async Task EventFires2Async()
+        {
+            string cacheWithOneUser = File.ReadAllText(
+                ResourceHelper.GetTestResourceRelativePath("token_cache_one_acc_seed.json"));
+
+            var properties = _storageCreationPropertiesBuilder
+                .WithCacheChangedEvent("1d18b3b0-251b-4714-a02a-9956cec86c2d", "https://login.microsoftonline.com/common")
+                .Build();
+
+            if (File.Exists(properties.CacheFilePath))
+            {
+                File.Delete(properties.CacheFilePath);
+            }
+
+            var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
+            var cache1 = new MockTokenCache();
+            helper.RegisterCache(cache1);
+
+            var semaphore = new SemaphoreSlim(0);
+            int cacheChangedEventFired = 0;
+
+            // event is fired asynchronously, test has to wait for it for a while
+            helper.CacheChanged += (sender, e) =>
+            {
+                semaphore.Release();
+                cacheChangedEventFired++;
+            };
+
+            // Act - simulate that an external process writes to the token cache
+            helper.CacheStore.WriteData(Encoding.UTF8.GetBytes(cacheWithOneUser));
+
+            // Assert
+            await semaphore.WaitAsync(5000).ConfigureAwait(false); // if event isn't fired in 5s, bail out
+            Assert.AreEqual(1, cacheChangedEventFired);
+        }
+
+        [TestMethod]
+        public async Task EventNeedsConfigurationAsync()
+        {
+           var properties = _storageCreationPropertiesBuilder.Build();
+
+            if (File.Exists(properties.CacheFilePath))
+            {
+                File.Delete(properties.CacheFilePath);
+            }
+
+            var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
+
+            // event is fired asynchronously, test has to wait for it for a while
+            AssertException.Throws<InvalidOperationException>(
+                () => helper.CacheChanged += (sender, e) =>
+            {
+                Assert.Fail("Should not fire");
+            });
         }
     }
 }

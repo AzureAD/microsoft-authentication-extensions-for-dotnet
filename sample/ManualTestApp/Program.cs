@@ -32,8 +32,8 @@ namespace ManualTestApp
             var cacheHelper = await CreateCacheHelperAsync().ConfigureAwait(false);
             cacheHelper.RegisterCache(pca.UserTokenCache);
 
-            // The token cache helper provides a high level event that informs apps about added / removed accounts.
-            cacheHelper.CacheChanged += (s, e) =>
+            // Advanced scenario for when 2 or more apps share the same cache             
+            cacheHelper.CacheChanged += (s, e) => // this event is very expensive perf wise
             {
                 Console.BackgroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine($"Cache Changed, Added: {e.AccountsAdded.Count()} Removed: {e.AccountsRemoved.Count()}");
@@ -276,8 +276,7 @@ namespace ManualTestApp
             {
                 storageProperties = new StorageCreationPropertiesBuilder(
                     Config.CacheFileName,
-                    Config.CacheDir,
-                    Config.ClientId)
+                    Config.CacheDir)
                 .WithLinuxKeyring(
                     Config.LinuxKeyRingSchema,
                     Config.LinuxKeyRingCollection,
@@ -287,6 +286,9 @@ namespace ManualTestApp
                 .WithMacKeyChain(
                     Config.KeyChainServiceName,
                     Config.KeyChainAccountName)
+                .WithCacheChangedEvent( // do NOT use unless really necessary, high perf penalty!
+                    Config.ClientId,
+                    Config.Authority)
                 .Build();
 
                 var cacheHelper = await MsalCacheHelper.CreateAsync(
@@ -305,8 +307,7 @@ namespace ManualTestApp
                 storageProperties =
                     new StorageCreationPropertiesBuilder(
                         Config.CacheFileName,
-                        Config.CacheDir,
-                        Config.ClientId)
+                        Config.CacheDir)
                     .WithLinuxUnprotectedFile()
                     .WithMacKeyChain(
                         Config.KeyChainServiceName,
@@ -318,7 +319,6 @@ namespace ManualTestApp
 
                 return cacheHelper;
             }
-
         }
 
         private static IPublicClientApplication CreatePublicClient(string authority)

@@ -14,9 +14,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     internal static class EnvUtils
     {
         internal const string TraceLevelEnvVarName = "IDENTITYEXTENSIONTRACELEVEL";
+        private const string DefaultTraceSource = "Microsoft.Identity.Client.Extensions.TraceSource";
 
         internal static TraceSource GetNewTraceSource(string sourceName)
         {
+            sourceName = sourceName ?? DefaultTraceSource;
 #if DEBUG
             var level = SourceLevels.Verbose;
 #else
@@ -29,7 +31,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 level = result;
             }
 
-            return new TraceSource("Microsoft.Identity.Client.Extensions.TraceSource", level);
+            return new TraceSource(sourceName, level);
         }
     }
 }

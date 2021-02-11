@@ -14,10 +14,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 namespace Microsoft.Identity.Client.Extensions.Web
 #endif
 {
-/// <summary>
-/// An immutable class containing information required to instantiate storage objects for MSAL caches in various platforms.
-/// </summary>
-public class StorageCreationProperties
+    /// <summary>
+    /// An immutable class containing information required to instantiate storage objects for MSAL caches in various platforms.
+    /// </summary>
+    public class StorageCreationProperties
     {
         /// <summary>
         /// This constructor is intentionally internal. To get one of these objects use <see cref="StorageCreationPropertiesBuilder.Build"/>.
@@ -33,9 +33,10 @@ public class StorageCreationProperties
             string keyringSecretLabel,
             KeyValuePair<string, string> keyringAttribute1,
             KeyValuePair<string, string> keyringAttribute2,
-            string clientId,
             int lockRetryDelay,
-            int lockRetryCount)
+            int lockRetryCount,
+            string clientId,
+            string authority)
         {
             CacheFileName = cacheFileName;
             CacheDirectory = cacheDirectory;
@@ -53,6 +54,7 @@ public class StorageCreationProperties
             KeyringAttribute2 = keyringAttribute2;
 
             ClientId = clientId;
+            Authority = authority;
             LockRetryDelay = lockRetryDelay;
             LockRetryCount = lockRetryCount;
         }
@@ -123,8 +125,24 @@ public class StorageCreationProperties
         public readonly int LockRetryCount;
 
         /// <summary>
-        /// The client id
+        /// The client id.
         /// </summary>
+        /// <remarks> Only required for the MsalCacheHelper.CacheChanged event</remarks>
         public string ClientId { get; }
+
+        /// <summary>
+        /// The authority
+        /// </summary>
+        /// <remarks> Only required for the MsalCacheHelper.CacheChanged event</remarks>
+        public string Authority { get; }
+
+        internal bool IsCacheEventConfigured
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(ClientId) &&
+                   !string.IsNullOrEmpty(Authority);
+            }
+        }
     }
 }
