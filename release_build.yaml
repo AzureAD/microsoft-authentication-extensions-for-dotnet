@@ -23,11 +23,6 @@ steps:
     CredScan: true
     PoliCheck: true
 
-#- task: UseDotNet@2
-#  displayName: 'Use .NET Core sdk 2.2.203'
-#  inputs:
-#    version: 2.2.203
-
 - task: DotNetCoreCLI@2
   displayName: 'Build solution'
   inputs:
