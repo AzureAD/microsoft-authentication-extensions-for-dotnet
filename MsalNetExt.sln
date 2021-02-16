@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{D6543F66
 		.editorconfig = .editorconfig
 		azure-pipelines.yml = azure-pipelines.yml
 		Directory.Build.props = Directory.Build.props
+		release_build.yaml = release_build.yaml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automation.TestApp", "tests\Automation.TestApp\Automation.TestApp.csproj", "{963834D9-B679-4976-84DC-66638CF4CA0F}"

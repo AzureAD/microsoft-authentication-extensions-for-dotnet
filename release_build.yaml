@@ -1,0 +1,151 @@
+pool:
+  name: Hosted Windows 2019 with VS2019
+  #demands: npm
+
+variables:
+  BuildConfiguration: 'Release'
+
+steps:
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
+  displayName: 'Run PoliCheck'
+  inputs:
+    targetType: F
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
+  displayName: 'Run CredScan'
+  inputs:
+    outputFormat: pre
+    debugMode: false
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+  displayName: 'Post Analysis'
+  inputs:
+    CredScan: true
+    PoliCheck: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build solution'
+  inputs:
+    arguments: '-c $(BuildConfiguration) /p:ClientSemVer=$(ClientSemVer) /p:SourceLinkCreate=true /p:ContinousIntegrationBuild=true'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests'
+  inputs:
+    command: test
+    projects: 'tests/**/*UnitTests*.csproj'
+    arguments: '-c $(BuildConfiguration) --no-build --no-restore --collect "Code coverage"'
+
+- task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+  displayName: 'Sign Binaries'
+  inputs:
+    ConnectedServiceName: 'IDDP Code Signing'
+    FolderPath: '$(Build.SourcesDirectory)\src'
+    Pattern: '**\bin\**\*.dll'
+    UseMinimatch: true
+    signConfigType: inlineSignParams
+    inlineOperation: |
+     [
+       {
+         "keyCode": "CP-230012",
+         "operationSetCode": "SigntoolSign",
+         "parameters": [
+         {
+           "parameterName": "OpusName",
+           "parameterValue": "Microsoft.Identity.Client.Extensions.Msal"
+         },
+         {
+           "parameterName": "OpusInfo",
+           "parameterValue": "https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/"
+         },
+         {
+           "parameterName": "PageHash",
+           "parameterValue": "/NPH"
+         },
+         {
+           "parameterName": "FileDigest",
+           "parameterValue": "/fd sha256"
+         },
+         {
+           "parameterName": "TimeStamp",
+           "parameterValue": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+         }
+         ],
+         "toolName": "signtool.exe",
+         "toolVersion": "6.2.9304.0"
+       },
+       {
+         "keyCode": "CP-230012",
+         "operationSetCode": "SigntoolVerify",
+         "parameters": [ ],
+         "toolName": "signtool.exe",
+         "toolVersion": "6.2.9304.0"
+       }
+     ]
+    SessionTimeout: 20
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@3
+  displayName: 'Run BinSkim '
+  inputs:
+    InputType: Basic
+    AnalyzeTarget: '$(Build.SourcesDirectory)\src\**\bin\**\*.dll'
+    AnalyzeVerbose: true
+    AnalyzeHashes: true
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+  displayName: 'Check BinSkim Results'
+  inputs:
+    BinSkim: true
+
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet pack'
+  inputs:
+    command: pack
+    packagesToPack: 'src/**/*.csproj'
+    nobuild: true
+    versioningScheme: byEnvVar
+    versionEnvVar: ClientSemVer
+
+- task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
+  displayName: 'Sign Packages'
+  inputs:
+    ConnectedServiceName: 'IDDP Code Signing'
+    FolderPath: '$(Build.ArtifactStagingDirectory)'
+    Pattern: '*nupkg'
+    signConfigType: inlineSignParams
+    inlineOperation: |
+     [
+         {
+             "keyCode": "CP-401405",
+             "operationSetCode": "NuGetSign",
+             "parameters": [ ],
+             "toolName": "sign",
+             "toolVersion": "1.0"
+         },
+         {
+             "keyCode": "CP-401405",
+             "operationSetCode": "NuGetVerify",
+             "parameters": [ ],
+             "toolName": "sign",
+             "toolVersion": "1.0"
+         }
+     ]
+    SessionTimeout: 20
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifacts'
+  inputs:
+    ArtifactName: packages
+
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@1
+  displayName: 'TSA Upload'
+  inputs:
+    tsaVersion: TsaV2
+    codeBaseName: 'Unified .NET Core Extensions'
+    uploadAPIScan: false
+    uploadFortifySCA: false
+    uploadFxCop: false
+    uploadModernCop: false
+    uploadPREfast: false
+    uploadRoslyn: false
+    uploadTSLint: false
+  continueOnError: true
