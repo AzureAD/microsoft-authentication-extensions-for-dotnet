@@ -96,10 +96,12 @@ namespace Microsoft.Identity.Client.Extensions.Web
         }
 
         /// <summary>
-        /// Enables the use of the MsalCacheHelper.CacheChanged event. 
+        /// Enables the use of the MsalCacheHelper.CacheChanged event, which notifies about
+        /// accounts added and removed. These accounts are scoped to the client_id and authority
+        /// specified here.
         /// </summary>
-        /// <param name="clientId">The client id for the calling application</param>
-        /// <param name="authority">Authority used by the calling application</param>
+        /// <param name="clientId">The client id for which you wish to receive notifications</param>
+        /// <param name="authority">The authority for which you wish to receive notifications</param>
         /// <returns>The augmented builder</returns>        
         public StorageCreationPropertiesBuilder WithCacheChangedEvent(
             string clientId,
