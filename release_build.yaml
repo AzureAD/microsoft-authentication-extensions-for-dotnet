@@ -4,8 +4,6 @@ pool:
 
 variables:
   BuildConfiguration: 'Release'
-
-parameters:
   ClientSemVer: '2.16.0-devops'
 
 steps:
