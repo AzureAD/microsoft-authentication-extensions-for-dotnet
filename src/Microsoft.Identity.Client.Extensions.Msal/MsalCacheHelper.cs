@@ -78,11 +78,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </remarks>
         public event EventHandler<CacheChangedEventArgs> CacheChanged;
 
-        /// <summary>
-        /// Contains a reference to all caches currently registered to synchronize with this MsalCacheHelper, along with
-        /// timestamp of the cache file the last time they deserialized.
-        /// </summary>
-        internal readonly HashSet<ITokenCache> _registeredCaches = new HashSet<ITokenCache>();
+
 
         /// <summary>
         /// Gets the current set of accounts in the cache by creating a new public client, and
@@ -229,7 +225,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 {
                     if (!SharedUtilities.IsMonoPlatform())
                     {
-                        cacheWatcher.EnableRaisingEvents = true;                                            
+                        cacheWatcher.EnableRaisingEvents = true;
                     }
                 }
                 catch (PlatformNotSupportedException)
@@ -253,34 +249,24 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 return SharedUtilities.GetUserRootDirectory();
             }
         }
-
+        private HashSet<ITokenCache> _caches = new HashSet<ITokenCache>();
         /// <summary>
-        /// Registers a token cache to synchronize with on disk storage.
+        /// Registers a token cache to synchronize with the persistent storage.
         /// </summary>
-        /// <param name="tokenCache">Token Cache</param>
+        /// <param name="tokenCache">The application token cache, typically referenced as <see cref="IClientApplicationBase.UserTokenCache"/></param>
+        /// <remarks>Call <see cref="UnregisterCache(ITokenCache)"/> to have the given token cache stop syncronizing.</remarks>
         public void RegisterCache(ITokenCache tokenCache)
         {
             if (tokenCache == null)
             {
                 throw new ArgumentNullException(nameof(tokenCache));
             }
+            //_caches.Add(tokenCache);
+            _logger.LogInformation($"Registering token cache with on disk storage");
 
-            lock (_lockObject)
-            {
-                _logger.LogInformation($"Registering token cache with on disk storage");
-                if (_registeredCaches.Contains(tokenCache))
-                {
-                    _logger.LogWarning($"Redundant registration of {nameof(tokenCache)} in {nameof(MsalCacheHelper)}, skipping further registration.");
-                    return;
-                }
-
-                tokenCache.SetBeforeAccess(BeforeAccessNotification);
-                tokenCache.SetAfterAccess(AfterAccessNotification);
-
-                _logger.LogInformation($"Initializing msal cache");
-            }
-
-            _registeredCaches.Add(tokenCache); // Ignore return value, since we already bail if _registeredCaches contains tokenCache earlier
+            // If the token cache was already registered, this operation does nothing
+            tokenCache.SetBeforeAccess(BeforeAccessNotification);
+            tokenCache.SetAfterAccess(AfterAccessNotification);
 
             _logger.LogInformation($"Done initializing");
         }
@@ -288,24 +274,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Unregisters a token cache so it no longer synchronizes with on disk storage.
         /// </summary>
-        /// <param name="tokenCache"></param>
         public void UnregisterCache(ITokenCache tokenCache)
         {
-            lock (_lockObject)
+            if (tokenCache == null)
             {
-                _logger.LogInformation($"Unregistering token cache from on disk storage");
-
-                if (_registeredCaches.Contains(tokenCache))
-                {
-                    _registeredCaches.Remove(tokenCache);
-                    tokenCache.SetBeforeAccess(args => { });
-                    tokenCache.SetAfterAccess(args => { });
-                }
-                else
-                {
-                    _logger.LogWarning($"Attempting to unregister an already unregistered {nameof(tokenCache)} in {nameof(MsalCacheHelper)}");
-                }
+                throw new ArgumentNullException(nameof(tokenCache));
             }
+
+            tokenCache.SetBeforeAccess(null);
+            tokenCache.SetAfterAccess(null);
         }
 
         /// <summary>

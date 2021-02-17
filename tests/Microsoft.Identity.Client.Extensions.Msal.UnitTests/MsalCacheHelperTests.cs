@@ -46,7 +46,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 _storageCreationPropertiesBuilder.Build(),
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
-            var helper = new MsalCacheHelper(cache, storage,_logger);
+            var helper = new MsalCacheHelper(cache, storage, _logger);
             byte[] dataToSave = Encoding.UTF8.GetBytes("Hello World 2");
 
             cacheAccessor.Read().Returns(Encoding.UTF8.GetBytes("Hello World"));
@@ -71,7 +71,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
             var helper = new MsalCacheHelper(cache, storage, _logger);
-            
+
             var ex = new InvalidCastException();
 
             cacheAccessor.Read().Throws(ex);
@@ -176,7 +176,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Total of 1000ms delay
             _storageCreationPropertiesBuilder.CustomizeLockRetry(20, 100);
             var properties = _storageCreationPropertiesBuilder.Build();
-            
+
 
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
@@ -246,6 +246,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             resetEvent1.Wait();
 
             Assert.IsTrue(getTime.ElapsedMilliseconds > 2000);
+        }
+
+        [TestMethod]
+        public async Task ITokenCacheIsDisposedAsync()
+        {
+#if DEBUG
+            Assert.Inconclusive("GC behavior makes this test run well only on RELEASE");
+#endif
+            var properties = _storageCreationPropertiesBuilder.Build();
+            var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
+            var pca = PublicClientApplicationBuilder.Create(Guid.NewGuid().ToString()).Build();
+            helper.RegisterCache(pca.UserTokenCache);
+
+            // the WeakReference is garbage collected
+            var weakReference = new WeakReference(pca.UserTokenCache);
+
+            // let the top level object go out of scope
+            pca = null;
+
+            // force garbage collection to make sure pca is cleaned (works only in RELEASE mode)
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            Assert.IsFalse(weakReference.IsAlive, "The ITokenCache object should have been garbage collected. This indicates a memory leak.");
         }
 
         [RunOnWindows]
@@ -359,7 +384,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             SemaphoreSlim semaphore2 = new SemaphoreSlim(0);
             bool lockCreated = false, lockDeleted = false;
 
-            
+
             fileSystemWatcher.Created += (s, e) =>
             {
                 semaphore1.Release();
