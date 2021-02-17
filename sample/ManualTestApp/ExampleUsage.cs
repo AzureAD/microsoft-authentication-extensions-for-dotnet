@@ -80,8 +80,7 @@ namespace ManualTestApp
             {
                 return new StorageCreationPropertiesBuilder(
                                    Config.CacheFileName,
-                                   Config.CacheDir,
-                                   Config.ClientId)
+                                   Config.CacheDir)
                                .WithLinuxKeyring(
                                    Config.LinuxKeyRingSchema,
                                    Config.LinuxKeyRingCollection,
@@ -96,8 +95,7 @@ namespace ManualTestApp
 
             return new StorageCreationPropertiesBuilder(
                                      Config.CacheFileName,
-                                     Config.CacheDir,
-                                     Config.ClientId)
+                                     Config.CacheDir)
                                  .WithLinuxUnprotectedFile()
                                  .WithMacKeyChain(
                                      Config.KeyChainServiceName,

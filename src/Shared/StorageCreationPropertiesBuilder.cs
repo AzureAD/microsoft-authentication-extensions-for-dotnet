@@ -12,14 +12,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 namespace Microsoft.Identity.Client.Extensions.Web
 #endif
 {
-/// <summary>
-/// An incremental builder for <see cref="StorageCreationProperties"/> objects.
-/// </summary>
-public class StorageCreationPropertiesBuilder
+    /// <summary>
+    /// An incremental builder for <see cref="StorageCreationProperties"/> objects.
+    /// </summary>
+    public class StorageCreationPropertiesBuilder
     {
         private readonly string _cacheFileName;
         private readonly string _cacheDirectory;
-        private readonly string _clientId;
+        private string _clientId;
+        private string _authority;
         private string _macKeyChainServiceName;
         private string _macKeyChainAccountName;
         private string _keyringSchemaName;
@@ -37,11 +38,25 @@ public class StorageCreationPropertiesBuilder
         /// <param name="cacheFileName">The name of the cache file to use when creating or opening storage.</param>
         /// <param name="cacheDirectory">The name of the directory containing the cache file.</param>
         /// <param name="clientId">The client id for the calling application</param>
+        [Obsolete("Use StorageCreationPropertiesBuilder(string, string) instead. " +
+            "If you need to consume the CacheChanged event then also use WithCacheChangedEvent(string, string)", false)]
         public StorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory, string clientId)
         {
             _cacheFileName = cacheFileName;
             _cacheDirectory = cacheDirectory;
             _clientId = clientId;
+            _authority = "https://login.microsoftonline.com/common"; 
+        }
+
+        /// <summary>
+        /// Constructs a new instance of this builder associated with the given cache file.
+        /// </summary>
+        /// <param name="cacheFileName">The name of the cache file to use when creating or opening storage.</param>
+        /// <param name="cacheDirectory">The name of the directory containing the cache file.</param>
+        public StorageCreationPropertiesBuilder(string cacheFileName, string cacheDirectory)
+        {
+            _cacheFileName = cacheFileName;
+            _cacheDirectory = cacheDirectory;
         }
 
         /// <summary>
@@ -61,9 +76,10 @@ public class StorageCreationPropertiesBuilder
                 _keyringSecretLabel,
                 _keyringAttribute1,
                 _keyringAttribute2,
-                _clientId,
                 _lockRetryDelay,
-                _lockRetryCount);
+                _lockRetryCount,
+                _clientId,
+                _authority);
         }
 
         /// <summary>
@@ -80,6 +96,23 @@ public class StorageCreationPropertiesBuilder
         }
 
         /// <summary>
+        /// Enables the use of the MsalCacheHelper.CacheChanged event, which notifies about
+        /// accounts added and removed. These accounts are scoped to the client_id and authority
+        /// specified here.
+        /// </summary>
+        /// <param name="clientId">The client id for which you wish to receive notifications</param>
+        /// <param name="authority">The authority for which you wish to receive notifications</param>
+        /// <returns>The augmented builder</returns>        
+        public StorageCreationPropertiesBuilder WithCacheChangedEvent(
+            string clientId,
+            string authority = "https://login.microsoftonline.com/common")
+        {
+            _clientId = clientId;
+            _authority = authority;
+            return this;
+        }
+
+        /// <summary>
         /// Augments this builder with a custom retry ammount and delay between retries in the cases where a lock is used.
         /// </summary>
         /// <param name="lockRetryDelay">Delay between retries in ms, must be 1 or more</param>
@@ -87,7 +120,7 @@ public class StorageCreationPropertiesBuilder
         /// <returns>The augmented builder</returns>
         public StorageCreationPropertiesBuilder CustomizeLockRetry(int lockRetryDelay, int lockRetryCount)
         {
-            if(lockRetryDelay < 1)
+            if (lockRetryDelay < 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(lockRetryDelay));
             }

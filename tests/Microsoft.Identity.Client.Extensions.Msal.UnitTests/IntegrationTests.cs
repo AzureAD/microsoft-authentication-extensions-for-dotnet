@@ -33,13 +33,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             var storageBuilder = new StorageCreationPropertiesBuilder(
                 Path.GetFileName(CacheFilePath),
-                Path.GetDirectoryName(CacheFilePath),
-                ClientId);
+                Path.GetDirectoryName(CacheFilePath));
             storageBuilder = storageBuilder.WithMacKeyChain(
                 serviceName: "Microsoft.Developer.IdentityService.Test",
                 accountName: "MSALCacheTest");
 
-           // unit tests run on Linux boxes without LibSecret 
+            // unit tests run on Linux boxes without LibSecret 
             storageBuilder.WithLinuxUnprotectedFile();
 
             // 1. Use MSAL to create an instance of the Public Client Application
@@ -60,9 +59,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void ImportExport()
         {
             var storageBuilder = new StorageCreationPropertiesBuilder(
-          Path.GetFileName(CacheFilePath),
-          Path.GetDirectoryName(CacheFilePath),
-          ClientId);
+                Path.GetFileName(CacheFilePath),
+                Path.GetDirectoryName(CacheFilePath));
+
             storageBuilder = storageBuilder.WithMacKeyChain(
                 serviceName: "Microsoft.Developer.IdentityService.Test",
                 accountName: "MSALCacheTest");

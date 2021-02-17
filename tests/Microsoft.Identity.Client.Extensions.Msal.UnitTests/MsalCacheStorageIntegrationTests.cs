@@ -27,7 +27,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere");
+            var builder = new StorageCreationPropertiesBuilder(
+                Path.GetFileName(CacheFilePath),
+                Path.GetDirectoryName(CacheFilePath));
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
 
             // Tests run on machines without Libsecret
@@ -83,8 +85,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             var storageWithKeyRing = new StorageCreationPropertiesBuilder(
                     Path.GetFileName(CacheFilePath),
-                    Path.GetDirectoryName(CacheFilePath),
-                    "ClientIDGoesHere")
+                    Path.GetDirectoryName(CacheFilePath))
                 .WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache")
                 .WithLinuxKeyring(
                     schemaName: "msal.cache",

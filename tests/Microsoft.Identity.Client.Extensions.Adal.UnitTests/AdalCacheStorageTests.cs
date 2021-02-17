@@ -20,7 +20,7 @@ namespace Microsoft.Identity.Client.Extensions.Adal.UnitTests
         [ClassInitialize]
         public static void ClassInitialize(TestContext _)
         {
-            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath), "ClientIDGoesHere");
+            var builder = new StorageCreationPropertiesBuilder(Path.GetFileName(CacheFilePath), Path.GetDirectoryName(CacheFilePath));
             builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "ADALCache");
             builder = builder.WithLinuxKeyring(
                 schemaName: "IdentityServiceAdalCache.cache",
