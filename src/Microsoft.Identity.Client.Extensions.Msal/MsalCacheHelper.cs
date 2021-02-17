@@ -249,7 +249,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 return SharedUtilities.GetUserRootDirectory();
             }
         }
-        private HashSet<ITokenCache> _caches = new HashSet<ITokenCache>();
+
         /// <summary>
         /// Registers a token cache to synchronize with the persistent storage.
         /// </summary>
@@ -261,7 +261,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             {
                 throw new ArgumentNullException(nameof(tokenCache));
             }
-            //_caches.Add(tokenCache);
+
             _logger.LogInformation($"Registering token cache with on disk storage");
 
             // If the token cache was already registered, this operation does nothing
