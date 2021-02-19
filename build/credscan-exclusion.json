@@ -1,0 +1,9 @@
+{
+  "tool": "Credential Scanner",
+  "suppressions": [
+    {
+      "file": "token_cache_adfs.json",
+      "_justification": "A few dummy test constants, not actual secrets."
+    }
+  ]
+}
