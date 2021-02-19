@@ -28,6 +28,7 @@ steps:
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
   displayName: 'Run CredScan'
   inputs:
+    suppressionsFile: 'build/credscan-exclusion.json'
     outputFormat: pre
     debugMode: false
 
