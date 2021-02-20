@@ -248,11 +248,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(getTime.ElapsedMilliseconds > 2000);
         }
 
+
         [TestMethod]
         public async Task ITokenCacheIsDisposedAsync()
         {
 #if DEBUG
             Assert.Inconclusive("GC behavior makes this test run well only on RELEASE");
+#endif
+#if NETCOREAPP1_0_OR_GREATER
+            Assert.Inconclusive("GC behavior on .NET core does not allow for this test");
 #endif
             var properties = _storageCreationPropertiesBuilder.Build();
             var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
