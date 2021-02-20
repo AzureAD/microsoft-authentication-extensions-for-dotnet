@@ -248,35 +248,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsTrue(getTime.ElapsedMilliseconds > 2000);
         }
 
-
-        [TestMethod]
-        public async Task ITokenCacheIsDisposedAsync()
-        {
-#if DEBUG
-            Assert.Inconclusive("GC behavior makes this test run well only on RELEASE");
-#endif
-#if NETCOREAPP1_0_OR_GREATER
-            Assert.Inconclusive("GC behavior on .NET core does not allow for this test");
-#endif
-            var properties = _storageCreationPropertiesBuilder.Build();
-            var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
-            var pca = PublicClientApplicationBuilder.Create(Guid.NewGuid().ToString()).Build();
-            helper.RegisterCache(pca.UserTokenCache);
-
-            // the WeakReference is garbage collected
-            var weakReference = new WeakReference(pca.UserTokenCache);
-
-            // let the top level object go out of scope
-            pca = null;
-
-            // force garbage collection to make sure pca is cleaned (works only in RELEASE mode)
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            Assert.IsFalse(weakReference.IsAlive, "The ITokenCache object should have been garbage collected. This indicates a memory leak.");
-        }
-
         [RunOnWindows]
         public async Task TwoRegisteredCachesRemainInSyncTestAsync()
         {
