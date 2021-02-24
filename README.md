@@ -10,15 +10,6 @@
 
 We aim to have all [MSAL public client samples](https://docs.microsoft.com/en-gb/azure/active-directory/develop/sample-v2-code#desktop-and-mobile-public-client-apps) use the extensions. 
 
-# Release schedule
-
-We release the extensions when: 
-
-- important changes are done to MSAL
-- changes are done to the extension library
-
-Please log an issue if you require an out of band release.
-
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
