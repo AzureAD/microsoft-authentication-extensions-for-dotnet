@@ -19,7 +19,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private readonly MacOSKeychain _keyChain;
 
-        public MacKeychainAccessor(string cacheFilePath, string keyChainServiceName, string keyChainAccountName, TraceSourceLogger logger) 
+        public MacKeychainAccessor(string cacheFilePath, string keyChainServiceName, string keyChainAccountName, TraceSourceLogger logger)
         {
             if (string.IsNullOrWhiteSpace(cacheFilePath))
             {
@@ -28,12 +28,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             if (string.IsNullOrWhiteSpace(keyChainServiceName))
             {
-                throw new ArgumentNullException( nameof(keyChainServiceName));
+                throw new ArgumentNullException(nameof(keyChainServiceName));
             }
 
             if (string.IsNullOrWhiteSpace(keyChainAccountName))
             {
-                throw new ArgumentNullException( nameof(keyChainAccountName));
+                throw new ArgumentNullException(nameof(keyChainAccountName));
             }
 
             _cacheFilePath = cacheFilePath;
@@ -49,27 +49,27 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             _logger.LogInformation("Clearing cache");
             FileIOWithRetries.DeleteCacheFile(_cacheFilePath, _logger);
 
-            _logger.LogInformation("Before delete mac keychain");
+            _logger.LogInformation($"Before delete mac keychain service: {_service} account {_account}");
             _keyChain.Remove(_service, _account);
-            _logger.LogInformation("After delete mac keychain");
+            _logger.LogInformation($"After delete mac keychain service: {_service} account {_account}");
         }
 
-       
+
         public byte[] Read()
         {
-            _logger.LogInformation($"ReadDataCore, Before reading from mac keychain");
+            _logger.LogInformation($"ReadDataCore, Before reading from mac keychain service: {_service} account {_account}");
             var entry = _keyChain.Get(_service, _account);
-            _logger.LogInformation($"ReadDataCore, After reading mac keychain {entry?.Password?.Length ?? 0} chars");        
+            _logger.LogInformation($"ReadDataCore, After reading mac keychain {entry?.Password?.Length ?? 0} chars service: {_service} account {_account}");
 
             return entry?.Password;
         }
 
         public void Write(byte[] data)
         {
-            _logger.LogInformation("Before write to mac keychain");
+            _logger.LogInformation($"Before write to mac keychain service: {_service} account {_account}");
 
             _keyChain.AddOrUpdate(_service, _account, data);
-            _logger.LogInformation("After write to mac keychain");
+            _logger.LogInformation($"After write to mac keychain service: {_service} account {_account}");
 
             // Change the "last modified" attribute and trigger file changed events
             FileIOWithRetries.TouchFile(_cacheFilePath, _logger);
