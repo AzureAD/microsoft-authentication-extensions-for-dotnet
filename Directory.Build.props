@@ -5,10 +5,10 @@
     <LangVersion>7.3</LangVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/build/MSAL.snk</AssemblyOriginatorKeyFile>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/build/SolutionWideAnalyzerConfig.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    
     <TargetFrameworkNetDesktop>net45</TargetFrameworkNetDesktop>
     <TargetFrameworkNetStandard>netstandard2.0</TargetFrameworkNetStandard>
     <TargetFrameworkNetCore>netcoreapp2.1</TargetFrameworkNetCore>
@@ -25,6 +25,6 @@
          For clarity, without PrivateAssets marked here, anyone consuming Microsoft.Identity.Client
          would also be forced to install these dependencies.  PrivateAssets avoids this problem. -->
     <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.3" PrivateAssets="All" />
-  </ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3" PrivateAssets="All" />
+</ItemGroup>
 </Project>
