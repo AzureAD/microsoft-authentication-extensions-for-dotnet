@@ -24,23 +24,20 @@ namespace KeyChainTestApp
                 // Display menu
                 Console.WriteLine($@"
                         1. Test KeyChain entry similar to PowerShell
-                        2. Test KeyChain entry different location
+                        2. Test KeyChain entry different location (read - write - read - delete)
                         
-                        3. Test iOS-style KeyChain entry, location like PowserShell
-                        4. Test iOS-style KeyChain entry, different location
-
                     Enter your Selection: ");
                 char.TryParse(Console.ReadLine(), out var selection);
                 try
                 {
-                    switch (selection)
+                    switch (selection) 
                     {
                         case '1':
                             MacKeychainAccessor macKeychainAccessor1 =
                                 new MacKeychainAccessor(
                                     cacheFilePath: "~/.local/.IdentityService",
                                     keyChainServiceName: "Microsoft.Developer.IdentityService",
-                                    keyChainAccountName: "MSALCache",
+                                    keyChainAccountName: "msal.cache",
                                     s_logger);
 
                             TestAccessors(macKeychainAccessor1);
@@ -49,19 +46,19 @@ namespace KeyChainTestApp
                             break;
                         case '2':
 
-                            Console.WriteLine("Type a keychain service or Enter to use `Microsoft.Developer.Test.<Guid>` ");
+                            Console.WriteLine("Type a keychain service or Enter to use `Microsoft.Developer.IdentityService` ");
                             string service = Console.ReadLine();
                             if (string.IsNullOrEmpty(service))
                             {
-                                service = $"Microsoft.Developer.Test.{Guid.NewGuid()}";
+                                service = "Microsoft.Developer.IdentityService";
                            
                             }
 
-                            Console.WriteLine("Type a keychain account or Enter to use `MSALCache` ");
+                            Console.WriteLine("Type a keychain account or Enter to use `msal.cache` ");
                             string account = Console.ReadLine();
                             if (string.IsNullOrEmpty(account))
                             {
-                                account = $"MSALCache";
+                                account = $"msal.cache";
                             }
 
                             Console.WriteLine($"Using Account {account} and Service: {service}");
@@ -73,21 +70,14 @@ namespace KeyChainTestApp
                                     keyChainAccountName: account,
                                     s_logger);
 
-                            ReadWrite(macKeychainAccessor2);
+                            ReadOrReadWriteClear(macKeychainAccessor2);
 
                             break;
 
-                        case '3':
-                            MacKeychainAccessor macKeychainAccessor3 =
-                               new MacKeychainAccessor(
-                                   cacheFilePath: "~/.local/microsoft.test.txt",
-                                   keyChainServiceName: "Microsoft.Developer.IdentityService",
-                                   keyChainAccountName: "MSALCache",
-                                   s_logger);
 
-                            //TestAccessors(macKeychainAccessor1);
+                         
 
-                            break;
+                            
                     }
                 }
                 catch (Exception ex)
@@ -113,7 +103,7 @@ namespace KeyChainTestApp
             try
             {
                 Console.WriteLine("Trying the location used for validation first .. ");
-                ReadWrite(persistenceValidator);
+                ReadOrReadWriteClear(persistenceValidator);
 
             }
             catch (Exception e)
@@ -124,7 +114,7 @@ namespace KeyChainTestApp
             try
             {
                 Console.WriteLine("Trying the real location");                
-                ReadWrite(persistenceValidator);
+                ReadOrReadWriteClear(macKeychainAccessor1);
             }
             catch (Exception e)
             {
@@ -132,17 +122,32 @@ namespace KeyChainTestApp
             }
         }
 
-        private static void ReadWrite(ICacheAccessor accessor)
+    
+
+        private static void ReadOrReadWriteClear(ICacheAccessor accessor)
         {
+      
             Console.WriteLine(accessor.ToString());
-
-            accessor.Clear();
-            accessor.Write(s_payload);
             var bytes = accessor.Read();
-            accessor.Clear();
+            if (bytes == null || bytes.Length == 0)
+            {
+                Console.WriteLine("No data found, writing some");
+                accessor.Write(s_payload);
+                var bytes2 = accessor.Read();
+                accessor.Clear();
+                Console.WriteLine("All good");
 
-            Console.WriteLine($"Clear/Write/Read/Clear cycle complete. " +
-                $"Read: `{ Encoding.UTF8.GetString(bytes) }`");
+            }
+            else
+            {
+                string s = Encoding.UTF8.GetString(bytes) ;
+                Console.WriteLine($"Found some data ... {s.Substring(0,20)}...");
+
+                Console.WriteLine("Stopping");
+
+            }
+            
+
         }
     }
 }
