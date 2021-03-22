@@ -54,11 +54,11 @@ namespace KeyChainTestApp
                            
                             }
 
-                            Console.WriteLine("Type a keychain account or Enter to use `msal.cache` ");
+                            Console.WriteLine("Type a keychain account or Enter to use `msal.cache.2` ");
                             string account = Console.ReadLine();
                             if (string.IsNullOrEmpty(account))
                             {
-                                account = $"msal.cache";
+                                account = $"msal.cache.2";
                             }
 
                             Console.WriteLine($"Using Account {account} and Service: {service}");
