@@ -83,5 +83,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 _account,
                 _logger);
         }
+
+        public override string ToString()
+        {
+            return $"MacKeyChain accessor pointing to: service {_service}, account {_account}, file {_cacheFilePath}";
+        }
     }
 }
