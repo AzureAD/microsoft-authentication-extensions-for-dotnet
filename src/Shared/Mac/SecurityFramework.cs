@@ -29,6 +29,8 @@ namespace Microsoft.Identity.Extensions.Mac
         public static readonly IntPtr kSecValueRef;
         public static readonly IntPtr kSecValueData;
         public static readonly IntPtr kSecReturnData;
+        public static readonly IntPtr kSecUseDataProtectionKeychain;
+        public static readonly IntPtr kSecAttrAccessGroup;
 
         static SecurityFramework()
         {
@@ -48,6 +50,8 @@ namespace Microsoft.Identity.Extensions.Mac
             kSecValueRef = GetGlobal(Handle, "kSecValueRef");
             kSecValueData = GetGlobal(Handle, "kSecValueData");
             kSecReturnData = GetGlobal(Handle, "kSecReturnData");
+            kSecUseDataProtectionKeychain = GetGlobal(Handle, "kSecUseDataProtectionKeychain");
+            kSecAttrAccessGroup = GetGlobal(Handle, "kSecAttrAccessGroup");
         }
 
         [DllImport(SecurityFrameworkLib, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

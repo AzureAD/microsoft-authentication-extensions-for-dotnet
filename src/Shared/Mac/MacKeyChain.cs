@@ -22,6 +22,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
     {
         private static object s_lock = new object();
         private readonly string _namespace;
+        private readonly bool _useIosKeyChain;
 
         #region Constructors
 
@@ -29,10 +30,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// Open the default keychain (current user's login keychain).
         /// </summary>
         /// <param name="namespace">Optional namespace to scope credential operations.</param>
+        /// <param name="useIosKeyChain">Use iOS KeyChain, which is not compatible with MacOs keychain
         /// <returns>Default keychain.</returns>
-        public MacOSKeychain(string @namespace = null)
+        public MacOSKeychain(string @namespace = null, bool useIosKeyChain = false)
         {
             _namespace = @namespace;
+            _useIosKeyChain = useIosKeyChain;
         }
 
         #endregion
@@ -249,8 +252,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         #endregion
+        
         private void UpdateQueryWithServiceAndAccount(string service, string account, IntPtr query, ref IntPtr servicePtr, ref IntPtr accountPtr)
         {
+     
+if (_useIosKeyChain) {
+                CFDictionaryAddValue(query, kSec, servicePtr);
+
+}
+            
+
             if (!string.IsNullOrWhiteSpace(service))
             {
                 string fullService = CreateServiceName(service);
