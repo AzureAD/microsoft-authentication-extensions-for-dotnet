@@ -122,6 +122,12 @@ namespace Microsoft.Identity.Extensions.Mac
         public static extern int SecKeychainItemCopyContent(IntPtr itemRef, IntPtr itemClass, IntPtr attrList,
             out uint length, out IntPtr outData);
 
+        [DllImport (SecurityFrameworkLib)]
+		public extern static int SecItemAdd (/* CFDictionaryRef */ IntPtr attributes, /* CFTypeRef* */ IntPtr result);
+
+        [DllImport (SecurityFrameworkLib)]
+        public extern static int SecItemUpdate (/* CFDictionaryRef */ IntPtr query, /* CFDictionaryRef */ IntPtr attributesToUpdate);
+
         public const int CallerSecuritySession = -1;
 
         // https://developer.apple.com/documentation/security/1542001-security_framework_result_codes
