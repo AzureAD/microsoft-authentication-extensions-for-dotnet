@@ -32,7 +32,7 @@
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.29.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.30.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == '$(TargetFrameworkNetDesktop)'">
