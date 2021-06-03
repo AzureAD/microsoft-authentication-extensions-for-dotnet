@@ -95,7 +95,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
         [TestMethod]
-        public void MultiAccessSerializationAsync()
+        public void MultiAccessSerialization()
         {
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(

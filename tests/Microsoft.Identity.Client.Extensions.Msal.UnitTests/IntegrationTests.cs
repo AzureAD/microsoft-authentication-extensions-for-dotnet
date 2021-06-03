@@ -50,7 +50,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                     storageBuilder.Build(),
                     new TraceSource("MSAL.CacheExtension.Test"))
                 .GetAwaiter().GetResult();
-
+            
             // 4. Let the cache helper handle MSAL's cache
             _cacheHelper.RegisterCache(app.UserTokenCache);
         }

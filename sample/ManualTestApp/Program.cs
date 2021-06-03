@@ -135,12 +135,12 @@ namespace ManualTestApp
 
                         while (true)
                         {
-                            Task.WaitAll(
-                                RunRopcAndSilentAsync("PCA_1", pca),
-                                RunRopcAndSilentAsync("PCA_2", pca2),
-                                RunRopcAndSilentAsync("PCA_3", pca3)
+                                await Task.WhenAll(
+                                    RunRopcAndSilentAsync("PCA_1", pca),
+                                    RunRopcAndSilentAsync("PCA_2", pca2),
+                                    RunRopcAndSilentAsync("PCA_3", pca3)
 
-                            );
+                                ).ConfigureAwait(false);
 
                             Trace.Flush();
                             await Task.Delay(2000).ConfigureAwait(false);

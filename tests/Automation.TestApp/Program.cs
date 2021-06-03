@@ -57,12 +57,13 @@ namespace Automation.TestApp
                 crossPlatLock = new CrossPlatLock(lockFile);
                 using (StreamWriter sw = new StreamWriter(protectedFile, true))
                 {
-                    sw.WriteLine($"< {pid} {DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}");
+                    await sw.WriteLineAsync($"< {pid} {DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}").ConfigureAwait(false);
 
                     // increase contention by simulating a slow writer
                     await Task.Delay(s_artificialContention).ConfigureAwait(false);
 
-                    sw.WriteLine($"> {pid} {DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}");
+                    await sw.WriteLineAsync($"> {pid} {DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)}").ConfigureAwait(false);
+                    ;
                     Console.WriteLine("Process finished: " + pid);
 
                 }
