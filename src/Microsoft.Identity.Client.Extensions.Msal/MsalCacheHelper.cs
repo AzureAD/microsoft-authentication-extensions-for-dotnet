@@ -170,7 +170,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
         }
 
+#pragma warning disable VSTHRD100 // Avoid async void methods 
+#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
         private async void OnCacheFileChangedAsync(object sender, FileSystemEventArgs args)
+#pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
+#pragma warning restore VSTHRD100 // Avoid async void methods
         {
             // avoid the high cost of computing the added / removed accounts if nobody listens to this
             if (_cacheChangedEventHandler?.GetInvocationList() != null &&
