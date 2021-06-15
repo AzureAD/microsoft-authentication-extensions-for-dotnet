@@ -10,6 +10,7 @@ namespace KeyChainTestApp
             new TraceSourceLogger(new System.Diagnostics.TraceSource("CacheExt.TestApp"));
 
         private static byte[] s_payload = Encoding.UTF8.GetBytes("Hello world from the MSAL cache test app");
+        private static byte[] s_payload2 = Encoding.UTF8.GetBytes("UPDATED");
         static void Main(string[] args)
         {
             if (!SharedUtilities.IsMacPlatform())
@@ -30,7 +31,7 @@ namespace KeyChainTestApp
                 char.TryParse(Console.ReadLine(), out var selection);
                 try
                 {
-                    switch (selection) 
+                    switch (selection)
                     {
                         case '1':
                             MacKeychainAccessor macKeychainAccessor1 =
@@ -51,7 +52,7 @@ namespace KeyChainTestApp
                             if (string.IsNullOrEmpty(service))
                             {
                                 service = "Microsoft.Developer.IdentityService";
-                           
+
                             }
 
                             Console.WriteLine("Type a keychain account or Enter to use `msal.cache.2` ");
@@ -75,9 +76,18 @@ namespace KeyChainTestApp
                             break;
 
 
-                         
+                        case '3':
+                            var chain = new MacOSKeychain();
 
+                            service = "Microsoft.Developer.IdentityService3";
+                            account = $"msal.cache.3";
+
+                            //chain.Add2(service, account, s_payload);
+                            chain.AddOrUpdate(service, account, s_payload);
+                            chain.AddOrUpdate(service, account, s_payload2);
                             
+
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -113,7 +123,7 @@ namespace KeyChainTestApp
 
             try
             {
-                Console.WriteLine("Trying the real location");                
+                Console.WriteLine("Trying the real location");
                 ReadOrReadWriteClear(macKeychainAccessor1);
             }
             catch (Exception e)
@@ -122,11 +132,11 @@ namespace KeyChainTestApp
             }
         }
 
-    
+
 
         private static void ReadOrReadWriteClear(ICacheAccessor accessor)
         {
-      
+
             Console.WriteLine(accessor.ToString());
             var bytes = accessor.Read();
             if (bytes == null || bytes.Length == 0)
@@ -140,13 +150,13 @@ namespace KeyChainTestApp
             }
             else
             {
-                string s = Encoding.UTF8.GetString(bytes) ;
-                Console.WriteLine($"Found some data ... {s.Substring(0,20)}...");
+                string s = Encoding.UTF8.GetString(bytes);
+                Console.WriteLine($"Found some data ... {s.Substring(0, 20)}...");
 
                 Console.WriteLine("Stopping");
 
             }
-            
+
 
         }
     }

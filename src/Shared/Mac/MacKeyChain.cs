@@ -20,6 +20,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
     internal class MacOSKeychain
     {
+        private static object s_lock = new object();
         private readonly string _namespace;
 
         #region Constructors
@@ -57,39 +58,29 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 CFDictionaryAddValue(query, kSecReturnData, kCFBooleanTrue);
                 CFDictionaryAddValue(query, kSecReturnAttributes, kCFBooleanTrue);
 
-                if (!string.IsNullOrWhiteSpace(service))
-                {
-                    string fullService = CreateServiceName(service);
-                    servicePtr = CreateCFStringUtf8(fullService);
-                    CFDictionaryAddValue(query, kSecAttrService, servicePtr);
-                }
+                UpdateQueryWithServiceAndAccount(service, account, query, ref servicePtr, ref accountPtr);
 
-                if (!string.IsNullOrWhiteSpace(account))
-                {
-                    accountPtr = CreateCFStringUtf8(account);
-                    CFDictionaryAddValue(query, kSecAttrAccount, accountPtr);
-                }
 
                 int searchResult = SecItemCopyMatching(query, out resultPtr);
 
                 switch (searchResult)
                 {
-                case OK:
-                    int typeId = CFGetTypeID(resultPtr);
-                    Debug.Assert(typeId != CFArrayGetTypeID(), "Returned more than one keychain item in search");
-                    if (typeId == CFDictionaryGetTypeID())
-                    {
-                        return CreateCredentialFromAttributes(resultPtr);
-                    }
+                    case OK:
+                        int typeId = CFGetTypeID(resultPtr);
+                        Debug.Assert(typeId != CFArrayGetTypeID(), "Returned more than one keychain item in search");
+                        if (typeId == CFDictionaryGetTypeID())
+                        {
+                            return CreateCredentialFromAttributes(resultPtr);
+                        }
 
-                    throw new InteropException($"Unknown keychain search result type CFTypeID: {typeId}.", -1);
+                        throw new InteropException($"Unknown keychain search result type CFTypeID: {typeId}.", -1);
 
-                case ErrorSecItemNotFound:
-                    return null;
+                    case ErrorSecItemNotFound:
+                        return null;
 
-                default:
-                    ThrowIfError(searchResult);
-                    return null;
+                    default:
+                        ThrowIfError(searchResult);
+                        return null;
                 }
             }
             finally
@@ -107,57 +98,101 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public void AddOrUpdate(string service, string account, byte[] secretBytes)
         {
-            IntPtr passwordData = IntPtr.Zero;
-            IntPtr itemRef = IntPtr.Zero;
 
-            string serviceName = CreateServiceName(service);
+            lock (s_lock)
+            {
+                if (Get(service, account) != null)
+                {
+                    Remove(service, account);
+                }
 
+                Add(service, account, secretBytes);
 
-            uint serviceNameLength = (uint)serviceName.Length;
-            uint accountLength = (uint)(account?.Length ?? 0);
+            }
+        }
+
+        // Fails if item already exists
+        public void Add(string service, string account, byte[] secretBytes)
+        {
+            IntPtr query = IntPtr.Zero;
+            IntPtr itemRefPtr = IntPtr.Zero;
+            IntPtr servicePtr = IntPtr.Zero;
+            IntPtr accountPtr = IntPtr.Zero;
 
             try
             {
-                // Check if an entry already exists in the keychain
-                int findResult = SecKeychainFindGenericPassword(
-                    IntPtr.Zero, serviceNameLength, serviceName, accountLength, account,
-                    out uint _, out passwordData, out itemRef);
+                query = CFDictionaryCreateMutable(
+                    IntPtr.Zero,
+                    0,
+                    IntPtr.Zero, IntPtr.Zero);
 
-                switch (findResult)
-                {
-                // Update existing entry
-                case OK:
-                    ThrowIfError(
-                        SecKeychainItemModifyAttributesAndData(itemRef, IntPtr.Zero, (uint)secretBytes.Length, secretBytes),
-                        "Could not update existing item"
-                    );
-                    break;
+                CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword);
+                IntPtr val = CreateCFStringUtf8(secretBytes);
+                CFDictionaryAddValue(query, kSecValueData, val);
 
-                // Create new entry
-                case ErrorSecItemNotFound:
-                    ThrowIfError(
-                        SecKeychainAddGenericPassword(IntPtr.Zero, serviceNameLength, serviceName, accountLength,
-                            account, (uint)secretBytes.Length, secretBytes, out itemRef),
-                        "Could not create new item"
-                    );
-                    break;
+                UpdateQueryWithServiceAndAccount(service, account, query, ref servicePtr, ref accountPtr);
 
-                default:
-                    ThrowIfError(findResult);
-                    break;
-                }
+                // Search for the credential to delete and get the SecKeychainItem ref.
+                int addResult = SecItemAdd(query, IntPtr.Zero);
+
+                ThrowIfError(addResult);
+
             }
             finally
             {
-                if (passwordData != IntPtr.Zero)
-                {
-                    SecKeychainItemFreeContent(IntPtr.Zero, passwordData);
-                }
+                if (query != IntPtr.Zero)
+                    CFRelease(query);
+                if (itemRefPtr != IntPtr.Zero)
+                    CFRelease(itemRefPtr);
+                if (servicePtr != IntPtr.Zero)
+                    CFRelease(servicePtr);
+                if (accountPtr != IntPtr.Zero)
+                    CFRelease(accountPtr);
+            }
+        }
 
-                if (itemRef != IntPtr.Zero)
-                {
-                    CFRelease(itemRef);
-                }
+        public void Update(string service, string account, byte[] newSecretBytes)
+        {
+            IntPtr query = IntPtr.Zero;
+            IntPtr attrList = IntPtr.Zero;
+            IntPtr itemRefPtr = IntPtr.Zero;
+            IntPtr servicePtr = IntPtr.Zero;
+            IntPtr accountPtr = IntPtr.Zero;
+
+            try
+            {
+                query = CFDictionaryCreateMutable(
+                    IntPtr.Zero,
+                    0,
+                    IntPtr.Zero, IntPtr.Zero);
+
+                attrList = CFDictionaryCreateMutable(
+                    IntPtr.Zero,
+                    0,
+                    IntPtr.Zero, IntPtr.Zero);
+
+                CFDictionaryAddValue(query, kSecClass, kSecClassGenericPassword);
+                IntPtr val = CreateCFStringUtf8(newSecretBytes);
+                CFDictionaryAddValue(attrList, kSecValueData, val);
+
+                UpdateQueryWithServiceAndAccount(service, account, query, ref servicePtr, ref accountPtr);
+
+                // Search for the credential to delete and get the SecKeychainItem ref.
+                int addResult = SecItemUpdate(query, attrList);
+
+                ThrowIfError(addResult);
+
+            }
+            finally
+            {
+                if (query != IntPtr.Zero)
+                    CFRelease(query);
+                if (itemRefPtr != IntPtr.Zero)
+                    CFRelease(itemRefPtr);
+                if (servicePtr != IntPtr.Zero)
+                    CFRelease(servicePtr);
+                if (accountPtr != IntPtr.Zero)
+                    CFRelease(accountPtr);
             }
         }
 
@@ -179,36 +214,25 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 CFDictionaryAddValue(query, kSecMatchLimit, kSecMatchLimitOne);
                 CFDictionaryAddValue(query, kSecReturnRef, kCFBooleanTrue);
 
-                if (!string.IsNullOrWhiteSpace(service))
-                {
-                    string fullService = CreateServiceName(service);
-                    servicePtr = CreateCFStringUtf8(fullService);
-                    CFDictionaryAddValue(query, kSecAttrService, servicePtr);
-                }
-
-                if (!string.IsNullOrWhiteSpace(account))
-                {
-                    accountPtr = CreateCFStringUtf8(account);
-                    CFDictionaryAddValue(query, kSecAttrAccount, accountPtr);
-                }
+                UpdateQueryWithServiceAndAccount(service, account, query, ref servicePtr, ref accountPtr);
 
                 // Search for the credential to delete and get the SecKeychainItem ref.
                 int searchResult = SecItemCopyMatching(query, out itemRefPtr);
                 switch (searchResult)
                 {
-                case OK:
-                    // Delete the item
-                    ThrowIfError(
-                        SecKeychainItemDelete(itemRefPtr)
-                    );
-                    return true;
+                    case OK:
+                        // Delete the item
+                        ThrowIfError(
+                            SecKeychainItemDelete(itemRefPtr)
+                        );
+                        return true;
 
-                case ErrorSecItemNotFound:
-                    return false;
+                    case ErrorSecItemNotFound:
+                        return false;
 
-                default:
-                    ThrowIfError(searchResult);
-                    return false;
+                    default:
+                        ThrowIfError(searchResult);
+                        return false;
                 }
             }
             finally
@@ -225,10 +249,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         }
 
         #endregion
+        private void UpdateQueryWithServiceAndAccount(string service, string account, IntPtr query, ref IntPtr servicePtr, ref IntPtr accountPtr)
+        {
+            if (!string.IsNullOrWhiteSpace(service))
+            {
+                string fullService = CreateServiceName(service);
+                servicePtr = CreateCFStringUtf8(fullService);
+                CFDictionaryAddValue(query, kSecAttrService, servicePtr);
+            }
+
+            if (!string.IsNullOrWhiteSpace(account))
+            {
+                accountPtr = CreateCFStringUtf8(account);
+                CFDictionaryAddValue(query, kSecAttrAccount, accountPtr);
+            }
+        }
 
         private static IntPtr CreateCFStringUtf8(string str)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(str);
+            return CreateCFStringUtf8(bytes);
+        }
+
+        private static IntPtr CreateCFStringUtf8(byte[] bytes)
+        {
             return CFStringCreateWithBytes(IntPtr.Zero,
                 bytes, bytes.Length, CFStringEncoding.kCFStringEncodingUTF8, false);
         }
