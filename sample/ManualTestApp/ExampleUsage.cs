@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -19,7 +18,6 @@ namespace ManualTestApp
         /// <summary>
         /// Start reading here...
         /// </summary>
-        /// <returns></returns>
         public static async Task Example_Async()
         {
             // 1. Use MSAL to create an instance of the Public Client Application
@@ -30,7 +28,12 @@ namespace ManualTestApp
 
             // 3. Let the cache helper handle MSAL's cache
             cacheHelper.RegisterCache(app.UserTokenCache);
+
+            // 4. Optionally, store some other secret
+            StoreOtherSecret();
         }
+
+
 
         private static async Task<MsalCacheHelper> CreateCacheHelperAsync()
         {
@@ -102,6 +105,43 @@ namespace ManualTestApp
                                      Config.KeyChainAccountName)
                                  .Build();
 
+        }
+
+        private static void StoreOtherSecret()
+        {
+            var storageProperties = new StorageCreationPropertiesBuilder(
+               Config.CacheFileName + ".other_secrets",
+               Config.CacheDir)
+                .WithMacKeyChain(
+                   Config.KeyChainServiceName + ".other_secrets",
+                   Config.KeyChainAccountName)
+                .WithLinuxKeyring(
+                                   Config.LinuxKeyRingSchema,
+                                   Config.LinuxKeyRingCollection,
+                                   Config.LinuxKeyRingLabel,                                   
+                                   Config.LinuxKeyRingAttr1,
+                                   new KeyValuePair<string, string>("other_secrets", "secret_description"));
+
+            Storage storage = Storage.Create(storageProperties.Build());
+
+            byte[] secretBytes = Encoding.UTF8.GetBytes("secret");
+
+            using (new CrossPlatLock(Config.CacheFileName + ".other_secrets.lock"))
+            {
+                Console.WriteLine("Writing...");
+                storage.WriteData(secretBytes);
+
+                Console.WriteLine("Writing again...");
+                storage.WriteData(secretBytes);
+
+
+                Console.WriteLine("Reading...");
+                var data = storage.ReadData();
+                Console.WriteLine("Read: " + Encoding.UTF8.GetString(data));
+
+                Console.WriteLine("Deleting...");
+                storage.Clear();
+            }
         }
     }
 }

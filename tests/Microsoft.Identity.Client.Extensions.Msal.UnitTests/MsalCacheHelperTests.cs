@@ -42,7 +42,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             var cache = new MockTokenCache();
-            var storage = new MsalCacheStorage(
+            var storage = new Storage(
                 _storageCreationPropertiesBuilder.Build(),
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
@@ -66,7 +66,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             var cache = new MockTokenCache();
-            var storage = new MsalCacheStorage(
+            var storage = new Storage(
                 _storageCreationPropertiesBuilder.Build(),
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
@@ -100,13 +100,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
                 cache1,
-                MsalCacheStorage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
+                Storage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
                 _logger);
 
             var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
                 cache2,
-                MsalCacheStorage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
+                Storage.Create(_storageCreationPropertiesBuilder.Build(), _logger),
                 _logger);
 
             //Test signalling thread 1
@@ -181,13 +181,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var cache1 = new MockTokenCache();
             var helper1 = new MsalCacheHelper(
                 cache1,
-                MsalCacheStorage.Create(properties, _logger),
+                Storage.Create(properties, _logger),
                 _logger);
 
             var cache2 = new MockTokenCache();
             var helper2 = new MsalCacheHelper(
                 cache2,
-                MsalCacheStorage.Create(properties, _logger),
+                Storage.Create(properties, _logger),
                 _logger);
 
             //Test signalling thread 1
@@ -326,7 +326,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var properties = _storageCreationPropertiesBuilder
                 .WithCacheChangedEvent(ClientId, "https://login.microsoftonline.com/common")
                 .Build();
-            MsalCacheStorage storage = MsalCacheStorage.Create(properties, _logger);
+            Storage storage = Storage.Create(properties, _logger);
             storage.WriteData(Encoding.UTF8.GetBytes("corrupted token cache"));
 
             // Act
@@ -344,7 +344,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         {
             // Arrange
             var properties = _storageCreationPropertiesBuilder.Build();
-            MsalCacheStorage storage = MsalCacheStorage.Create(properties, _logger);
+            Storage storage = Storage.Create(properties, _logger);
             storage.WriteData(Encoding.UTF8.GetBytes("corrupted token cache"));
             var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);
             var pca = PublicClientApplicationBuilder.Create(ClientId).Build();
@@ -369,7 +369,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Arrange
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             var cache = new MockTokenCache();
-            var storage = new MsalCacheStorage(
+            var storage = new Storage(
                 _storageCreationPropertiesBuilder.Build(),
                 cacheAccessor,
                 new TraceSourceLogger(new TraceSource("ts")));
@@ -470,7 +470,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             var properties = _storageCreationPropertiesBuilder.Build();
 
-            MsalCacheStorage storage = MsalCacheStorage.Create(properties, _logger);
+            Storage storage = Storage.Create(properties, _logger);
             storage.WriteData(Encoding.UTF8.GetBytes(cacheWithOneUser));
 
             var helper = await MsalCacheHelper.CreateAsync(properties).ConfigureAwait(true);

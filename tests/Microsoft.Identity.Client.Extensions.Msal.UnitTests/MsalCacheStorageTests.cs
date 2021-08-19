@@ -47,15 +47,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             cacheAccessor.Read().Throws(new InvalidOperationException());
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
-
-            // Act
-            byte[] result = storage.ReadData();
-            Assert.AreEqual(0, result.Length);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             // Assert
             AssertException.Throws<InvalidOperationException>(
-                () => storage.ReadData(ignoreExceptions: false));
+                () => storage.ReadData());
         }
 
         [TestMethod]
@@ -65,14 +61,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             cacheAccessor.WhenForAnyArgs(c => c.Write(null)).Throw(new InvalidOperationException());
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
-
-            // Act
-            storage.WriteData(new byte[0]);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             // Assert
             AssertException.Throws<InvalidOperationException>(
-                () => storage.WriteData(new byte[0], ignoreExceptions: false));
+                () => storage.WriteData(new byte[0]));
         }
 
         [TestMethod]
@@ -82,10 +75,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
             cacheAccessor.WhenForAnyArgs(c => c.Clear()).Throw(new InvalidOperationException());
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             // Act
-            storage.Clear();
+            storage.Clear(ignoreExceptions: true);
 
             // Assert
             AssertException.Throws<InvalidOperationException>(
@@ -100,7 +93,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             cacheAccessor.Read().Returns((byte[])null);
 
             var actualLogger = new TraceSourceLogger(_logger);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             // Act
             byte[] result = storage.ReadData();
@@ -109,24 +102,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.AreEqual(0, result.Length);
         }
 
-        [TestMethod]
-        public void CacheStorageReadCanHandleExceptionsWhenReading()
-        {
-            // Arrange
-            var cacheAccessor = NSubstitute.Substitute.For<ICacheAccessor>();
-            var exception = new InvalidOperationException();
-            cacheAccessor.Read().Throws(exception);
-
-            var actualLogger = new TraceSourceLogger(_logger);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
-
-            // Act
-            byte[] result = storage.ReadData();
-
-            // Assert
-            Assert.AreEqual(0, result.Length);
-        }
-
+      
         // Regression https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/issues/56
         [TestMethod]
         public void CacheStorageCanHandleMultipleExceptionsWhenReading()
@@ -139,13 +115,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             cacheAccessor.When((x) => x.Clear()).Do(x => throw exception);
             _logger.Listeners.Add(stringListener);
             var actualLogger = new TraceSourceLogger(_logger);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             // Act
-            byte[] result = storage.ReadData();
+            byte[] result = null;
+            try
+            {
+                 result = storage.ReadData();
+            }
+            catch (Exception ex)
+            {
+                // ignore 
+                Assert.IsTrue(ex is InvalidOperationException);
+            }
 
-            // Assert
-            Assert.AreEqual(0, result.Length);
+            // Assert            
             Assert.IsTrue(stringListener.CurrentLog.Contains("TestSource Error"));
             Assert.IsTrue(stringListener.CurrentLog.Contains("InvalidOperationException"));
             Assert.IsTrue(stringListener.CurrentLog.Contains("some error"));
@@ -159,7 +143,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
             var exception = new InvalidOperationException("some error");
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
             cacheAccessor.Read().Throws(exception);
 
@@ -179,7 +163,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
 
 
             // Act
@@ -197,7 +181,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
             cacheAccessor.Read().Returns(Encoding.UTF8.GetBytes("other_dummy_data"));
 
             // Act
@@ -213,11 +197,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         public void VerifyPersistenceHappyPath()
         {
             // Arrange
-            byte[] dummyData = Encoding.UTF8.GetBytes(MsalCacheStorage.PersistenceValidationDummyData);
+            byte[] dummyData = Encoding.UTF8.GetBytes(Storage.PersistenceValidationDummyData);
             var actualLogger = new TraceSourceLogger(_logger);
             var cacheAccessor = Substitute.For<ICacheAccessor>();
             cacheAccessor.CreateForPersistenceValidation().Returns(cacheAccessor);
-            var storage = new MsalCacheStorage(s_storageCreationProperties, cacheAccessor, actualLogger);
+            var storage = new Storage(s_storageCreationProperties, cacheAccessor, actualLogger);
             cacheAccessor.Read().Returns(dummyData);
 
             // Act

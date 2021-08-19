@@ -52,7 +52,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <summary>
         /// Storage that handles the storing of the adal cache file on disk. Internal for testing.
         /// </summary>
-        internal /* internal for testing only */ MsalCacheStorage CacheStore { get; }
+        internal /* internal for testing only */ Storage CacheStore { get; }
 
         /// <summary>
         /// Logger to log events to.
@@ -117,19 +117,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 pca.UserTokenCache.SetBeforeAccess((args) =>
                 {
-                    MsalCacheStorage tempCache = null;
+                    Storage tempCache = null;
                     try
                     {
-                        tempCache = MsalCacheStorage.Create(storageCreationProperties, s_staticLogger.Value.Source);
+                        tempCache = Storage.Create(storageCreationProperties, s_staticLogger.Value.Source);
                         // We're using ReadData here so that decryption is handled within the store.
-                        var data = tempCache.ReadData();
-                        args.TokenCache.DeserializeMsalV3(data);
+                        byte[] data = null;
+                        try
+                        {
+                            data = tempCache.ReadData();
+                        }
+                        catch
+                        {
+                            // ignore read failures, we will try again
+                        }
+
+                        if (data != null)
+                        {
+                            args.TokenCache.DeserializeMsalV3(data);
+                        }
                     }
                     catch (Exception e)
                     {
                         logger.LogError("An error occured while reading the token cache: " + e);
                         logger.LogError("Deleting the token cache as it might be corrupt.");
-                        tempCache.Clear();
+                        tempCache.Clear(ignoreExceptions: true);
                     }
                 });
 
@@ -159,7 +171,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             _storageCreationProperties = storageCreationProperties;
-            CacheStore = MsalCacheStorage.Create(_storageCreationProperties, _logger.Source);
+            CacheStore = Storage.Create(_storageCreationProperties, _logger.Source);
             _knownAccountIds = knownAccountIds;
 
             _cacheWatcher = cacheWatcher;
@@ -215,7 +227,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="userTokenCache">The token cache to synchronize with the backing store</param>
         /// <param name="store">The backing store to use.</param>
         /// <param name="logger">Passing null uses the default logger</param>
-        internal MsalCacheHelper(ITokenCache userTokenCache, MsalCacheStorage store, TraceSource logger = null)
+        internal MsalCacheHelper(ITokenCache userTokenCache, Storage store, TraceSource logger = null)
         {
             _logger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
             CacheStore = store;
@@ -337,7 +349,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             using (CreateCrossPlatLock(_storageCreationProperties))
             {
-                CacheStore.Clear();
+                CacheStore.Clear(ignoreExceptions: true);
             }
         }
 
@@ -350,7 +362,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             using (CreateCrossPlatLock(_storageCreationProperties))
             {
-                return CacheStore.ReadData(ignoreExceptions: false);
+                return CacheStore.ReadData();
             }
         }
 
@@ -362,7 +374,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             using (CreateCrossPlatLock(_storageCreationProperties))
             {
-                CacheStore.WriteData(tokenCache, ignoreExceptions: false);
+                CacheStore.WriteData(tokenCache);
             }
         }
 
@@ -395,7 +407,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             CacheLock = CreateCrossPlatLock(_storageCreationProperties);
 
             _logger.LogInformation($"Before access, the store has changed");
-            var cachedStoreData = CacheStore.ReadData();
+            byte[] cachedStoreData = null;
+            try
+            {
+                cachedStoreData = CacheStore.ReadData();
+            }
+            catch (Exception)
+            {
+                _logger.LogError($"Could not read the token cache. Ignoring. See previous error message.");
+                return;
+
+            }
             _logger.LogInformation($"Read '{cachedStoreData?.Length}' bytes from storage");
 
             lock (_lockObject)
@@ -411,7 +433,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
                     // Clear the memory cache without taking the lock over again
-                    CacheStore.Clear();
+                    CacheStore.Clear(ignoreExceptions: true);
                     throw;
                 }
             }
@@ -426,20 +448,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             try
             {
                 _logger.LogInformation($"After access");
-
+                byte[] data = null;
                 // if the access operation resulted in a cache update
                 if (args.HasStateChanged)
                 {
                     _logger.LogInformation($"After access, cache in memory HasChanged");
                     try
                     {
-                        _logger.LogInformation($"Before Write Store");
-                        byte[] data = args.TokenCache.SerializeMsalV3();
-
-                        _logger.LogInformation($"Serializing '{data.Length}' bytes");
-                        CacheStore.WriteData(data);
-
-                        _logger.LogInformation($"After write store");
+                        data = args.TokenCache.SerializeMsalV3();
                     }
                     catch (Exception e)
                     {
@@ -447,8 +463,21 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                         _logger.LogError($"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
-                        CacheStore.Clear();
+                        CacheStore.Clear(ignoreExceptions: true);
                         throw;
+                    }
+
+                    if (data != null)
+                    {
+                        _logger.LogInformation($"Serializing '{data.Length}' bytes");
+                        try
+                        {
+                            CacheStore.WriteData(data);
+                        }
+                        catch (Exception)
+                        {
+                            _logger.LogError($"Could not write the token cache. Ignoring. See previous error message.");
+                        }
                     }
                 }
             }
