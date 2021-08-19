@@ -362,7 +362,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
 
-        [TestMethod]
+        
         [DoNotRunOnLinux] // The FileSystemWatcher on Linux doesn't always fire
         public async Task ClearCacheUsesTheLockAsync()
         {
