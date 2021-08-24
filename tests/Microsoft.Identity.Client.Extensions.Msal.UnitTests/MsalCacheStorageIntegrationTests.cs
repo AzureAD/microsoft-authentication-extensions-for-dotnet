@@ -61,22 +61,22 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [RunOnOSX]
         public void CacheStorageFactoryMac()
         {
-            MsalCacheStorage store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            Storage store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is MacKeychainAccessor);
             store.VerifyPersistence();
 
-            store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is MacKeychainAccessor);
         }
 
         [RunOnWindows]
         public void CacheStorageFactoryWindows()
         {
-            MsalCacheStorage store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            Storage store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
             store.VerifyPersistence();
 
-            store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
         }
 
@@ -96,7 +96,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 .Build();
 
             // Tests run on machines without Libsecret
-            MsalCacheStorage store = MsalCacheStorage.Create(storageWithKeyRing, logger: _logger);
+            Storage store = Storage.Create(storageWithKeyRing, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is LinuxKeyringAccessor);
 
             // ADO Linux test agents do not have libsecret installed by default
@@ -105,7 +105,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             AssertException.Throws<MsalCachePersistenceException>(
                 () => store.VerifyPersistence());
 
-            MsalCacheStorage unprotectedStore = MsalCacheStorage.Create(s_storageCreationProperties, _logger);
+            Storage unprotectedStore = Storage.Create(s_storageCreationProperties, _logger);
             Assert.IsTrue(unprotectedStore.CacheAccessor is FileAccessor);
 
             unprotectedStore.VerifyPersistence();
@@ -113,7 +113,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             unprotectedStore.WriteData(new byte[] { 2, 3 });
 
             // Unproteced cache file should exist
-            Assert.IsTrue(File.Exists(unprotectedStore.CacheFilePath));
+            Assert.IsTrue(File.Exists(s_storageCreationProperties.CacheFilePath));
 
             // Mimic another sdk client to check libsecret availability by calling
             // MsalCacheStorage.VerifyPeristence() -> LinuxKeyringAccessor.CreateForPersistenceValidation()
@@ -121,20 +121,20 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 () => store.VerifyPersistence());
 
             // Verify above call doesn't delete existing cache file
-            Assert.IsTrue(File.Exists(unprotectedStore.CacheFilePath));
+            Assert.IsTrue(File.Exists(s_storageCreationProperties.CacheFilePath));
         }
 
         [TestMethod]
         public void MsalNewStoreNoFile()
         {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsFalse(store.ReadData().Any());
         }
 
         [TestMethod]
         public void MsalWriteEmptyData()
         {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             store.WriteData(new byte[0]);
@@ -145,7 +145,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalWriteGoodData()
         {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.ThrowsException<ArgumentNullException>(() => store.WriteData(null));
 
             byte[] data = { 2, 2, 3 };
@@ -163,10 +163,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void MsalTestClear()
         {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store = Storage.Create(s_storageCreationProperties, logger: _logger);
             store.ReadData();
 
-            var store2 = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store2 = Storage.Create(s_storageCreationProperties, logger: _logger);
             AssertException.Throws<ArgumentNullException>(() => store.WriteData(null));
 
             byte[] data = { 2, 2, 3 };
@@ -185,7 +185,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
         private void CleanTestData()
         {
-            var store = MsalCacheStorage.Create(s_storageCreationProperties, logger: _logger);
+            var store = Storage.Create(s_storageCreationProperties, logger: _logger);
             store.Clear();
         }
     }

@@ -27,6 +27,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
     }
 
+    public class DoNotRunOnWindowsAttribute : DoNotRunOnPlatformAttribute
+    {
+        public DoNotRunOnWindowsAttribute(): base(OSPlatform.Windows)
+        {
+
+        }
+    }
+
     public class DoNotRunOnLinuxAttribute : DoNotRunOnPlatformAttribute
     {
         public DoNotRunOnLinuxAttribute() : base(OSPlatform.Linux)

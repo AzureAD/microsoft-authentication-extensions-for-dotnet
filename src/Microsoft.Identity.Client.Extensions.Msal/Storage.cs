@@ -11,19 +11,23 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 {
 
     /// <summary>
-    /// Low-level wrapper over persistence layer. Does not use locking.
-    /// 
+    /// Wrapper over persistence layer. Does not use cross-process locking. To add cross-process locking, wrap calls 
+    /// with <see cref="CrossPlatLock"/>
     /// </summary>
     /// <remarks>Consider using the higher level <see cref="MsalCacheHelper"/></remarks>
-    internal class MsalCacheStorage
+    public class Storage
     {
         private readonly TraceSourceLogger _logger;
 
         internal /* internal for test only */ ICacheAccessor CacheAccessor { get; }
 
-        public StorageCreationProperties StorageCreationProperties { get; }
+        /// <summary>
+        /// The storage creation properties used to create this storage
+        /// </summary>
+        internal StorageCreationProperties StorageCreationProperties { get; }
 
-        public const string PersistenceValidationDummyData = "msal_persistence_test";
+
+        internal const string PersistenceValidationDummyData = "msal_persistence_test";
 
 
         /// <summary>
@@ -35,7 +39,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         });
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MsalCacheStorage"/> class.
+        /// Initializes a new instance of the <see cref="Storage"/> class.
         /// The actual cache reading and writing is OS specific:
         /// <list type="bullet">
         /// <item>
@@ -55,7 +59,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="creationProperties">Properties for creating the cache storage on disk</param>
         /// <param name="logger">logger</param>
         /// <returns></returns>
-        public static MsalCacheStorage Create(StorageCreationProperties creationProperties, TraceSource logger = null)
+        public static Storage Create(StorageCreationProperties creationProperties, TraceSource logger = null)
         {
             TraceSourceLogger actualLogger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
 
@@ -97,10 +101,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 throw new PlatformNotSupportedException();
             }
 
-            return new MsalCacheStorage(creationProperties, cacheAccessor, actualLogger);
+            return new Storage(creationProperties, cacheAccessor, actualLogger);
         }
 
-        internal /* internal for test, otherwise private */ MsalCacheStorage(
+        internal /* internal for test, otherwise private */ Storage(
             StorageCreationProperties creationProperties,
             ICacheAccessor cacheAccessor,
             TraceSourceLogger logger)
@@ -108,23 +112,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             StorageCreationProperties = creationProperties;
             _logger = logger;
             CacheAccessor = cacheAccessor;
-            _logger.LogInformation($"Initialized '{nameof(MsalCacheStorage)}'");
+            _logger.LogInformation($"Initialized '{nameof(Storage)}'");
         }
-
-        /// <summary>
-        /// Gets cache file path
-        /// </summary>
-        public string CacheFilePath => StorageCreationProperties.CacheFilePath;
 
         /// <summary>
         /// Read and unprotect cache data
         /// </summary>
         /// <returns>Unprotected cache data</returns>
-        public byte[] ReadData(bool ignoreExceptions = true)
+        public byte[] ReadData()
         {
-            bool cacheFileExists = File.Exists(CacheFilePath);
-            _logger.LogInformation($"ReadData Cache file exists '{cacheFileExists}'");
-
             byte[] data = null;
             try
             {
@@ -134,23 +130,18 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             catch (Exception e)
             {
-                _logger.LogError($"An exception was encountered while reading data from the {nameof(MsalCacheStorage)} : {e}");
-
-                if (!ignoreExceptions)
-                {
-                    throw;
-                }
+                _logger.LogError($"An exception was encountered while reading data from the {nameof(Storage)} : {e}");
+                throw;
             }
 
             return data ?? new byte[0];
         }
 
         /// <summary>
-        /// Protect and write cache data to file
+        /// Protect and write cache data to file. It overrides existing data.
         /// </summary>
         /// <param name="data">Cache data</param>
-        /// <param name="ignoreExceptions">If set to false, exposes exceptions. </param>
-        public void WriteData(byte[] data, bool ignoreExceptions = true)
+        public void WriteData(byte[] data)
         {
             if (data == null)
             {
@@ -164,18 +155,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             catch (Exception e)
             {
-                _logger.LogError($"An exception was encountered while writing data to {nameof(MsalCacheStorage)} : {e}");
-                if (!ignoreExceptions)
-                {
-                    throw;
-                }
+                _logger.LogError($"An exception was encountered while writing data to {nameof(Storage)} : {e}");
+                throw;
             }
         }
 
         /// <summary>
         /// Delete cache file
         /// </summary>
-        public void Clear(bool ignoreExceptions = true)
+        /// <param name="ignoreExceptions">Throw on exceptions</param>
+        public void Clear(bool ignoreExceptions = false)
         {
             try
             {
@@ -184,11 +173,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
             catch (Exception e)
             {
-                _logger.LogError($"An exception was encountered while clearing data from {nameof(MsalCacheStorage)} : {e}");
+                _logger.LogError($"An exception was encountered while clearing data from {nameof(Storage)} : {e}");
+
                 if (!ignoreExceptions)
-                {
                     throw;
-                }
             }
         }
 

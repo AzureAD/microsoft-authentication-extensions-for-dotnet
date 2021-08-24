@@ -103,11 +103,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 try
                 {
                     GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                    _logger.LogError($"An error was encountered while clearing secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
+                    _logger.LogError($"An error was encountered while clearing secret from keyring in the {nameof(Storage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(MsalCacheStorage)} ex:'{e}'");
+                    _logger.LogError($"An exception was encountered while processing libsecret error information during clearing secret in the {nameof(Storage)} ex:'{e}'");
                 }
             }
 
@@ -141,11 +141,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 try
                 {
                     GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                    _logger.LogError($"An error was encountered while reading secret from keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
+                    _logger.LogError($"An error was encountered while reading secret from keyring in the {nameof(Storage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"An exception was encountered while processing libsecret error information during reading in the {nameof(MsalCacheStorage)} ex:'{e}'");
+                    _logger.LogError($"An exception was encountered while processing libsecret error information during reading in the {nameof(Storage)} ex:'{e}'");
                 }
             }
             else if (string.IsNullOrEmpty(secret))
@@ -186,11 +186,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 try
                 {
                     GError err = (GError)Marshal.PtrToStructure(error, typeof(GError));
-                    _logger.LogError($"An error was encountered while saving secret to keyring in the {nameof(MsalCacheStorage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
+                    _logger.LogError($"An error was encountered while saving secret to keyring in the {nameof(Storage)} domain:'{err.Domain}' code:'{err.Code}' message:'{err.Message}'");
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"An exception was encountered while processing libsecret error information during saving in the {nameof(MsalCacheStorage)} ex:'{e}'");
+                    _logger.LogError($"An exception was encountered while processing libsecret error information during saving in the {nameof(Storage)} ex:'{e}'");
                 }
             }
 
@@ -218,7 +218,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                 if (_libsecretSchema == IntPtr.Zero)
                 {
-                    _logger.LogError($"Failed to create libsecret schema from the {nameof(MsalCacheStorage)}");
+                    _logger.LogError($"Failed to create libsecret schema from the {nameof(Storage)}");
                 }
 
                 _logger.LogInformation("After creating libsecret schema");

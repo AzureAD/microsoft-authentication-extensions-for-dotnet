@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -25,7 +26,7 @@ namespace ManualTestApp
         static async Task Main(string[] args)
 #pragma warning restore UseAsyncSuffix // Use Async suffix
         {
-            
+
             // It's recommended to create a separate PublicClient Application for each tenant
             // but only one CacheHelper object
             var pca = CreatePublicClient("https://login.microsoftonline.com/organizations");
@@ -52,8 +53,9 @@ namespace ManualTestApp
                         3. Acquire Token Interactive
                         4. Acquire Token Silent
                         5. Display Accounts (reads the cache)
-                        6. Acquire Token U/P and Silent in a loop
-                        7. Write to file with delay
+                        6. Acquire Token U/P and Silent in a loop                        
+                        7. Use persistence layer to read / write any data
+                        8. Use persistence layer to read / write any data with process-level lock
                         c. Clear cache
                         e. Expire Access Tokens (TEST only!)
                         x. Exit app
@@ -63,78 +65,78 @@ namespace ManualTestApp
                 {
                     switch (selection)
                     {
-                    case '1': //  Acquire Token using Username and Password (requires config)
+                        case '1': //  Acquire Token using Username and Password (requires config)
 
-                        // IMPORTANT: you should ALWAYS try to get a token silently first
+                            // IMPORTANT: you should ALWAYS try to get a token silently first
 
-                        result = await AcquireTokenROPCAsync(pca).ConfigureAwait(false);
-                        DisplayResult(result);
+                            result = await AcquireTokenROPCAsync(pca).ConfigureAwait(false);
+                            DisplayResult(result);
 
-                        break;
+                            break;
 
-                    case '2': // Device Code Flow
-                        // IMPORTANT: you should ALWAYS try to get a token silently first
+                        case '2': // Device Code Flow
+                                  // IMPORTANT: you should ALWAYS try to get a token silently first
 
-                        result = await pca.AcquireTokenWithDeviceCode(Config.Scopes, (dcr) =>
-                        {
-                            Console.BackgroundColor = ConsoleColor.DarkCyan;
-                            Console.WriteLine(dcr.Message);
-                            Console.ResetColor();
+                            result = await pca.AcquireTokenWithDeviceCode(Config.Scopes, (dcr) =>
+                            {
+                                Console.BackgroundColor = ConsoleColor.DarkCyan;
+                                Console.WriteLine(dcr.Message);
+                                Console.ResetColor();
 
-                            return Task.FromResult(1);
-                        }).ExecuteAsync().ConfigureAwait(false);
-                        DisplayResult(result);
+                                return Task.FromResult(1);
+                            }).ExecuteAsync().ConfigureAwait(false);
+                            DisplayResult(result);
 
-                        break;
-                    case '3': // Interactive
-                        // IMPORTANT: you should ALWAYS try to get a token silently first
+                            break;
+                        case '3': // Interactive
+                                  // IMPORTANT: you should ALWAYS try to get a token silently first
 
-                        result = await pca.AcquireTokenInteractive(Config.Scopes)
-                            .ExecuteAsync()
-                            .ConfigureAwait(false);
-                        DisplayResult(result);
-                        break;
-                    case '4': // Silent
+                            result = await pca.AcquireTokenInteractive(Config.Scopes)
+                                .ExecuteAsync()
+                                .ConfigureAwait(false);
+                            DisplayResult(result);
+                            break;
+                        case '4': // Silent
 
-                        
-                        Console.WriteLine("Getting all the accounts. This reads the cache");
-                        var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
-                        var firstAccount = accounts.FirstOrDefault();
 
-                        // this is expected to fail when account is null
-                        result = await pca.AcquireTokenSilent(Config.Scopes, firstAccount)
-                            .ExecuteAsync()
-                            .ConfigureAwait(false);
-                        DisplayResult(result);
-                        break;
-                    case '5': // Display Accounts
-                        Console.Clear();
-                        var accounts2 = await pca.GetAccountsAsync().ConfigureAwait(false);
-                        if (!accounts2.Any())
-                        {
-                            Console.WriteLine("No accounts were found in the cache.");
-                        }
+                            Console.WriteLine("Getting all the accounts. This reads the cache");
+                            var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
+                            var firstAccount = accounts.FirstOrDefault();
 
-                        foreach (var acc in accounts2)
-                        {
-                            Console.WriteLine($"Account for {acc.Username}");
-                        }
-                        break;
-                    case '6': // U/P and Silent in a loop
-                        Console.WriteLine("CTRL-C to stop...");
+                            // this is expected to fail when account is null
+                            result = await pca.AcquireTokenSilent(Config.Scopes, firstAccount)
+                                .ExecuteAsync()
+                                .ConfigureAwait(false);
+                            DisplayResult(result);
+                            break;
+                        case '5': // Display Accounts
+                            Console.Clear();
+                            var accounts2 = await pca.GetAccountsAsync().ConfigureAwait(false);
+                            if (!accounts2.Any())
+                            {
+                                Console.WriteLine("No accounts were found in the cache.");
+                            }
+
+                            foreach (var acc in accounts2)
+                            {
+                                Console.WriteLine($"Account for {acc.Username}");
+                            }
+                            break;
+                        case '6': // U/P and Silent in a loop
+                            Console.WriteLine("CTRL-C to stop...");
 
 #pragma warning disable CS0618 // Type or member is obsolete
-                        cacheHelper.Clear();
+                            cacheHelper.Clear();
 #pragma warning restore CS0618 // Type or member is obsolete
 
-                        
-                        var pca2 = CreatePublicClient("https://login.microsoftonline.com/organizations");
-                        var pca3 = CreatePublicClient("https://login.microsoftonline.com/organizations");
-                        cacheHelper.RegisterCache(pca2.UserTokenCache);
-                        cacheHelper.RegisterCache(pca3.UserTokenCache);
 
-                        while (true)
-                        {
+                            var pca2 = CreatePublicClient("https://login.microsoftonline.com/organizations");
+                            var pca3 = CreatePublicClient("https://login.microsoftonline.com/organizations");
+                            cacheHelper.RegisterCache(pca2.UserTokenCache);
+                            cacheHelper.RegisterCache(pca3.UserTokenCache);
+
+                            while (true)
+                            {
                                 await Task.WhenAll(
                                     RunRopcAndSilentAsync("PCA_1", pca),
                                     RunRopcAndSilentAsync("PCA_2", pca2),
@@ -142,54 +144,121 @@ namespace ManualTestApp
 
                                 ).ConfigureAwait(false);
 
-                            Trace.Flush();
-                            await Task.Delay(2000).ConfigureAwait(false);
-                        }
+                                Trace.Flush();
+                                await Task.Delay(2000).ConfigureAwait(false);
+                            }
 
-                    case 'c':
-                        var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
-                        foreach (var acc in accounts4)
-                        {
-                            Console.WriteLine($"Removing account for {acc.Username}");
-                            await pca.RemoveAsync(acc).ConfigureAwait(false);
-                        }
-                        Console.Clear();
+                        case '7':
 
-                        break;
+                            var storageProperties = new StorageCreationPropertiesBuilder(
+                               Config.CacheFileName + ".other_secrets",
+                               Config.CacheDir)
+                            .WithMacKeyChain(
+                               Config.KeyChainServiceName + ".other_secrets",
+                               Config.KeyChainAccountName);
 
-                    case 'e': // This is only meant for testing purposes
+                            Storage storage = Storage.Create(storageProperties.Build());
+                            //string lockFilePath = Path.Combine(Config.CacheDir, Config.CacheFileName + ".other_secrets.lockfile");
 
-                        // do smth that loads the cache first
-                        await pca.GetAccountsAsync().ConfigureAwait(false);
+                            byte[] secretBytes = Encoding.UTF8.GetBytes("secret");
+                            Console.WriteLine("Writing...");
+                            storage.WriteData(secretBytes);
+                            
+                            Console.WriteLine("Writing again...");
+                            storage.WriteData(secretBytes);
 
-                        string expiredValue = ((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds)
-                                .ToString(CultureInfo.InvariantCulture);
 
-                        var accessor = pca.UserTokenCache.GetType()
-                            .GetRuntimeProperties()
-                            .Single(p => p.Name == "Microsoft.Identity.Client.ITokenCacheInternal.Accessor")
-                            .GetValue(pca.UserTokenCache);
+                            Console.WriteLine("Reading...");
+                            var data = storage.ReadData();
+                            Console.WriteLine("Read: " + Encoding.UTF8.GetString(data));
 
-                        var internalAccessTokens = accessor.GetType().GetMethod("GetAllAccessTokens").Invoke(accessor, null) as IEnumerable<object>;
+                            Console.WriteLine("Deleting...");
+                            storage.Clear();
 
-                        foreach (var internalAt in internalAccessTokens)
-                        {
-                            internalAt.GetType().GetRuntimeMethods().Single(m => m.Name == "set_ExpiresOnUnixTimestamp").Invoke(internalAt, new[] { expiredValue });
-                            accessor.GetType().GetMethod("SaveAccessToken").Invoke(accessor, new[] { internalAt });
-                        }
+                            
+                            break;
 
-                        var ctor = typeof(TokenCacheNotificationArgs).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
 
-                        var notificationArgs = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false, true, null });
-                        var task = pca.UserTokenCache.GetType().GetRuntimeMethods()
-                            .Single(m => m.Name == "Microsoft.Identity.Client.ITokenCacheInternal.OnAfterAccessAsync")
-                            .Invoke(pca.UserTokenCache, new[] { notificationArgs });
+                        case '8':
 
-                        await (task as Task).ConfigureAwait(false);
-                        break;
+                            storageProperties = new StorageCreationPropertiesBuilder(
+                                Config.CacheFileName + ".other_secrets2",
+                                Config.CacheDir)
+                                .WithMacKeyChain(
+                           Config.KeyChainServiceName + ".other_secrets2",
+                           Config.KeyChainAccountName);
 
-                    case 'x':
-                        return;
+                            storage = Storage.Create(storageProperties.Build());
+                            
+                            string lockFilePath = Path.Combine(Config.CacheDir, Config.CacheFileName + ".lockfile");
+
+                            using (new CrossPlatLock(lockFilePath)) // cross-process only
+                            {
+                                secretBytes = Encoding.UTF8.GetBytes("secret");
+                                Console.WriteLine("Writing...");
+                                storage.WriteData(secretBytes);
+
+                                Console.WriteLine("Writing again...");
+                                storage.WriteData(secretBytes);
+
+                                // if another process (not thread!) attempts to read / write this secret
+                                // and uses the CrossPlatLock mechanism, it will wait for the lock to be released first
+                                await Task.Delay(1000).ConfigureAwait(false);
+
+                                Console.WriteLine("Reading...");
+                                data = storage.ReadData();
+                                Console.WriteLine("Read: " + Encoding.UTF8.GetString(data));
+
+                                Console.WriteLine("Deleting...");
+                                storage.Clear();
+                            } // lock released
+
+                            break;
+
+                        case 'c':
+                            var accounts4 = await pca.GetAccountsAsync().ConfigureAwait(false);
+                            foreach (var acc in accounts4)
+                            {
+                                Console.WriteLine($"Removing account for {acc.Username}");
+                                await pca.RemoveAsync(acc).ConfigureAwait(false);
+                            }
+                            Console.Clear();
+
+                            break;
+
+                        case 'e': // This is only meant for testing purposes
+
+                            // do smth that loads the cache first
+                            await pca.GetAccountsAsync().ConfigureAwait(false);
+
+                            string expiredValue = ((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds)
+                                    .ToString(CultureInfo.InvariantCulture);
+
+                            var accessor = pca.UserTokenCache.GetType()
+                                .GetRuntimeProperties()
+                                .Single(p => p.Name == "Microsoft.Identity.Client.ITokenCacheInternal.Accessor")
+                                .GetValue(pca.UserTokenCache);
+
+                            var internalAccessTokens = accessor.GetType().GetMethod("GetAllAccessTokens").Invoke(accessor, null) as IEnumerable<object>;
+
+                            foreach (var internalAt in internalAccessTokens)
+                            {
+                                internalAt.GetType().GetRuntimeMethods().Single(m => m.Name == "set_ExpiresOnUnixTimestamp").Invoke(internalAt, new[] { expiredValue });
+                                accessor.GetType().GetMethod("SaveAccessToken").Invoke(accessor, new[] { internalAt });
+                            }
+
+                            var ctor = typeof(TokenCacheNotificationArgs).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
+
+                            var notificationArgs = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false, true, null });
+                            var task = pca.UserTokenCache.GetType().GetRuntimeMethods()
+                                .Single(m => m.Name == "Microsoft.Identity.Client.ITokenCacheInternal.OnAfterAccessAsync")
+                                .Invoke(pca.UserTokenCache, new[] { notificationArgs });
+
+                            await (task as Task).ConfigureAwait(false);
+                            break;
+
+                        case 'x':
+                            return;
                     }
                 }
                 catch (Exception ex)

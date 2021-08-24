@@ -16,15 +16,26 @@ namespace Microsoft.Identity.Client.Extensions.Web
 #endif
 {
     /// <summary>
-    /// A cross-process lock that works on all platforms.
-    /// It is important to note that this lock is not thread safe !
+    /// A cross-process lock that works on all platforms, implemented using files.
+    /// Does not ensure thread safety, i.e. 2 threads from the same process will pass through this lock.
     /// </summary>
-    internal sealed class CrossPlatLock : IDisposable
+    /// <remarks>
+    /// Thread locking should be done using <see cref="SemaphoreSlim"/> or another such primitive.
+    /// </remarks>
+    public sealed class CrossPlatLock : IDisposable
     {
         internal const int LockfileRetryDelayDefault = 100;
         internal const int LockfileRetryCountDefault = 60000 / LockfileRetryDelayDefault;
         private FileStream _lockFileStream;
 
+        /// <summary>
+        /// Creates a file lock and maintains it until the lock is disposed. Any other process trying to get the lock will wait (spin waiting) until the lock is released. 
+        /// Works on Windows, Mac and Linux.
+        /// </summary>
+        /// <param name="lockfilePath">The path of the lock file, e.g. {MsalCacheHelper.UserRootDirectory}/MyAppsSecrets.lockfile </param>
+        /// <param name="lockFileRetryDelay">Delay between each attempt to get the lock. Defaults to 100ms</param>
+        /// <param name="lockFileRetryCount">How many times to try to get the lock before bailing. Defaults to 600 times.</param>
+        /// <remarks>This class is experimental and may be removed from the public API.</remarks>
         public CrossPlatLock(string lockfilePath, int lockFileRetryDelay = LockfileRetryDelayDefault, int lockFileRetryCount = LockfileRetryCountDefault)
         {
             Exception exception = null;
@@ -94,6 +105,9 @@ namespace Microsoft.Identity.Client.Extensions.Web
             _lockFileStream = fileStream ?? throw new InvalidOperationException("Could not get access to the shared lock file.", exception);
         }
 
+        /// <summary>
+        /// Releases the lock
+        /// </summary>
         public void Dispose()
         {
             _lockFileStream?.Dispose();
