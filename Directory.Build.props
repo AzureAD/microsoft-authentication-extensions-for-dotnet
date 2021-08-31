@@ -19,6 +19,12 @@
 
 
   </PropertyGroup>
+
+  <ItemGroup Label="For ContinuousIntegrationBuild support">
+    <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+    <!-- defines repository top level dir-->
+  </ItemGroup>
+  
   <ItemGroup Label="Dev Dependencies">
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.9.60" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3" PrivateAssets="All" />
