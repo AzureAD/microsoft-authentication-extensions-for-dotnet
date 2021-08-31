@@ -45,7 +45,6 @@ namespace ManualTestApp
 
             while (true)
             {
-
                 // Display menu
                 Console.WriteLine($@"
                         1. Acquire Token using Username and Password - for TEST only, do not use in production!
@@ -59,7 +58,7 @@ namespace ManualTestApp
                         c. Clear cache
                         e. Expire Access Tokens (TEST only!)
                         x. Exit app
-                    Enter your Selection: ");
+                    Enter your selection: ");
                 char.TryParse(Console.ReadLine(), out var selection);
                 try
                 {
@@ -163,7 +162,7 @@ namespace ManualTestApp
                             byte[] secretBytes = Encoding.UTF8.GetBytes("secret");
                             Console.WriteLine("Writing...");
                             storage.WriteData(secretBytes);
-                            
+
                             Console.WriteLine("Writing again...");
                             storage.WriteData(secretBytes);
 
@@ -175,7 +174,7 @@ namespace ManualTestApp
                             Console.WriteLine("Deleting...");
                             storage.Clear();
 
-                            
+
                             break;
 
 
@@ -189,7 +188,7 @@ namespace ManualTestApp
                            Config.KeyChainAccountName);
 
                             storage = Storage.Create(storageProperties.Build());
-                            
+
                             string lockFilePath = Path.Combine(Config.CacheDir, Config.CacheFileName + ".lockfile");
 
                             using (new CrossPlatLock(lockFilePath)) // cross-process only
@@ -239,7 +238,7 @@ namespace ManualTestApp
                                 .Single(p => p.Name == "Microsoft.Identity.Client.ITokenCacheInternal.Accessor")
                                 .GetValue(pca.UserTokenCache);
 
-                            var internalAccessTokens = accessor.GetType().GetMethod("GetAllAccessTokens").Invoke(accessor, null) as IEnumerable<object>;
+                            var internalAccessTokens = accessor.GetType().GetMethod("GetAllAccessTokens").Invoke(accessor, new object[] { null }) as IEnumerable<object>;
 
                             foreach (var internalAt in internalAccessTokens)
                             {
@@ -249,7 +248,7 @@ namespace ManualTestApp
 
                             var ctor = typeof(TokenCacheNotificationArgs).GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance).Single();
 
-                            var notificationArgs = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false, true, null });
+                            var notificationArgs = ctor.Invoke(new object[] { pca.UserTokenCache, Config.ClientId, null, true, false, true, null, null, null });
                             var task = pca.UserTokenCache.GetType().GetRuntimeMethods()
                                 .Single(m => m.Name == "Microsoft.Identity.Client.ITokenCacheInternal.OnAfterAccessAsync")
                                 .Invoke(pca.UserTokenCache, new[] { notificationArgs });
