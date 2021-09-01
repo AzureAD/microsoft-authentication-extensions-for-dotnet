@@ -28,6 +28,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
             string macKeyChainServiceName,
             string macKeyChainAccountName,
             bool useLinuxPlaintextFallback,
+            bool usePlaintextFallback,
             string keyringSchemaName,
             string keyringCollection,
             string keyringSecretLabel,
@@ -42,10 +43,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
             CacheDirectory = cacheDirectory;
             CacheFilePath = Path.Combine(CacheDirectory, CacheFileName);
 
+            UseLinuxUnencryptedFallback = useLinuxPlaintextFallback;
+            UseUnencryptedFallback = usePlaintextFallback;
+
             MacKeyChainServiceName = macKeyChainServiceName;
             MacKeyChainAccountName = macKeyChainAccountName;
-
-            UseLinuxUnencryptedFallback = useLinuxPlaintextFallback;
 
             KeyringSchemaName = keyringSchemaName;
             KeyringCollection = keyringCollection;
@@ -57,6 +59,23 @@ namespace Microsoft.Identity.Client.Extensions.Web
             Authority = authority;
             LockRetryDelay = lockRetryDelay;
             LockRetryCount = lockRetryCount;
+
+            Validate(keyringSecretLabel);
+
+        }
+
+        private void Validate(string keyringSecretLabel)
+        {
+            if ((UseLinuxUnencryptedFallback || UseUnencryptedFallback) &&
+                (
+                    !string.IsNullOrEmpty(KeyringSchemaName) ||
+                    !string.IsNullOrEmpty(KeyringCollection) ||
+                    !string.IsNullOrEmpty(keyringSecretLabel) ||
+                    !string.IsNullOrEmpty(MacKeyChainServiceName) ||
+                    !string.IsNullOrEmpty(MacKeyChainAccountName)))
+            {
+                throw new ArgumentException("Using plaintext storage is mutually exclusive with other storage options. ");
+            }
         }
 
         /// <summary>
@@ -118,6 +137,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// Flag which indicates that a plaintext file will be used on Linux for secret storage
         /// </summary>
         public readonly bool UseLinuxUnencryptedFallback;
+
+        /// <summary>
+        /// Flag which indicates that a plaintext file will be used on all OSes for secret storage
+        /// </summary>
+        public readonly bool UseUnencryptedFallback;
 
         /// <summary>
         /// The number of time to retry the lock if it is contended and retrying is possible

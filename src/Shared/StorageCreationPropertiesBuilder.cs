@@ -31,6 +31,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         private int _lockRetryDelay = CrossPlatLock.LockfileRetryDelayDefault;
         private int _lockRetryCount = CrossPlatLock.LockfileRetryCountDefault;
         private bool _useLinuxPlaintextFallback = false;
+        private bool _usePlaintextFallback = false;
 
         /// <summary>
         /// Constructs a new instance of this builder associated with the given cache file.
@@ -71,6 +72,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 _macKeyChainServiceName,
                 _macKeyChainAccountName,
                 _useLinuxPlaintextFallback,
+                _usePlaintextFallback,
                 _keyringSchemaName,
                 _keyringCollection,
                 _keyringSecretLabel,
@@ -92,6 +94,8 @@ namespace Microsoft.Identity.Client.Extensions.Web
         {
             _macKeyChainServiceName = serviceName;
             _macKeyChainAccountName = accountName;
+
+         
             return this;
         }
 
@@ -159,14 +163,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
             if (string.IsNullOrEmpty(schemaName))
             {
                 throw new ArgumentNullException(nameof(schemaName));
-            }
-
-            if (_useLinuxPlaintextFallback)
-            {
-                throw new ArgumentException(
-                    "WithLinuxUnprotectedFile and WithLinuxKeyring are mutually exclusive. " +
-                    "Only one storage mechanism per OS is supported. ");
-            }
+            }        
 
             _keyringSchemaName = schemaName;
             _keyringCollection = collection;
@@ -178,7 +175,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
         /// <summary>
         /// Use to allow storage of secrets in the cacheFile which was configured in the constructor of this class.
-        /// Secrets are stored in PLAINTEXT!
+        /// WARNING Secrets are stored in PLAINTEXT!
         /// Should be used as a fallback for cases where Linux LibSecret is not available, for example
         /// over SSH connections. Users are responsible for security.
         /// </summary>
@@ -188,14 +185,26 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <returns></returns>
         public StorageCreationPropertiesBuilder WithLinuxUnprotectedFile()
         {
-            if (!string.IsNullOrEmpty(_keyringSchemaName))
-            {
-                throw new ArgumentException(
-                    "WithLinuxUnprotectedFile and WithLinuxKeyring are mutually exclusive. " +
-                    "Only one storage mechanism per OS is supported. ");
-            }
-
             _useLinuxPlaintextFallback = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Use to allow storage of secrets in the cacheFile which was configured in the constructor of this class.
+        /// WARNING Secrets are stored in PLAINTEXT!
+        /// 
+        /// The application is responsible for storing the plaintext file in a secure location, such as an encrypted drive or ACL directory.
+        /// 
+        /// Should be used as a fall-back for cases where encrypted persistence is not available, for example: 
+        /// - Linux and Mac over SSH connections
+        /// - Certain virtualized Windows scenarios where DPAPI is not available         
+        /// </summary>
+        /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence()
+        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+        /// </remarks>
+        public StorageCreationPropertiesBuilder WithUnprotectedFile()
+        {
+            _usePlaintextFallback = true;
             return this;
         }
     }

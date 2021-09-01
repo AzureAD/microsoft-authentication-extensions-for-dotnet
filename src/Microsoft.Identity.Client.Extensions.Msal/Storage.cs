@@ -44,7 +44,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <list type="bullet">
         /// <item>
         ///     <term>Windows</term>
-        ///     <description>DPAPI encyrpted file on behalf of the user. </description>
+        ///     <description>DPAPI encrypted file on behalf of the user. </description>
         /// </item>
         /// <item>
         ///     <term>Mac</term>
@@ -52,7 +52,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// </item>
         /// <item>
         ///     <term>Linux</term>
-        ///     <description>Cache is stored in Gnone KeyRing - https://developer.gnome.org/libsecret/0.18/  </description>
+        ///     <description>Cache is stored in Gnome KeyRing - https://developer.gnome.org/libsecret/0.18/  </description>
         /// </item>
         /// </list>
         /// </summary>
@@ -64,41 +64,49 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             TraceSourceLogger actualLogger = logger == null ? s_staticLogger.Value : new TraceSourceLogger(logger);
 
             ICacheAccessor cacheAccessor;
-            if (SharedUtilities.IsWindowsPlatform())
+
+            if (creationProperties.UseUnencryptedFallback)
             {
-                cacheAccessor = new DpApiEncryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
-            }
-            else if (SharedUtilities.IsMacPlatform())
-            {
-                cacheAccessor = new MacKeychainAccessor(
-                    creationProperties.CacheFilePath,
-                    creationProperties.MacKeyChainServiceName,
-                    creationProperties.MacKeyChainAccountName,
-                    actualLogger);
-            }
-            else if (SharedUtilities.IsLinuxPlatform())
-            {
-                if (creationProperties.UseLinuxUnencryptedFallback)
-                {
-                    cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
-                }
-                else
-                {
-                    cacheAccessor = new LinuxKeyringAccessor(
-                       creationProperties.CacheFilePath,
-                       creationProperties.KeyringCollection,
-                       creationProperties.KeyringSchemaName,
-                       creationProperties.KeyringSecretLabel,
-                       creationProperties.KeyringAttribute1.Key,
-                       creationProperties.KeyringAttribute1.Value,
-                       creationProperties.KeyringAttribute2.Key,
-                       creationProperties.KeyringAttribute2.Value,
-                       actualLogger);
-                }
+                cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
             }
             else
             {
-                throw new PlatformNotSupportedException();
+                if (SharedUtilities.IsWindowsPlatform())
+                {
+                    cacheAccessor = new DpApiEncryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
+                }
+                else if (SharedUtilities.IsMacPlatform())
+                {
+                    cacheAccessor = new MacKeychainAccessor(
+                        creationProperties.CacheFilePath,
+                        creationProperties.MacKeyChainServiceName,
+                        creationProperties.MacKeyChainAccountName,
+                        actualLogger);
+                }
+                else if (SharedUtilities.IsLinuxPlatform())
+                {
+                    if (creationProperties.UseLinuxUnencryptedFallback)
+                    {
+                        cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
+                    }
+                    else
+                    {
+                        cacheAccessor = new LinuxKeyringAccessor(
+                           creationProperties.CacheFilePath,
+                           creationProperties.KeyringCollection,
+                           creationProperties.KeyringSchemaName,
+                           creationProperties.KeyringSecretLabel,
+                           creationProperties.KeyringAttribute1.Key,
+                           creationProperties.KeyringAttribute1.Value,
+                           creationProperties.KeyringAttribute2.Key,
+                           creationProperties.KeyringAttribute2.Value,
+                           actualLogger);
+                    }
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException();
+                }
             }
 
             return new Storage(creationProperties, cacheAccessor, actualLogger);
