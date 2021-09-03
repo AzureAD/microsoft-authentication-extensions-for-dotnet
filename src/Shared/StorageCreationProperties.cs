@@ -60,17 +60,21 @@ namespace Microsoft.Identity.Client.Extensions.Web
             LockRetryDelay = lockRetryDelay;
             LockRetryCount = lockRetryCount;
 
-            Validate(keyringSecretLabel);
-
+            Validate();
         }
 
-        private void Validate(string keyringSecretLabel)
+        private void Validate()
         {
+            if (UseLinuxUnencryptedFallback && UseUnencryptedFallback)
+            {
+                throw new ArgumentException("UseLinuxUnencryptedFallback and UseUnencryptedFallback are mutually exclusive. UseLinuxUnencryptedFallback is the safer option. ");
+
+            }
             if ((UseLinuxUnencryptedFallback || UseUnencryptedFallback) &&
                 (
                     !string.IsNullOrEmpty(KeyringSchemaName) ||
                     !string.IsNullOrEmpty(KeyringCollection) ||
-                    !string.IsNullOrEmpty(keyringSecretLabel) ||
+                    !string.IsNullOrEmpty(KeyringSecretLabel) ||
                     !string.IsNullOrEmpty(MacKeyChainServiceName) ||
                     !string.IsNullOrEmpty(MacKeyChainAccountName)))
             {

@@ -241,6 +241,14 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             builder.WithUnprotectedFile();
             AssertException.Throws<ArgumentException>(() => builder.Build());
 
+            builder = new StorageCreationPropertiesBuilder(
+              Path.GetFileName(CacheFilePath),
+              Path.GetDirectoryName(CacheFilePath));
+            builder.WithLinuxUnprotectedFile();
+            builder.WithUnprotectedFile();
+            
+            AssertException.Throws<ArgumentException>(() => builder.Build());
+
         }
     }
 }
