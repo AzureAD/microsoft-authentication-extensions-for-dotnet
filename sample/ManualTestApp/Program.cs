@@ -333,11 +333,8 @@ namespace ManualTestApp
             Console.Clear();
         }
 
-
-
         private static async Task<MsalCacheHelper> CreateCacheHelperAsync()
         {
-
             StorageCreationProperties storageProperties;
 
             try
@@ -366,21 +363,18 @@ namespace ManualTestApp
                 return cacheHelper;
 
             }
-            catch (Exception e)
+            catch (MsalCachePersistenceException e)
             {
-                Console.WriteLine($"WARNING! Libsecret is not usable. " +
-                    $"Secrets will be stored in plaintext at {Path.Combine(Config.CacheDir, Config.CacheFileName)} !");
-                Console.WriteLine($"Libsecret exception: " + e);
+                Console.WriteLine($"WARNING! Unable to encrypt tokens at rest." +
+                    $" Saving tokens in plaintext at {Path.Combine(Config.CacheDir, Config.CacheFileName)} ! Please protect this directory or delete the file after use");
+                Console.WriteLine($"Encryption exception: " + e);
 
                 storageProperties =
                     new StorageCreationPropertiesBuilder(
-                        Config.CacheFileName,
+                        Config.CacheFileName + ".plaintext", // do not use the same file name so as not to overwrite the encypted version
                         Config.CacheDir)
-                    .WithLinuxUnprotectedFile()
-                    .WithMacKeyChain(
-                        Config.KeyChainServiceName,
-                        Config.KeyChainAccountName)
-                     .Build();
+                    .WithUnprotectedFile()
+                    .Build();
 
                 var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties).ConfigureAwait(false);
                 cacheHelper.VerifyPersistence();

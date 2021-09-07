@@ -97,7 +97,7 @@ namespace ManualTestApp
             }
 
             return new StorageCreationPropertiesBuilder(
-                                     Config.CacheFileName,
+                                     Config.CacheFileName + "plaintext", // do not use the same file name so as not to overwrite the encypted version
                                      Config.CacheDir)
                                  .WithLinuxUnprotectedFile()
                                  .WithMacKeyChain(

@@ -215,5 +215,40 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                 cacheAccessor.Clear();
             });
         }
+
+        [TestMethod]
+        public void UnprotectedOptionMutuallyExclusiveWithOtherOptions()
+        {
+            var builder = new StorageCreationPropertiesBuilder(
+               Path.GetFileName(CacheFilePath),
+               Path.GetDirectoryName(CacheFilePath));
+            builder = builder.WithMacKeyChain(serviceName: "Microsoft.Developer.IdentityService", accountName: "MSALCache");
+            builder.WithUnprotectedFile();
+
+            AssertException.Throws<ArgumentException>(() => builder.Build());
+
+
+            builder = new StorageCreationPropertiesBuilder(
+               Path.GetFileName(CacheFilePath),
+               Path.GetDirectoryName(CacheFilePath));
+            
+            builder = builder.WithLinuxKeyring(
+                schemaName: "msal.cache",
+                collection: "default",
+                secretLabel: "MSALCache",
+                attribute1: new KeyValuePair<string, string>("MsalClientID", "Microsoft.Developer.IdentityService"),
+                attribute2: new KeyValuePair<string, string>("MsalClientVersion", "1.0.0.0"));
+            builder.WithUnprotectedFile();
+            AssertException.Throws<ArgumentException>(() => builder.Build());
+
+            builder = new StorageCreationPropertiesBuilder(
+              Path.GetFileName(CacheFilePath),
+              Path.GetDirectoryName(CacheFilePath));
+            builder.WithLinuxUnprotectedFile();
+            builder.WithUnprotectedFile();
+            
+            AssertException.Throws<ArgumentException>(() => builder.Build());
+
+        }
     }
 }

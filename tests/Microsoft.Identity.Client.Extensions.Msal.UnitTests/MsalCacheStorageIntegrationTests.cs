@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,6 +79,30 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             store = Storage.Create(s_storageCreationProperties, logger: _logger);
             Assert.IsTrue(store.CacheAccessor is DpApiEncryptedFileAccessor);
+        }
+
+        [TestMethod]
+        public void CacheFallback()
+        {
+            const string data = "data";
+            var plaintextStorage = new StorageCreationPropertiesBuilder(
+                    Path.GetFileName(CacheFilePath + "fallback"),
+                    Path.GetDirectoryName(CacheFilePath))
+                .WithUnprotectedFile()
+                .Build();
+
+            Storage unprotectedStore = Storage.Create(plaintextStorage, _logger);
+            Assert.IsTrue(unprotectedStore.CacheAccessor is FileAccessor);
+
+            unprotectedStore.VerifyPersistence();
+            unprotectedStore.WriteData(Encoding.UTF8.GetBytes(data));
+
+            // Unproteced cache file should exist
+            Assert.IsTrue(File.Exists(plaintextStorage.CacheFilePath));
+
+            string dataReadFromPlaintext = File.ReadAllText(plaintextStorage.CacheFilePath);
+
+            Assert.AreEqual(data, dataReadFromPlaintext);
         }
 
         [RunOnLinux]
