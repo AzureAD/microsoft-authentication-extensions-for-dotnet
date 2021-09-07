@@ -74,7 +74,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 (
                     !string.IsNullOrEmpty(KeyringSecretLabel) ||
                     !string.IsNullOrEmpty(KeyringSchemaName) ||
-                    !string.IsNullOrEmpty(KeyringCollection)                    ))
+                    !string.IsNullOrEmpty(KeyringCollection)))
             {
                 throw new ArgumentException("Using plaintext storage is mutually exclusive with other Linux storage options. ");
             }
@@ -83,7 +83,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
                 (   !string.IsNullOrEmpty(MacKeyChainServiceName) ||
                     !string.IsNullOrEmpty(MacKeyChainAccountName)))
             {
-                throw new ArgumentException("Using Luiplaintext storage is mutually exclusive with other Mac storage options. ");
+                throw new ArgumentException("Using plaintext storage is mutually exclusive with other Mac storage options. ");
 
             }
         }
