@@ -72,13 +72,19 @@ namespace Microsoft.Identity.Client.Extensions.Web
             }
             if ((UseLinuxUnencryptedFallback || UseUnencryptedFallback) &&
                 (
-                    !string.IsNullOrEmpty(KeyringSchemaName) ||
-                    !string.IsNullOrEmpty(KeyringCollection) ||
                     !string.IsNullOrEmpty(KeyringSecretLabel) ||
-                    !string.IsNullOrEmpty(MacKeyChainServiceName) ||
+                    !string.IsNullOrEmpty(KeyringSchemaName) ||
+                    !string.IsNullOrEmpty(KeyringCollection)                    ))
+            {
+                throw new ArgumentException("Using plaintext storage is mutually exclusive with other Linux storage options. ");
+            }
+
+            if ((UseUnencryptedFallback ) && 
+                (   !string.IsNullOrEmpty(MacKeyChainServiceName) ||
                     !string.IsNullOrEmpty(MacKeyChainAccountName)))
             {
-                throw new ArgumentException("Using plaintext storage is mutually exclusive with other storage options. ");
+                throw new ArgumentException("Using Luiplaintext storage is mutually exclusive with other Mac storage options. ");
+
             }
         }
 
