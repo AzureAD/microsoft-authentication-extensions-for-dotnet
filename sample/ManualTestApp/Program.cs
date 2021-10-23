@@ -230,7 +230,7 @@ namespace ManualTestApp
                             // do smth that loads the cache first
                             await pca.GetAccountsAsync().ConfigureAwait(false);
 
-                            DateTimeOffset expiredValue = DateTimeOffset.UtcNow.AddMonths(1);
+                            DateTimeOffset expiredValue = DateTimeOffset.UtcNow.AddMonths(-1);
 
                             var accessor = pca.UserTokenCache.GetType()
                                 .GetRuntimeProperties()
@@ -325,6 +325,7 @@ namespace ManualTestApp
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Token Acquisition Success! Got a token for: " + result.Account.Username);
+            Console.WriteLine("Token source:" + result.AuthenticationResultMetadata.TokenSource);
             Console.WriteLine(result.AccessToken);
             Console.ResetColor();
             Console.WriteLine("Press ENTER to continue");
