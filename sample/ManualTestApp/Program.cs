@@ -230,8 +230,7 @@ namespace ManualTestApp
                             // do smth that loads the cache first
                             await pca.GetAccountsAsync().ConfigureAwait(false);
 
-                            string expiredValue = ((long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds)
-                                    .ToString(CultureInfo.InvariantCulture);
+                            DateTimeOffset expiredValue = DateTimeOffset.UtcNow.AddMonths(1);
 
                             var accessor = pca.UserTokenCache.GetType()
                                 .GetRuntimeProperties()
@@ -242,7 +241,7 @@ namespace ManualTestApp
 
                             foreach (var internalAt in internalAccessTokens)
                             {
-                                internalAt.GetType().GetRuntimeMethods().Single(m => m.Name == "set_ExpiresOnUnixTimestamp").Invoke(internalAt, new[] { expiredValue });
+                                internalAt.GetType().GetRuntimeMethods().Single(m => m.Name == "set_ExpiresOn").Invoke(internalAt, new object[] { expiredValue });
                                 accessor.GetType().GetMethod("SaveAccessToken").Invoke(accessor, new[] { internalAt });
                             }
 
