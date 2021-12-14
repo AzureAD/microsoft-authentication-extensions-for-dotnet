@@ -145,6 +145,11 @@ steps:
      ]
     SessionTimeout: 20
 
+- task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+  displayName: 'Get Software Bill Of Materials (SBOM)'
+  inputs:
+       BuildDropPath: '$(Build.ArtifactStagingDirectory)'
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifacts'
   inputs:
