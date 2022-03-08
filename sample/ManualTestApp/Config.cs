@@ -14,7 +14,7 @@ namespace ManualTestApp
 
         // Use "common" if you want to allow any "enterprise" (work or school) account AND any user account (live.com, outlook, hotmail) to log in.
         // Use an actual tenant ID to allow only your enterprise to log in.
-        // Use "organizatins" to allow only enterprise log-in, this is required for the Username / Password flow
+        // Use "organizations" to allow only enterprise log-in, this is required for the Username / Password flow
         public const string Authority = "https://login.microsoftonline.com/organizations";
 
         // DO NOT USE THIS CLIENT ID IN YOUR APP. WE REGULARLY DELETE THEM. CREATE YOUR OWN!
