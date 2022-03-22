@@ -9,9 +9,9 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     
-    <TargetFrameworkNetDesktop>net45</TargetFrameworkNetDesktop>
+    <TargetFrameworkNetDesktop>net452</TargetFrameworkNetDesktop>
     <TargetFrameworkNetStandard>netstandard2.0</TargetFrameworkNetStandard>
-    <TargetFrameworkNetCore>netcoreapp2.1</TargetFrameworkNetCore>
+    <TargetFrameworkNetCore>netcoreapp3.1</TargetFrameworkNetCore>
 
     <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('Windows'))">$(TargetFrameworkNetDesktop);$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
     <DesktopTargetFrameworks Condition="$([MSBuild]::IsOsPlatform('OSX'))">$(TargetFrameworkNetStandard);$(TargetFrameworkNetCore)</DesktopTargetFrameworks>
