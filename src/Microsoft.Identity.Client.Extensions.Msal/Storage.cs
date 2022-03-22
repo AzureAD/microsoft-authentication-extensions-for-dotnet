@@ -67,13 +67,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             if (creationProperties.UseUnencryptedFallback)
             {
-                cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
+                cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, useChmod: true, logger: actualLogger);
             }
             else
             {
                 if (SharedUtilities.IsWindowsPlatform())
                 {
-                    cacheAccessor = new DpApiEncryptedFileAccessor(creationProperties.CacheFilePath, actualLogger);
+                    cacheAccessor = new DpApiEncryptedFileAccessor(creationProperties.CacheFilePath, logger: actualLogger);
                 }
                 else if (SharedUtilities.IsMacPlatform())
                 {
@@ -87,7 +87,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 {
                     if (creationProperties.UseLinuxUnencryptedFallback)
                     {
-                        cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, actualLogger);
+                        cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, useChmod: true, actualLogger);
                     }
                     else
                     {

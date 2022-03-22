@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using Microsoft.Identity.Client.Extensions.Msal.Accessors;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -33,7 +34,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }, logger);
         }
 
-        internal static void WriteDataToFile(string filePath, byte[] data, TraceSourceLogger logger)
+        internal static void CreateAndWriteToFile(string filePath, byte[] data, bool setChmod600, TraceSourceLogger logger)
         {
             EnsureParentDirectoryExists(filePath, logger);
 
@@ -41,7 +42,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             TryProcessFile(() =>
             {
-                File.WriteAllBytes(filePath, data);
+                if (setChmod600)
+                {
+                    logger.LogInformation($"Writing file with chmod 600");
+                    FileWithPermissions.WriteToNewFileWith600Permissions(filePath, data);
+                }
+                else
+                {
+                    logger.LogInformation($"Writing file without special permissions");
+                    File.WriteAllBytes(filePath, data);
+                }
             }, logger);
         }
 

@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Security.AccessControl;
 using System.Text;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
@@ -13,10 +14,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private readonly string _cacheFilePath;
         private readonly TraceSourceLogger _logger;
+        private readonly bool _useChmod;
 
-        public FileAccessor(string cacheFilePath, TraceSourceLogger logger)
+        public FileAccessor(string cacheFilePath, bool useChmod, TraceSourceLogger logger)
         {
             _cacheFilePath = cacheFilePath;
+            _useChmod = useChmod;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -28,7 +31,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new FileAccessor(_cacheFilePath + ".test", _logger);
+            return new FileAccessor(_cacheFilePath + ".test", _useChmod, _logger);
         }
 
         public byte[] Read()
@@ -53,7 +56,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public void Write(byte[] data)
         {
-            FileIOWithRetries.WriteDataToFile(_cacheFilePath, data, _logger);
+            FileIOWithRetries.CreateAndWriteToFile(_cacheFilePath, data, true, _logger);
         }
     }
 }

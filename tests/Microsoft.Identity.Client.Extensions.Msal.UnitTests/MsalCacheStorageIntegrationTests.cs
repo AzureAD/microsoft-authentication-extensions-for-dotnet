@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,25 +85,45 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheFallback()
         {
+            
             const string data = "data";
+            string cacheFilePathFallback = CacheFilePath + "fallback";
             var plaintextStorage = new StorageCreationPropertiesBuilder(
-                    Path.GetFileName(CacheFilePath + "fallback"),
+                    Path.GetFileName(cacheFilePathFallback),
                     Path.GetDirectoryName(CacheFilePath))
                 .WithUnprotectedFile()
                 .Build();
-
+            
             Storage unprotectedStore = Storage.Create(plaintextStorage, _logger);
             Assert.IsTrue(unprotectedStore.CacheAccessor is FileAccessor);
 
             unprotectedStore.VerifyPersistence();
             unprotectedStore.WriteData(Encoding.UTF8.GetBytes(data));
 
-            // Unproteced cache file should exist
+            // Unprotected cache file should exist
             Assert.IsTrue(File.Exists(plaintextStorage.CacheFilePath));
 
             string dataReadFromPlaintext = File.ReadAllText(plaintextStorage.CacheFilePath);
 
             Assert.AreEqual(data, dataReadFromPlaintext);
+
+            if (SharedUtilities.IsWindowsPlatform())
+            {
+                FileInfo fi = new FileInfo(plaintextStorage.CacheFilePath);
+                var acl = fi.GetAccessControl();
+                var accessRules = acl.GetAccessRules(true, true, typeof(System.Security.Principal.SecurityIdentifier));
+
+                Assert.AreEqual(1, accessRules.Count);
+
+                var rule = accessRules.Cast<FileSystemAccessRule>().Single();
+
+                Assert.AreEqual(FileSystemRights.Read | FileSystemRights.Write | FileSystemRights.Synchronize, rule.FileSystemRights);
+                Assert.AreEqual(AccessControlType.Allow, rule.AccessControlType);
+                Assert.AreEqual(System.Security.Principal.WindowsIdentity.GetCurrent().User, rule.IdentityReference);
+                Assert.IsFalse(rule.IsInherited);
+                Assert.AreEqual(InheritanceFlags.None, rule.InheritanceFlags);
+            }
+
         }
 
         [RunOnLinux]
