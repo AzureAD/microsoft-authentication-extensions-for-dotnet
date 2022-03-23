@@ -85,7 +85,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheFallback()
         {
-            
+
             const string data = "data";
             string cacheFilePathFallback = CacheFilePath + "fallback";
             var plaintextStorage = new StorageCreationPropertiesBuilder(
@@ -93,7 +93,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
                     Path.GetDirectoryName(CacheFilePath))
                 .WithUnprotectedFile()
                 .Build();
-            
+
             Storage unprotectedStore = Storage.Create(plaintextStorage, _logger);
             Assert.IsTrue(unprotectedStore.CacheAccessor is FileAccessor);
 
@@ -107,24 +107,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             Assert.AreEqual(data, dataReadFromPlaintext);
 
-            if (SharedUtilities.IsWindowsPlatform())
-            {
-                FileInfo fi = new FileInfo(plaintextStorage.CacheFilePath);
-                var acl = fi.GetAccessControl();
-                var accessRules = acl.GetAccessRules(true, true, typeof(System.Security.Principal.SecurityIdentifier));
-
-                Assert.AreEqual(1, accessRules.Count);
-
-                var rule = accessRules.Cast<FileSystemAccessRule>().Single();
-
-                Assert.AreEqual(FileSystemRights.Read | FileSystemRights.Write | FileSystemRights.Synchronize, rule.FileSystemRights);
-                Assert.AreEqual(AccessControlType.Allow, rule.AccessControlType);
-                Assert.AreEqual(System.Security.Principal.WindowsIdentity.GetCurrent().User, rule.IdentityReference);
-                Assert.IsFalse(rule.IsInherited);
-                Assert.AreEqual(InheritanceFlags.None, rule.InheritanceFlags);
-            }
+            // Verify that file permissions are set to 600
+            FileHelper.AssertChmod600(s_storageCreationProperties.CacheFilePath);
 
         }
+
+    
 
         [RunOnLinux]
         public void CacheStorageFactory_WithFallback_Linux()
@@ -168,6 +156,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Verify above call doesn't delete existing cache file
             Assert.IsTrue(File.Exists(s_storageCreationProperties.CacheFilePath));
+
+            // Verify that file permissions are set to 600
+            FileHelper.AssertChmod600(s_storageCreationProperties.CacheFilePath);
         }
 
         [TestMethod]
