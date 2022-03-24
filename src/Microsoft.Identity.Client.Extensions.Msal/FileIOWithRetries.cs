@@ -45,7 +45,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 if (setChmod600)
                 {
                     logger.LogInformation($"Writing file with chmod 600");
-                    FileWithPermissions.WriteToNewFileWith600Permissions(filePath, data);
+                    FileWithPermissions.WriteToNewFileWithOwnerRWPermissions(filePath, data);
                 }
                 else
                 {

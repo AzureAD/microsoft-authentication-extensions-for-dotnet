@@ -12,6 +12,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
 {
     internal static class FileWithPermissions
     {
+        #region Unix specific
+
+        // See https://ss64.com/bash/chmod.html 
+
         [DllImport("libc", SetLastError = true)]
         private static extern int chmod(string pathname, int mode);
 
@@ -29,22 +33,23 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         const int S_IROTH = 0x4;
         const int S_IWOTH = 0x2;
         const int S_IXOTH = 0x1;
+        #endregion
 
-     
+
         /// <summary>
         /// Creates a new file with "600" permissions (i.e. read / write only by the owner) and writes some data to it.
         /// On Windows, file security is more complex, but an equivalent is achieved.
         /// </summary>
         /// <exception cref="PlatformNotSupportedException"></exception>
-        public static void WriteToNewFileWith600Permissions(string path, byte[] data)
+        public static void WriteToNewFileWithOwnerRWPermissions(string path, byte[] data)
         {
             if (SharedUtilities.IsWindowsPlatform())
             {
-                WriteToNewFileWith600PermissionsWindows(path, data);
+                WriteToNewFileWithOwnerRWPermissionsWindows(path, data);
             }
             else if (SharedUtilities.IsMacPlatform() || SharedUtilities.IsLinuxPlatform())
             {
-                WriteToNewFileWith600PermissionsUnix(path, data);
+                WriteToNewFileWithOwnerRWPermissionsUnix(path, data);
             }
             else
             {
@@ -55,9 +60,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         /// <summary>
         /// Based on https://stackoverflow.com/questions/45132081/file-permissions-on-linux-unix-with-net-core
         /// </summary>
-        private static void WriteToNewFileWith600PermissionsUnix(string filePath, byte[] data)
+        private static void WriteToNewFileWithOwnerRWPermissionsUnix(string filePath, byte[] data)
         {
-            File.WriteAllBytes(filePath, data);
+            File.Create(filePath);
 
             // Setting permissions to 0600 
             const int _0600 = S_IRUSR | S_IWUSR; // read & write only for user
@@ -76,6 +81,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
 
                 throw new IOException($"Failed to set permissions on file {filePath} - error code {result}");
             }
+
+            using (var stream = new FileStream(filePath, FileMode.Append))
+            {
+                stream.Write(data, 0, data.Length);
+            }
         }
 
         /// <summary>
@@ -83,21 +93,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="data"></param>
-        private static void WriteToNewFileWith600PermissionsWindows(string filePath, byte[] data)
+        private static void WriteToNewFileWithOwnerRWPermissionsWindows(string filePath, byte[] data)
         {
             FileSecurity security = new FileSecurity();
             var rights = FileSystemRights.Read | FileSystemRights.Write;
 
             // https://stackoverflow.com/questions/39480255/c-sharp-how-to-grant-access-only-to-current-user-and-restrict-access-to-others
-            //var adminIdentifier = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
-            //security.AddAccessRule(
-            //    new FileSystemAccessRule(
-            //            adminIdentifier,
-            //            rights,
-            //            InheritanceFlags.None,
-            //            PropagationFlags.NoPropagateInherit,
-            //            AccessControlType.Allow));
-
             security.AddAccessRule(
                 new FileSystemAccessRule(
                         WindowsIdentity.GetCurrent().Name,
@@ -123,7 +124,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
                 FileInfo info = new FileInfo(filePath);
                 fs = info.Create(FileMode.Create, rights, FileShare.Read, data.Length, FileOptions.None, security);
 #endif
-                
+
 
                 fs.Write(data, 0, data.Length);
             }

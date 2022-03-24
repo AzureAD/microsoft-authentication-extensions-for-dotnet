@@ -14,12 +14,12 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         private readonly string _cacheFilePath;
         private readonly TraceSourceLogger _logger;
-        private readonly bool _useChmod;
+        private readonly bool _setOwnerOnlyPermission;
 
-        public FileAccessor(string cacheFilePath, bool useChmod, TraceSourceLogger logger)
+        internal FileAccessor(string cacheFilePath, bool setOwnerOnlyPermissions, TraceSourceLogger logger)
         {
             _cacheFilePath = cacheFilePath;
-            _useChmod = useChmod;
+            _setOwnerOnlyPermission = setOwnerOnlyPermissions;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -31,7 +31,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public ICacheAccessor CreateForPersistenceValidation()
         {
-            return new FileAccessor(_cacheFilePath + ".test", _useChmod, _logger);
+            return new FileAccessor(_cacheFilePath + ".test", _setOwnerOnlyPermission, _logger);
         }
 
         public byte[] Read()
@@ -56,7 +56,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
         public void Write(byte[] data)
         {
-            FileIOWithRetries.CreateAndWriteToFile(_cacheFilePath, data, true, _logger);
+            FileIOWithRetries.CreateAndWriteToFile(_cacheFilePath, data, _setOwnerOnlyPermission, _logger);
         }
     }
 }

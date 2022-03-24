@@ -67,7 +67,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             if (creationProperties.UseUnencryptedFallback)
             {
-                cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, useChmod: true, logger: actualLogger);
+                cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, setOwnerOnlyPermissions: true, logger: actualLogger);
             }
             else
             {
@@ -87,7 +87,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                 {
                     if (creationProperties.UseLinuxUnencryptedFallback)
                     {
-                        cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, useChmod: true, actualLogger);
+                        cacheAccessor = new FileAccessor(creationProperties.CacheFilePath, setOwnerOnlyPermissions: true, actualLogger);
                     }
                     else
                     {
