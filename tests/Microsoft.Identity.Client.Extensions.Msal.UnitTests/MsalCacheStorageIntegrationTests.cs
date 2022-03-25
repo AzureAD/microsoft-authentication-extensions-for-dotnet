@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,9 +85,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheFallback()
         {
+
             const string data = "data";
+            string cacheFilePathFallback = CacheFilePath + "fallback";
             var plaintextStorage = new StorageCreationPropertiesBuilder(
-                    Path.GetFileName(CacheFilePath + "fallback"),
+                    Path.GetFileName(cacheFilePathFallback),
                     Path.GetDirectoryName(CacheFilePath))
                 .WithUnprotectedFile()
                 .Build();
@@ -97,13 +100,19 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             unprotectedStore.VerifyPersistence();
             unprotectedStore.WriteData(Encoding.UTF8.GetBytes(data));
 
-            // Unproteced cache file should exist
+            // Unprotected cache file should exist
             Assert.IsTrue(File.Exists(plaintextStorage.CacheFilePath));
 
             string dataReadFromPlaintext = File.ReadAllText(plaintextStorage.CacheFilePath);
 
             Assert.AreEqual(data, dataReadFromPlaintext);
+
+            // Verify that file permissions are set to 600
+            FileHelper.AssertChmod600(s_storageCreationProperties.CacheFilePath);
+
         }
+
+    
 
         [RunOnLinux]
         public void CacheStorageFactory_WithFallback_Linux()
@@ -147,6 +156,9 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 
             // Verify above call doesn't delete existing cache file
             Assert.IsTrue(File.Exists(s_storageCreationProperties.CacheFilePath));
+
+            // Verify that file permissions are set to 600
+            FileHelper.AssertChmod600(s_storageCreationProperties.CacheFilePath);
         }
 
         [TestMethod]
