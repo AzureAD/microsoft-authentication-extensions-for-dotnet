@@ -6,10 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
@@ -85,7 +82,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public void CacheFallback()
         {
-
             const string data = "data";
             string cacheFilePathFallback = CacheFilePath + "fallback";
             var plaintextStorage = new StorageCreationPropertiesBuilder(
@@ -108,11 +104,10 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.AreEqual(data, dataReadFromPlaintext);
 
             // Verify that file permissions are set to 600
-            FileHelper.AssertChmod600(s_storageCreationProperties.CacheFilePath);
-
+            FileHelper.AssertChmod600(plaintextStorage.CacheFilePath);
         }
 
-    
+
 
         [RunOnLinux]
         public void CacheStorageFactory_WithFallback_Linux()
