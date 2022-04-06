@@ -1,6 +1,6 @@
 # MSAL token cache extension for public client applications
 
-A cross platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache).
+A cross-platform token cache serialization mechanism - [see details on the Wiki](https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache).
 
 [![NuGet](https://img.shields.io/nuget/vpre/Microsoft.Identity.Client.Extensions.Msal.svg?style=flat-square&label=nuget&colorB=00b200)](https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal/) 
 
