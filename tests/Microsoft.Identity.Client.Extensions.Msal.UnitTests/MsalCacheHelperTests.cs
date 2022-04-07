@@ -362,7 +362,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
 
 
-        
+
         [DoNotRunOnLinux] // The FileSystemWatcher on Linux doesn't always fire
         public async Task ClearCacheUsesTheLockAsync()
         {
@@ -410,8 +410,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             // Assert
             if (SharedUtilities.IsLinuxPlatform())
             {
-                Assert.IsTrue(lockCreated, $"lockCreated {lockCreated} lockDeleted {lockDeleted}");
-                Assert.IsTrue(lockDeleted, $"lockCreated {lockDeleted} lockDeleted {lockDeleted}");
+                Assert.IsFalse(lockCreated, $"lockCreated {lockCreated} lockDeleted {lockDeleted}");
+                Assert.IsFalse(lockDeleted, $"lockCreated {lockDeleted} lockDeleted {lockDeleted}");
             }
             else
             {
@@ -484,7 +484,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             var accounts = await pca.GetAccountsAsync().ConfigureAwait(false);
 
             // Assert
-            Assert.AreEqual(1, accounts.Count());                       
+            Assert.AreEqual(1, accounts.Count());
         }
 
         [TestMethod]
@@ -529,7 +529,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         [TestMethod]
         public async Task EventNeedsConfigurationAsync()
         {
-           var properties = _storageCreationPropertiesBuilder.Build();
+            var properties = _storageCreationPropertiesBuilder.Build();
 
             if (File.Exists(properties.CacheFilePath))
             {
