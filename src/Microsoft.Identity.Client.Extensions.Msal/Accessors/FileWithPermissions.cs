@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,6 +8,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
 {
@@ -62,14 +64,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         /// </summary>
         private static void WriteToNewFileWithOwnerRWPermissionsUnix(string filePath, byte[] data)
         {
-            File.Create(filePath);
+            using (File.Create(filePath))
+            {
+            }
 
             // Setting permissions to 0600 
             const int _0600 = S_IRUSR | S_IWUSR; // read & write only for user
             int result = chmod(filePath, _0600);
 
             if (result != 0)
-            {
+            {                
                 try
                 {
                     File.Delete(filePath);
@@ -79,7 +83,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
                     // ignored
                 }
 
-                throw new IOException($"Failed to set permissions on file {filePath} - error code {result}");
+                throw new IOException($"Failed to set permissions on file {filePath} Error code: {result} Last error: {Marshal.GetLastWin32Error()}");
             }
 
             using (var stream = new FileStream(filePath, FileMode.Append))
