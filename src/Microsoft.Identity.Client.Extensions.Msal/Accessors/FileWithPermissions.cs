@@ -16,25 +16,17 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
     {
         #region Unix specific
 
-        // See https://ss64.com/bash/chmod.html 
 
-        [DllImport("libc", SetLastError = true)]
-        private static extern int chmod(string pathname, int mode);
+        /// <summary>
+        /// Equivalent to calling open() with flags  O_CREAT|O_WRONLY|O_TRUNC. O_TRUNC will truncate the file. 
+        /// See https://man7.org/linux/man-pages/man2/open.2.html
+        /// </summary>
+        [DllImport("libc", EntryPoint = "creat", SetLastError = true)]
+        private static extern int PosixCreate([MarshalAs(UnmanagedType.LPStr)] string pathname, int mode);
 
-        // user permissions
-        const int S_IRUSR = 0x100;
-        const int S_IWUSR = 0x80;
-        const int S_IXUSR = 0x40;
+        [DllImport("libc", EntryPoint = "chmod", SetLastError = true)]
+        private static extern int PosixChmod([MarshalAs(UnmanagedType.LPStr)] string pathname, int mode);
 
-        // group permission
-        const int S_IRGRP = 0x20;
-        const int S_IWGRP = 0x10;
-        const int S_IXGRP = 0x8;
-
-        // other permissions
-        const int S_IROTH = 0x4;
-        const int S_IWOTH = 0x2;
-        const int S_IXOTH = 0x1;
         #endregion
 
 
@@ -42,9 +34,13 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         /// Creates a new file with "600" permissions (i.e. read / write only by the owner) and writes some data to it.
         /// On Windows, file security is more complex, but an equivalent is achieved.
         /// </summary>
+        /// <remarks>
+        /// This logic will not work on Mono, see https://github.com/NuGet/NuGet.Client/commit/d62db666c710bf95121fe8f5c6a6cbe01985456f
+        /// </remarks>
         /// <exception cref="PlatformNotSupportedException"></exception>
         public static void WriteToNewFileWithOwnerRWPermissions(string path, byte[] data)
         {
+
             if (SharedUtilities.IsWindowsPlatform())
             {
                 WriteToNewFileWithOwnerRWPermissionsWindows(path, data);
@@ -60,35 +56,31 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         }
 
         /// <summary>
-        /// Based on https://stackoverflow.com/questions/45132081/file-permissions-on-linux-unix-with-net-core
+        /// Based on https://stackoverflow.com/questions/45132081/file-permissions-on-linux-unix-with-net-core and on 
+        /// https://github.com/NuGet/NuGet.Client/commit/d62db666c710bf95121fe8f5c6a6cbe01985456f
         /// </summary>
-        private static void WriteToNewFileWithOwnerRWPermissionsUnix(string filePath, byte[] data)
+        private static void WriteToNewFileWithOwnerRWPermissionsUnix(string path, byte[] data)
         {
-            using (File.Create(filePath))
+            int _0600 = Convert.ToInt32("600", 8);
+
+            int fileDescriptor =  PosixCreate(path, _0600);
+
+            // if creat() fails, then try to use File.Create because it will throw a meaningful exception.
+            if (fileDescriptor == -1)
             {
+                int posixCreateError = Marshal.GetLastWin32Error();
+                using (File.Create(path))
+                {
+                    // File.Create() should have thrown an exception with an appropriate error message
+                }
+                File.Delete(path);
+                throw new InvalidOperationException($"libc creat() failed with last error code {posixCreateError}, but File.Create did not");
             }
 
-            // Setting permissions to 0600 
-            const int _0600 = S_IRUSR | S_IWUSR; // read & write only for user
-            int result = chmod(filePath, _0600);
-
-            if (result != 0)
-            {                
-                try
-                {
-                    File.Delete(filePath);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-
-                throw new IOException($"Failed to set permissions on file {filePath} Error code: {result} Last error: {Marshal.GetLastWin32Error()}");
-            }
-
-            using (var stream = new FileStream(filePath, FileMode.Append))
+            var safeFileHandle = new SafeFileHandle((IntPtr)fileDescriptor, ownsHandle: true);
+            using (var fileStream = new FileStream(safeFileHandle, FileAccess.ReadWrite))
             {
-                stream.Write(data, 0, data.Length);
+                fileStream.Write(data, 0, data.Length);
             }
         }
 
@@ -137,5 +129,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
                 fs?.Dispose();
             }
         }
+
+
     }
 }
