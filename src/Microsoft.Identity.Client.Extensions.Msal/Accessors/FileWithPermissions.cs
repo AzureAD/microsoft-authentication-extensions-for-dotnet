@@ -16,18 +16,16 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
     {
         #region Unix specific
 
-        // See https://ss64.com/bash/chmod.html 
 
-
+        /// <summary>
+        /// Equivalent to calling open() with flags  O_CREAT|O_WRONLY|O_TRUNC. O_TRUNC will truncate the file. 
+        /// See https://man7.org/linux/man-pages/man2/open.2.html
+        /// </summary>
         [DllImport("libc", EntryPoint = "creat", SetLastError = true)]
         private static extern int PosixCreate([MarshalAs(UnmanagedType.LPStr)] string pathname, int mode);
 
         [DllImport("libc", EntryPoint = "chmod", SetLastError = true)]
         private static extern int PosixChmod([MarshalAs(UnmanagedType.LPStr)] string pathname, int mode);
-
-        [DllImport("libc", EntryPoint = "umask", SetLastError = true)]
-        private static extern int PosixUMask(int mask);
-
 
         #endregion
 
@@ -42,11 +40,11 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         /// <exception cref="PlatformNotSupportedException"></exception>
         public static void WriteToNewFileWithOwnerRWPermissions(string path, byte[] data)
         {
-            
+
             if (SharedUtilities.IsWindowsPlatform())
             {
                 WriteToNewFileWithOwnerRWPermissionsWindows(path, data);
-            }           
+            }
             else if (SharedUtilities.IsMacPlatform() || SharedUtilities.IsLinuxPlatform())
             {
                 WriteToNewFileWithOwnerRWPermissionsUnix(path, data);
@@ -64,34 +62,25 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
         private static void WriteToNewFileWithOwnerRWPermissionsUnix(string path, byte[] data)
         {
             int _0600 = Convert.ToInt32("600", 8);
-           
-            int fd;
 
-            try
-            {
-                fd = PosixCreate(path, _0600);
-            }
-            catch (Exception exception)
-            {
-                throw new IOException(
-                    $"Error trying to create file {path}: {exception.Message} - last error {Marshal.GetLastWin32Error()}",
-                    exception);
-            }
+            int fileDescriptor =  PosixCreate(path, _0600);
 
-            if (fd == -1)
+            // if creat() fails, then try to use File.Create because it will throw a meaningful exception.
+            if (fileDescriptor == -1)
             {
+                int posixCreateError = Marshal.GetLastWin32Error();
                 using (File.Create(path))
                 {
                     // File.Create() should have thrown an exception with an appropriate error message
                 }
                 File.Delete(path);
-                throw new InvalidOperationException("libc creat failed, but File.Create did not");
+                throw new InvalidOperationException($"libc creat() failed with last error code {posixCreateError}, but File.Create did not");
             }
 
-            var sfh = new SafeFileHandle((IntPtr)fd, ownsHandle: true);
-            using (var fs = new FileStream(sfh, FileAccess.ReadWrite))
+            var safeFileHandle = new SafeFileHandle((IntPtr)fileDescriptor, ownsHandle: true);
+            using (var fileStream = new FileStream(safeFileHandle, FileAccess.ReadWrite))
             {
-                fs.Write(data, 0, data.Length);
+                fileStream.Write(data, 0, data.Length);
             }
         }
 
