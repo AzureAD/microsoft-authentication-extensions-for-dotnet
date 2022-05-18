@@ -43,10 +43,11 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
             // Create lock file dir if it doesn't already exist
             Directory.CreateDirectory(Path.GetDirectoryName(lockfilePath));
+            Process currentProcess = Process.GetCurrentProcess();
+            string lockerProcessInfo = $"{currentProcess.Id} {currentProcess.ProcessName}";
 
             for (int tryCount = 0; tryCount < lockFileRetryCount; tryCount++)
             {
-
                 try
                 {
                     // We are using the file locking to synchronize the store, do not allow multiple writers or readers for the file.
@@ -82,7 +83,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
                     using (var writer = new StreamWriter(fileStream, Encoding.UTF8, defaultBufferSize, leaveOpen: true))
                     {
-                        writer.WriteLine($"{Process.GetCurrentProcess().Id} {Process.GetCurrentProcess().ProcessName}");
+                        writer.WriteLine(lockerProcessInfo);
                     }
                         break;
                 }
