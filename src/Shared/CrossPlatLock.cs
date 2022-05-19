@@ -42,9 +42,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
             FileStream fileStream = null;
 
             // Create lock file dir if it doesn't already exist
-            Directory.CreateDirectory(Path.GetDirectoryName(lockfilePath));
-            Process currentProcess = Process.GetCurrentProcess();
-            string lockerProcessInfo = $"{currentProcess.Id} {currentProcess.ProcessName}";
+            string lockerProcessInfo = $"{SharedUtilities.GetCurrentProcessId()} {SharedUtilities.GetCurrentProcessName()}";
 
             for (int tryCount = 0; tryCount < lockFileRetryCount; tryCount++)
             {

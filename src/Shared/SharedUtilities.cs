@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -30,6 +31,8 @@ namespace Microsoft.Identity.Client.Extensions.Web
         private static readonly string s_usernameEnvVar = Environment.GetEnvironmentVariable("USERNAME");
 
         private static readonly Lazy<bool> s_isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+
+        private static readonly Lazy<Process> s_currentProcess = new Lazy<Process>(() => Process.GetCurrentProcess());
 
         /// <summary>
         ///  Is this a windows platform
@@ -76,6 +79,18 @@ namespace Microsoft.Identity.Client.Extensions.Web
         {
             return s_isMono.Value;
         }
+
+        /// <summary>
+        /// Instantiates the process if not done already and retrieves the ID the process.
+        /// </summary>
+        /// <returns>process id</returns>
+        public static int GetCurrentProcessId() => s_currentProcess.Value.Id;
+
+        /// <summary>
+        /// Instantiates the process if not done already and retrieves the name of the process.
+        /// </summary>
+        /// <returns>process id</returns>
+        public static string GetCurrentProcessName() => s_currentProcess.Value.ProcessName;
 
         /// <summary>
         /// Generate the default file location
