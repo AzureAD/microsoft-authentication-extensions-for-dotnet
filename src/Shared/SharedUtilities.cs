@@ -32,8 +32,6 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
         private static readonly Lazy<bool> s_isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
 
-        private static readonly Lazy<Process> s_currentProcess = new Lazy<Process>(() => Process.GetCurrentProcess());
-
         private static string s_processName = null;
         private static int s_processId = default(int);
 
