@@ -34,6 +34,9 @@ namespace Microsoft.Identity.Client.Extensions.Web
 
         private static readonly Lazy<Process> s_currentProcess = new Lazy<Process>(() => Process.GetCurrentProcess());
 
+        private static string s_processName = null;
+        private static int s_processId = default(int);
+
         /// <summary>
         ///  Is this a windows platform
         /// </summary>
@@ -81,16 +84,38 @@ namespace Microsoft.Identity.Client.Extensions.Web
         }
 
         /// <summary>
-        /// Instantiates the process if not done already and retrieves the ID the process.
+        /// Instantiates the process if not done already and retrieves the id of the process.
+        /// Caches it for the next call.
         /// </summary>
         /// <returns>process id</returns>
-        public static int GetCurrentProcessId() => s_currentProcess.Value.Id;
+        public static int GetCurrentProcessId()
+        {
+            if (s_processId == default(int))
+            {
+                var process = Process.GetCurrentProcess();
+                s_processId = process.Id;
+                s_processName = process.ProcessName;
+            }
+
+            return s_processId;
+        }
 
         /// <summary>
         /// Instantiates the process if not done already and retrieves the name of the process.
+        /// Caches it for the next call
         /// </summary>
-        /// <returns>process id</returns>
-        public static string GetCurrentProcessName() => s_currentProcess.Value.ProcessName;
+        /// <returns>process name</returns>
+        public static string GetCurrentProcessName()
+        {
+            if (string.IsNullOrEmpty(s_processName))
+            {
+                var process = Process.GetCurrentProcess();
+                s_processName = process.ProcessName;
+                s_processId = process.Id;
+            }
+
+            return s_processName;
+        }
 
         /// <summary>
         /// Generate the default file location
