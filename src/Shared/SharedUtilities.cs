@@ -86,13 +86,15 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// Caches it for the next call.
         /// </summary>
         /// <returns>process id</returns>
-        public static int GetCurrentProcessId()
+        internal static int GetCurrentProcessId()
         {
             if (s_processId == default(int))
             {
-                var process = Process.GetCurrentProcess();
-                s_processId = process.Id;
-                s_processName = process.ProcessName;
+                using (var process = Process.GetCurrentProcess())
+                {
+                    s_processId = process.Id;
+                    s_processName = process.ProcessName;
+                }
             }
 
             return s_processId;
@@ -103,13 +105,15 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// Caches it for the next call
         /// </summary>
         /// <returns>process name</returns>
-        public static string GetCurrentProcessName()
+        internal static string GetCurrentProcessName()
         {
             if (string.IsNullOrEmpty(s_processName))
             {
-                var process = Process.GetCurrentProcess();
-                s_processName = process.ProcessName;
-                s_processId = process.Id;
+                using (var process = Process.GetCurrentProcess())
+                {
+                    s_processName = process.ProcessName;
+                    s_processId = process.Id;
+                }
             }
 
             return s_processName;
