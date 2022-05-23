@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -30,6 +31,9 @@ namespace Microsoft.Identity.Client.Extensions.Web
         private static readonly string s_usernameEnvVar = Environment.GetEnvironmentVariable("USERNAME");
 
         private static readonly Lazy<bool> s_isMono = new Lazy<bool>(() => Type.GetType("Mono.Runtime") != null);
+
+        private static string s_processName = null;
+        private static int s_processId = default(int);
 
         /// <summary>
         ///  Is this a windows platform
@@ -75,6 +79,44 @@ namespace Microsoft.Identity.Client.Extensions.Web
         internal static bool IsMonoPlatform()
         {
             return s_isMono.Value;
+        }
+
+        /// <summary>
+        /// Instantiates the process if not done already and retrieves the id of the process.
+        /// Caches it for the next call.
+        /// </summary>
+        /// <returns>process id</returns>
+        internal static int GetCurrentProcessId()
+        {
+            if (s_processId == default(int))
+            {
+                using (var process = Process.GetCurrentProcess())
+                {
+                    s_processId = process.Id;
+                    s_processName = process.ProcessName;
+                }
+            }
+
+            return s_processId;
+        }
+
+        /// <summary>
+        /// Instantiates the process if not done already and retrieves the name of the process.
+        /// Caches it for the next call
+        /// </summary>
+        /// <returns>process name</returns>
+        internal static string GetCurrentProcessName()
+        {
+            if (string.IsNullOrEmpty(s_processName))
+            {
+                using (var process = Process.GetCurrentProcess())
+                {
+                    s_processName = process.ProcessName;
+                    s_processId = process.Id;
+                }
+            }
+
+            return s_processName;
         }
 
         /// <summary>
