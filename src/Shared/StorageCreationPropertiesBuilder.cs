@@ -180,7 +180,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// over SSH connections. Users are responsible for security.
         /// </summary>
         /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence()
-        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/main/docs/keyring_fallback_proposal.md
         /// </remarks>
         /// <returns></returns>
         public StorageCreationPropertiesBuilder WithLinuxUnprotectedFile()
@@ -200,7 +200,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// - Certain virtualized Windows scenarios where DPAPI is not available         
         /// </summary>
         /// <remarks>You can check if the persistence is available by calling msalCacheHelper.VerifyPersistence()
-        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/master/docs/keyring_fallback_proposal.md
+        /// For more details see https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/blob/main/docs/keyring_fallback_proposal.md
         /// </remarks>
         public StorageCreationPropertiesBuilder WithUnprotectedFile()
         {

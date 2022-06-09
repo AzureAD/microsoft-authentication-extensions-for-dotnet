@@ -6,6 +6,8 @@ A cross-platform token cache serialization mechanism - [see details on the Wiki]
 
 [![Build Status](https://identitydivision.visualstudio.com/IDDP/_apis/build/status/CI/DotNet/MSAL%20YAML/Cache%20Ext/Extension%20CI-PR?branchName=master)](https://identitydivision.visualstudio.com/IDDP/_build/latest?definitionId=1071&branchName=master)
 
+> We have renamed the default branch to main. To rename your local repo follow the directions [here](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/renaming-a-branch#updating-a-local-clone-after-a-branch-name-changes).
+
 ## Samples
 
 We aim to have all [MSAL public client samples](https://docs.microsoft.com/en-gb/azure/active-directory/develop/sample-v2-code#desktop-and-mobile-public-client-apps) use the extensions. 
