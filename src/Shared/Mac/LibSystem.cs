@@ -10,7 +10,7 @@ namespace Microsoft.Identity.Extensions.Mac
 {
     internal static class LibSystem
     {
-        private const string LibSystemLib = "/System/Library/Frameworks/System.framework/System";
+        private const string LibSystemLib = "/usr/lib/libSystem.dylib";
 
         [DllImport(LibSystemLib, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr dlopen(string name, int flags);
@@ -20,8 +20,7 @@ namespace Microsoft.Identity.Extensions.Mac
 
         public static IntPtr GetGlobal(IntPtr handle, string symbol)
         {
-            IntPtr ptr = dlsym(handle, symbol);
-            //return Marshal.PtrToStructure<IntPtr>(ptr);
+            IntPtr ptr = dlsym(handle, symbol);            
             var structure = Marshal.PtrToStructure(ptr, typeof(IntPtr));
 
             return (IntPtr)structure;
