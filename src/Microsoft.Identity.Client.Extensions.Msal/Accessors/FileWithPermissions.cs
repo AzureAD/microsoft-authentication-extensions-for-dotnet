@@ -109,7 +109,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.Accessors
 
             try
             {
-#if NET452_OR_GREATER
+#if NET45_OR_GREATER
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);

@@ -50,7 +50,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <returns>A value indicating if we are running on mac or not</returns>
         public static bool IsMacPlatform()
         {
-#if NET452_OR_GREATER
+#if NET45_OR_GREATER
             // we have to also check for PlatformID.Unix because Mono can sometimes return Unix as the platform on a Mac machine.
             // see http://www.mono-project.com/docs/faq/technical/
             return Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
@@ -65,7 +65,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
         /// <returns>A  value indicating if we are running on linux or not</returns>
         public static bool IsLinuxPlatform()
         {
-#if NET452_OR_GREATER
+#if NET45_OR_GREATER
             return Environment.OSVersion.Platform == PlatformID.Unix;
 #else
             return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);
