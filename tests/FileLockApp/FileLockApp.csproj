@@ -13,9 +13,4 @@
     <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0" />
-    <PackageReference Update="Microsoft.VisualStudio.Threading.Analyzers" Version="17.2.32" />
-  </ItemGroup>
-
 </Project>

@@ -42,10 +42,6 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0" />
-    <PackageReference Update="Microsoft.VisualStudio.Threading.Analyzers" Version="17.2.32" />
-  </ItemGroup>
 
   <Target Name="CopyFiles" AfterTargets="AfterBuild">
     <ItemGroup>

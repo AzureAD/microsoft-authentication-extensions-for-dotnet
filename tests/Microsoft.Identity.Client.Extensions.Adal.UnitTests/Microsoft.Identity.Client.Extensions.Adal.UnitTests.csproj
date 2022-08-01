@@ -26,8 +26,4 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0" />
-    <PackageReference Update="Microsoft.VisualStudio.Threading.Analyzers" Version="17.2.32" />
-  </ItemGroup>
 </Project>
