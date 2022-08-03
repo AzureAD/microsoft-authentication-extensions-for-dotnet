@@ -21,4 +21,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj" />
   </ItemGroup>
+
 </Project>
