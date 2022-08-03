@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-#pragma warning disable CA2000 // Dispose objects before losing scope
 
 namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
 {
@@ -361,8 +360,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
             Assert.IsFalse(data.Any(), "Cache is corrupt, so it should have been deleted");
         }
 
-
-
+       
         [DoNotRunOnLinux] // The FileSystemWatcher on Linux doesn't always fire
         public async Task ClearCacheUsesTheLockAsync()
         {
@@ -547,4 +545,3 @@ namespace Microsoft.Identity.Client.Extensions.Msal.UnitTests
         }
     }
 }
-#pragma warning restore CA2000 // Dispose objects before losing scope
