@@ -4,11 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
@@ -305,20 +303,12 @@ namespace ManualTestApp
                 throw new InvalidOperationException("Please configure a username and password!");
             }
 
-            using (SecureString securePassword = new SecureString())
-            {
-                foreach (char c in Config.Password)
-                {
-                    securePassword.AppendChar(c);
-                }
-
-                return await pca.AcquireTokenByUsernamePassword(
-                    Config.Scopes,
-                    Config.Username,
-                    securePassword)
-                    .ExecuteAsync()
-                    .ConfigureAwait(false);
-            }
+            return await pca.AcquireTokenByUsernamePassword(
+                Config.Scopes,
+                Config.Username,
+                Config.Password)
+                .ExecuteAsync()
+                .ConfigureAwait(false);
         }
 
         private static void DisplayResult(AuthenticationResult result)
