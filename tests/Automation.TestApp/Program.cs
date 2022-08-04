@@ -48,7 +48,7 @@ namespace Automation.TestApp
         {
             string pid = Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
             string errorFile = protectedFile + $"{pid}.e.txt";
-            string pidFIle = Path.Combine(Path.GetDirectoryName(protectedFile), "finished", pid + ".txt");
+            string pidFIle = Path.Combine(Path.GetDirectoryName(protectedFile), pid + ".txt");
 
             Console.WriteLine("Starting process: " + pid);
             CrossPlatLock crossPlatLock = null;
