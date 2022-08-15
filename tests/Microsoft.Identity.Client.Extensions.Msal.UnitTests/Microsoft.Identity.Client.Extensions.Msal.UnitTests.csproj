@@ -13,6 +13,10 @@
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
+
+    <!-- Not directly required, but used to override the use of version 9 inside Microsoft.NET.Test.Sdk -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+
   </ItemGroup>
 
   <ItemGroup>
