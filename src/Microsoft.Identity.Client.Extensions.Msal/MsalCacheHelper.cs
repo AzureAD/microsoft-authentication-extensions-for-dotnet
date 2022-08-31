@@ -139,7 +139,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     catch (Exception e)
                     {
                         LogMessage(args.IdentityLogger, EventLogLevel.Error, "An error occured while reading the token cache: " + e, logger);
-                        LogMessage(args.IdentityLogger, EventLogLevel.Error, "[Microsoft.Identity.Client.Extensions] Deleting the token cache as it might be corrupt.", logger);
+                        LogMessage(args.IdentityLogger, EventLogLevel.Error, "Deleting the token cache as it might be corrupt.", logger);
                         tempCache.Clear(ignoreExceptions: true);
                     }
                 });
@@ -396,9 +396,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="args">Callback parameters from MSAL</param>
         internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Before access");
-
-            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Acquiring lock for token cache");
+            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Before access\nAcquiring lock for token cache");
 
             // OK, we have two nested locks here. We need to maintain a clear ordering to avoid deadlocks.
             // 1. Use the CrossPlatLock which is respected by all processes and is used around all cache accesses.
