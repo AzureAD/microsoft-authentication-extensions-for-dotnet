@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Abstractions;
 
 namespace Microsoft.Identity.Client.Extensions.Msal
 {
@@ -95,8 +96,6 @@ namespace Microsoft.Identity.Client.Extensions.Msal
             }
         }
 
-
-
         /// <summary>
         /// Gets the current set of accounts in the cache by creating a new public client, and
         /// deserializing the cache into a temporary object.
@@ -139,8 +138,8 @@ namespace Microsoft.Identity.Client.Extensions.Msal
                     }
                     catch (Exception e)
                     {
-                        logger.LogError("An error occured while reading the token cache: " + e);
-                        logger.LogError("Deleting the token cache as it might be corrupt.");
+                        LogMessage(args.IdentityLogger, EventLogLevel.Error, "An error occured while reading the token cache: " + e, logger);
+                        LogMessage(args.IdentityLogger, EventLogLevel.Error, "Deleting the token cache as it might be corrupt.", logger);
                         tempCache.Clear(ignoreExceptions: true);
                     }
                 });
@@ -397,40 +396,39 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         /// <param name="args">Callback parameters from MSAL</param>
         internal void BeforeAccessNotification(TokenCacheNotificationArgs args)
         {
-            _logger.LogInformation($"Before access");
-
-            _logger.LogInformation($"Acquiring lock for token cache");
+            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Before access\nAcquiring lock for token cache");
 
             // OK, we have two nested locks here. We need to maintain a clear ordering to avoid deadlocks.
             // 1. Use the CrossPlatLock which is respected by all processes and is used around all cache accesses.
             // 2. Use _lockObject which is used in UnregisterCache, and is needed for all accesses of _registeredCaches.
             CacheLock = CreateCrossPlatLock(_storageCreationProperties);
 
-            _logger.LogInformation($"Before access, the store has changed");
+            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Before access, the store has changed");
+
             byte[] cachedStoreData = null;
             try
             {
                 cachedStoreData = CacheStore.ReadData();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _logger.LogError($"Could not read the token cache. Ignoring. See previous error message.");
+                LogMessage(args.IdentityLogger, EventLogLevel.Error, $"Could not read the token cache. Ignoring. Exception: {ex}");
                 return;
 
             }
-            _logger.LogInformation($"Read '{cachedStoreData?.Length}' bytes from storage");
+            LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Read '{cachedStoreData?.Length}' bytes from storage");
 
             lock (_lockObject)
             {
                 try
                 {
-                    _logger.LogInformation($"Deserializing the store");
+                    LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Deserializing the store");
                     args.TokenCache.DeserializeMsalV3(cachedStoreData, shouldClearExistingCache: true);
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError($"An exception was encountered while deserializing the {nameof(MsalCacheHelper)} : {e}");
-                    _logger.LogError($"No data found in the store, clearing the cache in memory.");
+                    LogMessage(args.IdentityLogger, EventLogLevel.Error, $"An exception was encountered while deserializing the {nameof(MsalCacheHelper)} : {e}");
+                    LogMessage(args.IdentityLogger, EventLogLevel.Error, $"No data found in the store, clearing the cache in memory.");
 
                     // Clear the memory cache without taking the lock over again
                     CacheStore.Clear(ignoreExceptions: true);
@@ -447,20 +445,20 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         {
             try
             {
-                _logger.LogInformation($"After access");
+                LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"After access");
                 byte[] data = null;
                 // if the access operation resulted in a cache update
                 if (args.HasStateChanged)
                 {
-                    _logger.LogInformation($"After access, cache in memory HasChanged");
+                    LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"After access, cache in memory HasChanged");
                     try
                     {
                         data = args.TokenCache.SerializeMsalV3();
                     }
                     catch (Exception e)
                     {
-                        _logger.LogError($"An exception was encountered while serializing the {nameof(MsalCacheHelper)} : {e}");
-                        _logger.LogError($"No data found in the store, clearing the cache in memory.");
+                        LogMessage(args.IdentityLogger, EventLogLevel.Error, $"An exception was encountered while serializing the {nameof(MsalCacheHelper)} : {e}");
+                        LogMessage(args.IdentityLogger, EventLogLevel.Error, $"No data found in the store, clearing the cache in memory.");
 
                         // The cache is corrupt clear it out
                         CacheStore.Clear(ignoreExceptions: true);
@@ -469,14 +467,15 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
                     if (data != null)
                     {
-                        _logger.LogInformation($"Serializing '{data.Length}' bytes");
+                        LogMessage(args.IdentityLogger, EventLogLevel.Verbose, $"Serializing '{data.Length}' bytes");
+
                         try
                         {
                             CacheStore.WriteData(data);
                         }
                         catch (Exception)
                         {
-                            _logger.LogError($"Could not write the token cache. Ignoring. See previous error message.");
+                            LogMessage(args.IdentityLogger, EventLogLevel.Error, $"Could not write the token cache. Ignoring. See previous error message.");
                         }
                     }
                 }
@@ -505,6 +504,36 @@ namespace Microsoft.Identity.Client.Extensions.Msal
         public void VerifyPersistence()
         {
             CacheStore.VerifyPersistence();
+        }
+
+        //Logs to TraceSourceLogger and Identity Logger acquired from MSAL's TokenCacheNotificationArgs
+        private void LogMessage(IIdentityLogger identityLogger, EventLogLevel level, string message)
+        {
+            LogMessage(identityLogger, level, message, _logger);
+        }
+
+        //Logs to TraceSourceLogger and Identity Logger acquired from MSAL's TokenCacheNotificationArgs
+        private static void LogMessage(IIdentityLogger identityLogger, EventLogLevel level, string message, TraceSourceLogger traceSourceLogger)
+        {
+            message = "[Microsoft.Identity.Client.Extensions] " + message;
+
+            //Log to TraceSourceLogger
+            switch (level)
+            {
+                case EventLogLevel.Warning:
+                    traceSourceLogger.LogWarning(message);
+                    break;
+                case EventLogLevel.Error:
+                    traceSourceLogger.LogError(message);
+                    break;
+                case EventLogLevel.Verbose:
+                    traceSourceLogger.LogInformation(message);
+                    break;
+            }
+
+            //Log to Identity Logger
+            LogEntry logEntry = new LogEntry() { Message = message, EventLogLevel = level };
+            identityLogger.Log(logEntry);
         }
     }
 }
