@@ -533,7 +533,7 @@ namespace Microsoft.Identity.Client.Extensions.Msal
 
             //Log to Identity Logger
             LogEntry logEntry = new LogEntry() { Message = message, EventLogLevel = level };
-            identityLogger.Log(logEntry);
+            identityLogger?.Log(logEntry);
         }
     }
 }
