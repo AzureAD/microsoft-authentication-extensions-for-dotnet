@@ -22,9 +22,9 @@ pool:
 steps:
 
 - task: UseDotNet@2
-  displayName: 'Use .NET SDK 6.x'
+  displayName: 'Use .NET Core SDK 3.1.x'
   inputs:
-    version: 6.x
+    version: 3.1.x
 
 - task: DotNetCoreCLI@2
   displayName: Restore
