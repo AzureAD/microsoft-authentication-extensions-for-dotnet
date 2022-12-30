@@ -9,15 +9,15 @@ steps:
 
 # required for the signing task, but should not be used for the entire build
 - task: UseDotNet@2
-  displayName: 'Use .Net Core sdk 2.1.x'
+  displayName: 'Use .NET Core SDK 2.1.x'
   inputs:
     version: 2.1.x
 
 # Use latest SDK for build
 - task: UseDotNet@2
-  displayName: 'Use .Net Core sdk 5.x'
+  displayName: 'Use .NET SDK 6.x'
   inputs:
-    version: 5.x
+    version: 6.x
 
 - task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
   displayName: 'Run PoliCheck'
@@ -111,7 +111,7 @@ steps:
     BinSkim: true
 
 - task: DotNetCoreCLI@2
-  displayName: 'dotnet pack'
+  displayName: Pack projects
   inputs:
     command: pack
     packagesToPack: 'src/**/*.csproj'
