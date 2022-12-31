@@ -19,7 +19,7 @@ steps:
   inputs:
     version: 6.x
 
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@1
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@2
   displayName: 'Run PoliCheck'
   inputs:
     targetType: F
@@ -31,11 +31,11 @@ steps:
     outputFormat: pre
     debugMode: false
 
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
   displayName: 'Post Analysis'
   inputs:
-    CredScan: true
-    PoliCheck: true
+    GdnBreakGdnToolCredScan: true
+    GdnBreakGdnToolPoliCheck: true
 
 - task: DotNetCoreCLI@2
   displayName: 'Build solution'
@@ -97,18 +97,18 @@ steps:
      ]
     SessionTimeout: 20
 
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@3
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-binskim.BinSkim@4
   displayName: 'Run BinSkim '
   inputs:
     InputType: Basic
-    AnalyzeTarget: '$(Build.SourcesDirectory)\src\**\bin\**\*.dll'
+    AnalyzeTargetGlob: '$(Build.SourcesDirectory)\src\**\bin\**\*.dll'
     AnalyzeVerbose: true
     AnalyzeHashes: true
 
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@1
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-postanalysis.PostAnalysis@2
   displayName: 'Check BinSkim Results'
   inputs:
-    BinSkim: true
+    GdnBreakGdnToolBinSkim: true
 
 - task: DotNetCoreCLI@2
   displayName: Pack projects
@@ -155,16 +155,9 @@ steps:
   inputs:
     ArtifactName: packages
 
-- task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@1
+- task: securedevelopmentteam.vss-secure-development-tools.build-task-uploadtotsa.TSAUpload@2
   displayName: 'TSA Upload'
   inputs:
-    tsaVersion: TsaV2
-    codeBaseName: 'Unified .NET Core Extensions'
-    uploadAPIScan: false
-    uploadFortifySCA: false
-    uploadFxCop: false
-    uploadModernCop: false
-    uploadPREfast: false
-    uploadRoslyn: false
-    uploadTSLint: false
+    GdnPublishTsaOnboard: false
+    GdnPublishTsaConfigFile: '$(Build.SourcesDirectory)/build/tsaConfig.json'
   continueOnError: true

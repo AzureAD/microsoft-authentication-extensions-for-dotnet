@@ -1,0 +1,8 @@
+{
+    "codebaseName": "Unified .NET Core Extensions",
+    "tools": [
+        "binskim",
+        "credscan",
+        "policheck"
+    ]
+}
