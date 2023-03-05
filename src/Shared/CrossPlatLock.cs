@@ -99,7 +99,7 @@ namespace Microsoft.Identity.Client.Extensions.Web
                     fileStream?.Dispose();
                     fileStream = null;
                     exception = ex;
-                    Thread.Sleep(lockFileRetryCount);
+                    Thread.Sleep(lockFileRetryDelay);
                 }
             }
 
