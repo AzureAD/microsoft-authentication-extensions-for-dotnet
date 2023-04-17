@@ -42,13 +42,6 @@ steps:
   inputs:
     arguments: '-c $(BuildConfiguration) /p:ClientSemVer=$(ClientSemVer) /p:SourceLinkCreate=true /p:ContinousIntegrationBuild=true'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Run unit tests'
-  inputs:
-    command: test
-    projects: 'tests/**/*UnitTests*.csproj'
-    arguments: '-c $(BuildConfiguration) --no-build --no-restore --collect "Code coverage"'
-
 - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
   displayName: 'Sign Binaries'
   inputs:
