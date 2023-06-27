@@ -4,6 +4,8 @@ pool:
 
 variables:
   BuildConfiguration: 'release'
+  Codeql.Enabled: true
+  Codeql.Language: csharp
 
 steps:
 
