@@ -1,5 +1,5 @@
 >**Note**
->This package continues to be maintained alongside [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) repository. [Microsoft.Identity.Client.Extensions.Msal](https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal) will be versioned in sync with [Microsoft.Identity.Client](https://www.nuget.org/packages/Microsoft.Identity.Client). No breaking changes exist between version 2.x and version 4.x
+>This package continues to be maintained alongside [Microsoft.Identity.Client](https://github.com/AzureAD/microsoft-authentication-library-for-dotnet) repository. [Microsoft.Identity.Client.Extensions.Msal](https://www.nuget.org/packages/Microsoft.Identity.Client.Extensions.Msal) will be versioned in sync with [Microsoft.Identity.Client](https://www.nuget.org/packages/Microsoft.Identity.Client). No breaking changes exist between version 2.x and version 4.x.
 >
 
 # MSAL token cache extension for public client applications
